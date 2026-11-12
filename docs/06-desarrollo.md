@@ -380,7 +380,8 @@ se cierra con otro commit, sin push. El recorrido manual de ambas está en
 
 ## Navegación y tablas — S14 (RF-01, RF-03, RF-04, RF-05, RF-08 y RF-09)
 
-Presentación actual: negro, blanco y dorado, conservando CoreUI/Bootstrap local.
+Presentación de S14 (la paleta fue sustituida por S15): negro, blanco y dorado,
+conservando CoreUI/Bootstrap local.
 La raíz `/` muestra Inicio con paneles a Proyectos y Catálogo. El sidebar tiene
 un botón debajo de las opciones para contraerlo a iconos; conserva la preferencia
 en el navegador y permite usar teclado. En móvil comienza contraído. Se retiraron
@@ -410,3 +411,43 @@ Chromium verificó inicio, catálogo, entregas, acceso a corrección y anulació
 pestaña Inventario e historial, saldo, menú con teclado y preferencia tras recargar,
 y ausencia de desborde de página a 320, 390 y 1440 píxeles. Firefox se intentó
 iniciar, pero sigue sin estar disponible su ejecutable en el entorno.
+
+
+## Ajustes de interfaz — S15 (RF-03, RF-05, RF-08 y RF-09)
+
+Se aplica la paleta de seis colores acordada en S15 a toda la interfaz. El sidebar
+separa Inicio, Proyectos y Catálogo con divisores; el control para contraer/expandir
+es una flecha, con nombre accesible y 48 píxeles de separación bajo la navegación.
+Conserva teclado y preferencia del navegador. Los formularios y el contenedor de
+contenido aprovechan el ancho disponible, sin el límite anterior de 48 rem del
+formulario. Catálogo y Entregas tienen filas alternadas (`table-striped`).
+
+La búsqueda filtra al escribir tras una pausa de 300 ms. Consulta el conjunto
+completo en el servidor, actualiza tabla y paginación sin reemplazar el campo ni
+perder el foco y vuelve a la primera página al cambiar filtros. Estado, orden y
+filas también se aplican automáticamente. Se cancelan consultas anteriores y se
+ignoran respuestas obsoletas. El resumen se anuncia de forma accesible. Si falla
+la consulta, se informa que los resultados anteriores siguen visibles y se puede
+reintentar con Aplicar. Sin JavaScript se conserva el formulario GET y su botón.
+
+Verificación: 114 pruebas pasan en PostgreSQL. Chromium comprobó búsquedas en
+ambas tablas, foco, estados, ordenación, filas, paginación y Atrás, respuesta
+anterior demorada, fallo de red y reintento, funcionamiento sin JavaScript,
+colores y franjas, flecha y teclado, ancho de formularios y ausencia de desborde
+de página a 320, 390, 1440 y 1920 píxeles. El saldo de los datos exclusivos de
+prueba se mantuvo intacto. Firefox se intentó iniciar y sigue faltando su
+ejecutable. No hay paquetes ni migraciones nuevas.
+
+## Próximo flujo por acordar e implementar — S16
+
+El usuario confirmó stock real común de empresa, solicitudes por proyecto que
+reservan existencias y descuento al realizar la entrega. Las solicitudes deben
+limitarse a lo disponible; se admiten entregas parciales y reducción/cancelación
+de lo pendiente con motivo e historial. Un elemento sin cantidad inicial empieza
+en cero. Los datos actuales del PC son de prueba, sin autorización para borrarlos.
+Este destino funcional reemplazará las aperturas por
+proyecto, pero **el código actual sigue usando el inventario por proyecto**.
+Las aclaraciones y pendientes están en [S16](05-fuentes.md#s16--revisión-del-flujo-stock-común-y-solicitudes-por-proyecto).
+No se ha iniciado una conversión de datos ni se deben usar las solicitudes como
+si ya existieran. El rediseño requiere conservar el historial y acordar el
+tratamiento de registros anteriores antes de preparar migraciones.

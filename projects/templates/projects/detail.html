@@ -5,10 +5,12 @@
 {% include 'projects/project_tabs.html' with active_tab='deliveries' %}
 <h2 class="h4 mb-4">Entregas</h2>
 {% include 'projects/table_controls.html' with search_placeholder='Elemento, trabajador u observación' %}
+<div id="table-results" data-table-results aria-busy="false">
 <p class="d-md-none small text-body-secondary">Desliza la tabla para ver todas las columnas.</p>
-<div class="card"><div class="table-responsive" tabindex="0" role="region" aria-label="Tabla de entregas"><table class="table mb-0 align-middle"><caption class="visually-hidden">Entregas de {{ project.name }}</caption><thead><tr><th scope="col">Elemento</th><th scope="col">Trabajador</th><th scope="col">Cantidad</th><th scope="col">Fecha</th><th scope="col">Estado</th><th scope="col">Acciones</th></tr></thead><tbody>
+<div class="card"><div class="table-responsive" tabindex="0" role="region" aria-label="Tabla de entregas"><table class="table table-striped mb-0 align-middle"><caption class="visually-hidden">Entregas de {{ project.name }}</caption><thead><tr><th scope="col">Elemento</th><th scope="col">Trabajador</th><th scope="col">Cantidad</th><th scope="col">Fecha</th><th scope="col">Estado</th><th scope="col">Acciones</th></tr></thead><tbody>
 {% for delivery in deliveries %}<tr><td class="text-break">{{ delivery.position.item.name }}</td><td class="text-break">{{ delivery.worker_full_name }}</td><td>{{ delivery.quantity }}</td><td class="text-nowrap">{{ delivery.occurred_on|date:'d/m/Y' }}</td><td>{% if not delivery.voided_at %}<span class="badge text-bg-light border">Vigente</span>{% elif delivery.has_replacement %}<span class="badge text-bg-light border">Sustituido</span>{% else %}<span class="badge text-bg-light border">Anulado</span>{% endif %}</td><td><div class="table-actions"><a href="{{ delivery.get_absolute_url }}">Historial</a>{% if not delivery.voided_at %}<a href="{% url 'inventory:correct' project.pk delivery.position.item_id delivery.pk %}">Corregir</a><a href="{% url 'inventory:cancel' project.pk delivery.position.item_id delivery.pk %}">Anular</a>{% endif %}</div></td></tr>
 {% empty %}<tr><td colspan="6" class="p-4">No hay entregas para esta consulta. Desde la pestaña <a href="{% url 'inventory:list' project.pk %}">Inventario</a> puedes consultar los elementos y registrar una entrega.</td></tr>{% endfor %}
 </tbody></table></div></div>
 {% include 'projects/pagination.html' %}
+</div>
 {% endblock %}

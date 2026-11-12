@@ -12,8 +12,6 @@
     button.setAttribute('aria-expanded', String(!collapsed));
     button.setAttribute('aria-label', label);
     button.title = label;
-    button.querySelector('.toggle-copy').textContent = label;
-    button.firstElementChild.textContent = collapsed ? '»' : '«';
   }
   button.hidden = false;
   render();

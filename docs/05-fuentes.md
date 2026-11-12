@@ -3,7 +3,7 @@
 ## Procedencia
 Base reconstruida el 12 de noviembre de 2026 a partir del historial recuperado del proyecto de la amiga prevencionista, principalmente la conversación «Recordar proyecto amiga». No es una transcripción completa ni una revisión del repositorio. Las fechas se usan para localizar conversaciones, sin convertir marcas técnicas en horas locales.
 
-Los códigos S0–S14 son referencias internas de las fuentes, no IDs de decisiones previamente aprobadas.
+Los códigos S0–S16 son referencias internas de las fuentes, no IDs de decisiones previamente aprobadas.
 
 | Ref. | Conversación o momento | Evidencia recuperada |
 |---|---|---|
@@ -169,6 +169,45 @@ En las aclaraciones confirmó:
 Aceptó el inicio con accesos a Proyectos y Catálogo y las tablas con búsqueda,
 ordenación y paginación en español. Estos cambios de presentación no modifican
 las reglas de existencias, corrección, anulación ni los datos del catálogo.
+
+## S15 — Ajustes de interfaz y búsqueda automática
+
+El usuario solicitó divisores entre grupos del sidebar, control de contracción
+solo con flecha y más separado, formularios que aprovechen el ancho de pantalla,
+filtrado mientras escribe y tablas con filas alternadas. Confirmó que la nueva
+paleta se aplica a todo el sistema: principal `#334155`, secundario `#64748B`,
+fondo `#F1F5F9`, superficies `#FFFFFF`, texto `#0F172A` y bordes `#CBD5E1`.
+Sustituye la paleta negro/blanco/dorado de S14. Se conserva Entregas como vista
+inicial del proyecto, según su respuesta posterior.
+
+## S16 — Revisión del flujo: stock común y solicitudes por proyecto
+
+Durante la ronda de preguntas, el usuario aclaró el modelo que desea:
+
+- Las cantidades representan existencias reales de la empresa, compartidas entre
+  proyectos, en lugar de exigir una apertura independiente en cada proyecto.
+- Agregar un elemento al proyecto representa una solicitud, que puede estar
+  pendiente de entrega; no una entrega ya realizada.
+- La solicitud reserva existencias; la entrega real descuenta stock.
+- No permitir solicitudes que superen el stock disponible.
+- Mantener la consulta de entregas realizadas como vista inicial del proyecto.
+
+Son decisiones para el próximo rediseño, **todavía no implementado**. La versión
+actual continúa calculando existencias por proyecto, con las reglas S9–S13.
+No se han modificado registros, modelos, servicios ni migraciones por S16.
+
+En las siguientes respuestas confirmó:
+
+- Un elemento sin cantidad inicial comienza con stock cero y permite entradas posteriores.
+- Se permiten entregas parciales; lo pendiente sigue reservado.
+- Se puede reducir o cancelar lo pendiente, liberando la reserva, con motivo
+  obligatorio e historial, sin modificar las entregas ya realizadas.
+- Los datos actuales de su PC son solo de prueba. Esto no autoriza borrarlos:
+  se conserva el trabajo existente y se preparará una transición explícita.
+
+Antes de implementar hay que concretar la transición del historial y la relación
+entre solicitudes y las correcciones/anulaciones de entregas. No se asume su
+comportamiento sobre las reservas ni se modifica el historial actual.
 
 ## Qué se excluyó
 - La idea de junio de automatizar documentos para distintos profesionales: no corresponde a este producto. Se excluyen sus requisitos de plantillas, generación PDF/Excel, IPER, AST, reportes de incidentes y charlas.

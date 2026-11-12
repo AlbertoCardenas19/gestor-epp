@@ -114,7 +114,8 @@ presiona `Ctrl+C`. Las próximas veces solo necesitas iniciar PostgreSQL y ejecu
 9. Vuelve al proyecto: «Entregas» muestra una fila por entrega vigente. Prueba
    buscar por trabajador, ordenar y cambiar de página. El filtro de estado permite
    consultar también las entregas sustituidas y anuladas.
-10. En Catálogo, prueba la tabla con búsqueda, ordenación y paginación. El botón
+10. En Catálogo, prueba la tabla con búsqueda automática al escribir, ordenación
+    y paginación. También se aplica a la tabla de Entregas. El botón
     bajo las opciones del menú lateral permite reducirlo a una columna de iconos.
 
 Los datos que registres se guardan en tu PostgreSQL local. No se incluyen bases
@@ -142,3 +143,8 @@ Para actualizar una copia limpia más adelante: `git pull`, instalar nuevamente
 - [Requisitos, acuerdos y pendientes](docs/README.md).
 - [Desarrollo en el entorno de nube y detalles de implementación](docs/06-desarrollo.md).
 - [Prueba manual de corrección y anulación de entregas](docs/07-iteraciones-entregas.md#recorrido-manual-para-ambas-iteraciones).
+
+
+El stock común de empresa y las solicitudes por proyecto con reserva están
+acordándose para un próximo cambio; todavía no sustituyen el inventario por
+proyecto de esta versión. Consulta [las decisiones y pendientes](docs/05-fuentes.md#s16--revisión-del-flujo-stock-común-y-solicitudes-por-proyecto).

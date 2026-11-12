@@ -20,6 +20,22 @@ Esta lista explicita huecos de la evidencia recuperada para evitar que Codex los
 | P-12 | Tecnologías | Django, PostgreSQL y CoreUI con Bootstrap confirmados en S7. Estructura detallada y alojamiento siguen pendientes. |
 | P-13 | Comercialización y práctica | Condiciones formales de práctica y acuerdos comerciales concretos. La intención no equivale a un contrato. |
 
+## Revisión posterior del inventario y las entregas — S16
+
+El usuario quiere stock común de empresa y solicitudes por proyecto con reserva,
+limitadas a existencias disponibles, y descuento al entregar. Mantiene las entregas
+realizadas como pantalla inicial del proyecto. Esta decisión revisa P-05/P-08 y
+el modelo S9; la implementación existente aún usa stock por proyecto.
+
+S16 también confirma cantidad inicial vacía como cero, entradas posteriores,
+entregas parciales y reducción/cancelación de lo pendiente con motivo e historial,
+liberando la reserva sin alterar entregas anteriores. Los datos actuales del PC
+son de prueba; no se ha solicitado borrarlos.
+
+Pendiente de concretar antes de implementar: transición del historial actual y
+comportamiento de reservas ante corrección/anulación de entregas vinculadas.
+No se convierte una corrección/anulación de entrega en devolución física.
+
 ## Recomendaciones anteriores que no son decisiones cerradas
 Se recuperó una recomendación del asistente de usar Django, PostgreSQL y Render. No se recuperó aceptación explícita del usuario de esa combinación. [S6]
 
