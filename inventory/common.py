@@ -1,0 +1,48 @@
+"""Common stock: read the existing ledger without duplicating historical quantities.
+
+This increment adds consultation and receipts. Requests/reservations follow later;
+legacy project flows remain available until their transition is implemented.
+"""
+from django.db import transaction
+from django.db.models import BigIntegerField, Case, CharField, Exists, OuterRef, Subquery, Sum, Value, When
+from django.db.models.functions import Coalesce
+
+from catalog.models import Item
+from .models import StockPosition, StockRecord, stock_delta_expression
+from .services import _create_record, _repeated_submission
+
+
+def common_items():
+    totals = StockRecord.objects.filter(position__item_id=OuterRef('pk'), voided_at__isnull=True).order_by().values(
+        'position__item_id',
+    ).annotate(total=Sum(stock_delta_expression())).values('total')
+    return Item.objects.annotate(
+        total=Coalesce(Subquery(totals, output_field=BigIntegerField()), Value(0), output_field=BigIntegerField()),
+        type_label=Case(When(item_type=Item.Type.EPP, then=Value('EPP')),
+                        default=Value('Señalética'), output_field=CharField()),
+    ).order_by('name', 'pk')
+
+
+def common_records(item):
+    return StockRecord.objects.filter(position__item=item).select_related(
+        'position__item', 'position__project', 'replaces__position', 'replacement__position',
+    ).annotate(
+        delta_quantity=stock_delta_expression(),
+        has_replacement=Exists(StockRecord.objects.filter(replaces_id=OuterRef('pk'))),
+        operation_label=Case(*[When(operation=key, then=Value(label)) for key, label in StockRecord.Operation.choices],
+                             output_field=CharField()),
+        state_label=Case(When(voided_at__isnull=True, then=Value('Vigente')),
+                         When(replacement__isnull=False, then=Value('Sustituido')),
+                         default=Value('Anulado'), output_field=CharField()),
+        origin_label=Coalesce('position__project__name', Value('Empresa'), output_field=CharField()),
+    ).order_by('-occurred_on', '-pk')
+
+
+@transaction.atomic
+def receive_common_stock(item, data):
+    # Serializes creation of the common position and retries for this item.
+    item = Item.objects.select_for_update().get(pk=item.pk)
+    position, _ = StockPosition.objects.get_or_create(project=None, item=item)
+    position = StockPosition.objects.select_for_update().get(pk=position.pk)
+    repeated = _repeated_submission(position, StockRecord.Operation.RECEIPT, data)
+    return repeated or _create_record(position, StockRecord.Operation.RECEIPT, data)

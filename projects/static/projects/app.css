@@ -23,6 +23,7 @@ a { text-underline-offset: .2em; }
 .nav-link { display: flex; align-items: center; gap: 12px; padding: 13px 12px; color: var(--app-border); border-radius: 8px; text-decoration: none; font-size: .9rem; font-weight: 500; white-space: nowrap; }
 .nav-link::before { content: ''; flex-shrink: 0; width: 20px; height: 20px; background: currentColor; mask: url('folder.svg') center / contain no-repeat; }
 .nav-home::before { mask-image: url('home.svg'); }
+.nav-stock::before { mask-image: url('stock.svg'); }
 .nav-catalog::before { mask-image: url('grid.svg'); }
 .nav-link:hover { color: var(--app-surface); background: var(--app-secondary); }
 .nav-link.active { background: var(--app-surface); color: var(--app-primary); font-weight: 650; }

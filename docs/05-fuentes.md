@@ -3,7 +3,7 @@
 ## Procedencia
 Base reconstruida el 12 de noviembre de 2026 a partir del historial recuperado del proyecto de la amiga prevencionista, principalmente la conversación «Recordar proyecto amiga». No es una transcripción completa ni una revisión del repositorio. Las fechas se usan para localizar conversaciones, sin convertir marcas técnicas en horas locales.
 
-Los códigos S0–S20 son referencias internas de las fuentes, no IDs de decisiones previamente aprobadas.
+Los códigos S0–S21 son referencias internas de las fuentes, no IDs de decisiones previamente aprobadas.
 
 | Ref. | Conversación o momento | Evidencia recuperada |
 |---|---|---|
@@ -264,6 +264,17 @@ reglas o datos de inventario, ni commit ni push en esta entrega.
 
 Esta es una instrucción nueva del usuario, no un acuerdo histórico recuperado.
 La implementación y reutilización se explican en [09-componentes-y-datatables.md](09-componentes-y-datatables.md).
+
+## S21 — Entregas históricas sin solicitud
+
+Al continuar el desarrollo después de publicar S20, el usuario confirmó que las
+entregas anteriores sin solicitud podrán corregirse/anularse y ajustar el stock
+común sin crear ni reservar una solicitud ficticia. No deben convertirse en
+solicitudes retrospectivas.
+
+El primer incremento de consulta y entradas comunes se documenta en
+[10-inventario-comun.md](10-inventario-comun.md). La transición completa a
+solicitudes/reservas sigue pendiente de implementación.
 
 ## Qué se excluyó
 - La idea de junio de automatizar documentos para distintos profesionales: no corresponde a este producto. Se excluyen sus requisitos de plantillas, generación PDF/Excel, IPER, AST, reportes de incidentes y charlas.

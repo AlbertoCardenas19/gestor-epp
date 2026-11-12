@@ -7,6 +7,7 @@
   <h1 class="text-break">{{ item.name }}</h1>
 
 </div>
+<a class="btn btn-primary mb-4" href="{% url 'stock:history' item.pk %}">Ver inventario común</a>
 <section class="card"><div class="card-body p-4 p-md-5">
   <dl class="mb-4"><dt>Tipo</dt><dd>{{ item.get_item_type_display }}</dd></dl>
   <h2 class="h5 mb-3">Descripción</h2>

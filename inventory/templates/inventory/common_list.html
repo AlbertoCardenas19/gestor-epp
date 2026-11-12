@@ -1,0 +1,16 @@
+{% extends 'projects/base.html' %}
+{% block title %}Inventario común{% endblock %}
+{% block extra_styles %}{% include 'projects/datatables_styles.html' %}{% endblock %}
+{% block extra_scripts %}{% include 'projects/datatables_scripts.html' %}{% endblock %}
+{% block content %}
+<h1 class="mb-4">Inventario común</h1>
+<section data-datatable-panel>
+<p class="small text-danger" role="alert" data-datatable-error hidden></p>
+<div class="card datatable-shell"><div class="card-body">
+<table class="table table-striped mb-0 align-middle" style="width:100%" data-datatable data-source="{% url 'stock:data' %}" data-order='[[0,"asc"]]'>
+<caption class="visually-hidden">Existencias comunes de la empresa</caption>
+<thead><tr><th data-column="name" scope="col">Elemento</th><th data-column="type" scope="col">Tipo</th><th data-column="quantity" scope="col">Existencias</th><th data-column="actions" data-actions scope="col">Acciones</th></tr></thead><tbody></tbody>
+</table>
+</div></div>
+</section>
+{% endblock %}

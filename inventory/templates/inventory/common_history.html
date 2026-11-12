@@ -1,0 +1,19 @@
+{% extends 'projects/base.html' %}
+{% block title %}{{ item.name }} · Inventario común{% endblock %}
+{% block extra_styles %}{% include 'projects/datatables_styles.html' %}{% endblock %}
+{% block extra_scripts %}{% include 'projects/datatables_scripts.html' %}{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'stock:list' %}">← Volver al inventario común</a>
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mt-4 mb-4"><h1 class="text-break">{{ item.name }}</h1><a class="btn btn-primary" href="{% url 'stock:receive' item.pk %}">Registrar entrada</a></div>
+<div class="card balance-card mb-4"><div class="card-body p-4"><p class="text-body-secondary mb-1">Existencias comunes</p><p class="fs-1 fw-semibold mb-0" data-testid="common-balance">{{ balance }}</p></div></div>
+<h2 class="h4 mb-4">Historial</h2>
+<section data-datatable-panel>
+<p class="small text-danger" role="alert" data-datatable-error hidden></p>
+<div class="card datatable-shell"><div class="card-body">
+<table class="table table-striped mb-0 align-middle" style="width:100%" data-datatable data-source="{% url 'stock:history-data' item.pk %}" data-order='[[0,"desc"]]'>
+<caption class="visually-hidden">Historial común de {{ item.name }}</caption>
+<thead><tr><th data-column="date" data-format="date" scope="col">Fecha</th><th data-column="operation" scope="col">Movimiento</th><th data-column="origin" scope="col">Origen</th><th data-column="quantity" scope="col">Cantidad</th><th data-column="state" scope="col">Estado</th><th data-column="actions" data-actions scope="col">Acciones</th></tr></thead><tbody></tbody>
+</table>
+</div></div>
+</section>
+{% endblock %}

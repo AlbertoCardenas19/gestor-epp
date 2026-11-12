@@ -543,3 +543,19 @@ Firefox se intentó ejecutar; sigue faltando el binario. Sin commit ni push.
 Versiones, reemplazos, configuración reutilizable, pruebas reproducibles y pasos
 para PC están en [09-componentes-y-datatables.md](09-componentes-y-datatables.md).
 El estado de continuidad está en [09-continuidad-ui.md](09-continuidad-ui.md).
+
+
+## Primer incremento de inventario común — S16/S19/S21, RF-04/RF-05
+
+Se implementan consulta, historial, entradas de empresa y corrección de esas
+entradas. Se agregan sin duplicar los saldos de todos los movimientos anteriores.
+La migración 0003 permite posiciones de empresa sin proyecto y garantiza una por
+elemento, sin modificar los registros históricos. Durante la transición se
+conservan el inventario y las entregas anteriores por proyecto.
+
+Verificación: 138 pruebas PostgreSQL aprobadas y 4 pruebas de navegador en base
+temporal. Incluyen conservación mediante migración desde 0002, saldos, rollback,
+CSRF, formularios, correcciones, reintentos y concurrencia de entradas comunes.
+Chromium comprobó el flujo 14 → 19 → 17 → 20 y menús/tablas a 320/390/1440 píxeles.
+No hay bibliotecas nuevas. Solicitudes/reservas y sus entregas siguen pendientes.
+Guía de implementación y pasos Ubuntu: [10-inventario-comun.md](10-inventario-comun.md).

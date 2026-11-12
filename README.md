@@ -6,7 +6,8 @@ Actualmente puedes:
 
 - Crear, listar y consultar proyectos.
 - Crear y consultar un catálogo común de EPP y señaléticas.
-- Registrar existencias iniciales y entradas por proyecto.
+- Consultar existencias e historial común de empresa y registrar/corregir entradas.
+- Conservar las existencias iniciales y entradas anteriores por proyecto durante la transición.
 - Consultar saldos e historial y corregir registros conservando sus originales.
 - Registrar entregas directas a trabajadores por nombre completo, descontando
   unidades del inventario del proyecto sin permitir superar el saldo disponible.
@@ -124,6 +125,10 @@ presiona `Ctrl+C`. Las próximas veces solo necesitas iniciar PostgreSQL y ejecu
 Los datos que registres se guardan en tu PostgreSQL local. No se incluyen bases
 de datos ni registros de prueba de la nube en GitHub.
 
+Para probar el nuevo inventario: abre «Inventario común», consulta un elemento y
+usa «Registrar entrada». Indica cantidad, fecha y observación opcional; desde el
+registro puedes corregirlo con motivo y consultar ambas versiones.
+
 ## Comprobaciones
 
 Con PostgreSQL en ejecución y `.env` configurado:
@@ -148,11 +153,12 @@ no se necesita npm ni conexión a un CDN para ejecutar la app.
 ## Documentación
 
 - [DataTables, componentes CoreUI y pruebas](docs/09-componentes-y-datatables.md).
+- [Inventario común y migración 0003](docs/10-inventario-comun.md).
 - [Requisitos, acuerdos y pendientes](docs/README.md).
 - [Desarrollo en el entorno de nube y detalles de implementación](docs/06-desarrollo.md).
 - [Prueba manual de corrección y anulación de entregas](docs/07-iteraciones-entregas.md#recorrido-manual-para-ambas-iteraciones).
 
 
-El stock común de empresa y las solicitudes por proyecto con reserva están
-acordándose para un próximo cambio; todavía no sustituyen el inventario por
-proyecto de esta versión. Consulta [las decisiones y pendientes](docs/05-fuentes.md#s16--revisión-del-flujo-stock-común-y-solicitudes-por-proyecto).
+La consulta y las entradas del stock común están implementadas (requieren migración
+0003). Las solicitudes con reserva y sus entregas todavía no sustituyen el flujo
+anterior por proyecto. Consulta [las decisiones y pendientes](docs/05-fuentes.md#s16--revisión-del-flujo-stock-común-y-solicitudes-por-proyecto).

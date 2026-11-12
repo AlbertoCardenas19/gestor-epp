@@ -180,6 +180,72 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         balance = opening.position.balance
         return project, item, replacement, balance, len(records)
 
+    @staticmethod
+    def seed_common_stock():
+        north = Project.objects.create(name='Norte')
+        south = Project.objects.create(name='Sur')
+        helmet = Item.objects.create(name='Casco', item_type=Item.Type.EPP)
+        Item.objects.create(name='Guantes', item_type=Item.Type.EPP)
+        open_stock(north, helmet, data(10))
+        open_stock(south, helmet, data(7))
+        delivery = deliver_stock(north, helmet, data(3, worker_full_name='Ana Pérez'))
+        return north, helmet, delivery
+
+    def test_common_stock_receipt_correction_and_legacy_traceability(self):
+        north, item, delivery = self.db(self.seed_common_stock)
+        self.visit_table(reverse('stock:list'))
+        expect(self.rows().nth(1).locator('td').nth(1)).to_have_text('EPP')
+        expect(self.rows().nth(1).locator('td').nth(2)).to_have_text('0')
+        result = self.search('Casco')
+        self.assertEqual(result['data'][0]['quantity'], '14')
+        self.rows().get_by_role('button', name=re.compile('^Acciones de')).click()
+        self.page.locator('.dropdown-menu.show').get_by_role('link', name='Registrar entrada', exact=True).click()
+        self.page.get_by_label('Cantidad', exact=False).fill('5')
+        self.page.get_by_label('Fecha del conteo o recepción', exact=False).fill('2026-11-12')
+        self.page.get_by_label('Observación', exact=False).fill('Entrada de empresa')
+        self.page.get_by_role('button', name='Guardar entrada', exact=True).click()
+        expect(self.page.get_by_test_id('common-balance')).to_have_text('19')
+        original_url = self.page.url
+        self.page.get_by_role('link', name='Corregir entrada', exact=True).click()
+        self.page.get_by_label('Cantidad', exact=False).fill('3')
+        self.page.get_by_label('Motivo de la corrección', exact=False).fill('Cantidad revisada')
+        self.page.get_by_role('button', name='Guardar corrección', exact=True).click()
+        expect(self.page.get_by_test_id('common-balance')).to_have_text('17')
+        replacement_url = self.page.url
+        self.page.get_by_role('link', name='Ver registro anterior', exact=True).click()
+        self.assertEqual(self.page.url, original_url)
+        expect(self.page.get_by_text('Cantidad revisada', exact=False)).to_be_visible()
+        expect(self.page.get_by_role('link', name='Corregir entrada', exact=True)).to_have_count(0)
+        self.page.get_by_role('link', name='Ver reemplazo', exact=True).click()
+        self.assertEqual(self.page.url, replacement_url)
+        self.visit_table(reverse('stock:history', args=[item.pk]))
+        result = self.search('Empresa')
+        self.assertEqual(result['recordsFiltered'], 2)
+        expect(self.page.get_by_test_id('common-balance')).to_have_text('17')
+        # Historical deliveries keep their original URL and contribute once to the common total.
+        self.page.goto(self.live_server_url + reverse('stock:record', args=[item.pk, delivery.pk]))
+        self.page.get_by_role('link', name='Ver historial del proyecto', exact=True).click()
+        self.page.locator(f'#registro-{delivery.pk}').get_by_role('link', name=re.compile('^Anular entrega')).click()
+        self.page.get_by_label('Motivo de la anulación', exact=False).fill('Entrega histórica duplicada')
+        self.page.get_by_role('button', name='Confirmar anulación', exact=True).click()
+        self.visit_table(reverse('stock:history', args=[item.pk]))
+        expect(self.page.get_by_test_id('common-balance')).to_have_text('20')
+        for width in [320, 390, 1440]:
+            self.page.set_viewport_size({'width': width, 'height': 900})
+            self.visit_table(reverse('stock:list'))
+            if self.page.locator('.sidebar-toggle').get_attribute('aria-expanded') == 'true':
+                self.page.locator('.sidebar-toggle').click()
+                self.page.wait_for_timeout(300)
+            self.page.wait_for_function('Math.abs(document.querySelector(".dt-scroll-head table").getBoundingClientRect().width - document.querySelector(".dt-scroll-body table").getBoundingClientRect().width) < 2')
+            self.rows().first.get_by_role('button', name=re.compile('^Acciones de')).click()
+            menu = self.page.locator('.dropdown-menu.show')
+            expect(menu).to_be_visible()
+            hit = menu.locator('a').first.evaluate('(e)=>{const r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}')
+            self.assertTrue(hit)
+            self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+            self.capture(f'common-stock-{width}')
+            self.page.keyboard.press('Escape')
+
     def test_mobile_menu_clipping_sidebar_and_project_cards(self):
         projects = self.db(lambda: [Project.objects.create(name=f'Obra {i:02d}') for i in range(14)])
         self.db(lambda: Item.objects.bulk_create([Item(name=f'Elemento {i:02d}', item_type=Item.Type.EPP) for i in range(14)]))

@@ -13,17 +13,31 @@ def stock_delta_expression(prefix=''):
 
 
 class StockPosition(models.Model):
-    project = models.ForeignKey('projects.Project', on_delete=models.PROTECT, related_name='stock_positions')
+    project = models.ForeignKey('projects.Project', on_delete=models.PROTECT, related_name='stock_positions', null=True, blank=True)
     item = models.ForeignKey('catalog.Item', on_delete=models.PROTECT, related_name='stock_positions')
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=['project', 'item'], name='inventory_project_item_unique')]
+        constraints = [
+            models.UniqueConstraint(fields=['project', 'item'], name='inventory_project_item_unique'),
+            models.UniqueConstraint(fields=['item'], condition=Q(project__isnull=True), name='inventory_one_common_position'),
+        ]
 
     @property
     def balance(self):
+        if self.project_id is None:
+            return self.common_balance(self.item_id)
         return self.records.filter(voided_at__isnull=True).aggregate(total=Sum(stock_delta_expression()))['total'] or 0
 
+    @staticmethod
+    def common_balance(item_id):
+        # One source of truth: existing ledger + new common records, never copied balances.
+        return StockRecord.objects.filter(position__item_id=item_id, voided_at__isnull=True).aggregate(
+            total=Sum(stock_delta_expression()),
+        )['total'] or 0
+
     def get_absolute_url(self):
+        if self.project_id is None:
+            return reverse('stock:history', args=[self.item_id])
         return reverse('inventory:history', args=[self.project_id, self.item_id])
 
 
@@ -73,6 +87,8 @@ class StockRecord(models.Model):
         return -self.quantity if self.operation == self.Operation.DELIVERY else self.quantity
 
     def get_absolute_url(self):
+        if self.position.project_id is None:
+            return reverse('stock:record', args=[self.position.item_id, self.pk])
         return self.position.get_absolute_url() + f'#registro-{self.pk}'
 
     @property

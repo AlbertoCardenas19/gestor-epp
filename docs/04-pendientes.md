@@ -35,8 +35,9 @@ son de prueba; no se ha solicitado borrarlos.
 S19 confirma trasladar los saldos anteriores al stock común, conservar historial
 y devolver unidades a la reserva pendiente de la misma solicitud al reducir o
 anular una entrega. Las correcciones entre proyectos/elementos requieren una
-solicitud existente de destino con pendiente suficiente. Resta implementar y
-verificar la transición conforme al [diseño](08-stock-comun-y-solicitudes.md).
+solicitud existente de destino con pendiente suficiente. Se implementaron consulta y entradas comunes conservando los saldos anteriores
+([guía 10](10-inventario-comun.md)); resta incorporar solicitudes, reservas y su
+flujo de entregas conforme al [diseño](08-stock-comun-y-solicitudes.md).
 No se convierte una corrección/anulación de entrega en devolución física.
 
 ## Recomendaciones anteriores que no son decisiones cerradas

@@ -1,0 +1,23 @@
+{% extends 'projects/base.html' %}
+{% block title %}Registro de {{ item.name }}{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'stock:history' item.pk %}">← Volver al historial común</a>
+<h1 class="text-break mt-4 mb-4">{{ item.name }}</h1>
+<div class="card mb-4" id="registro-{{ record.pk }}"><div class="card-body p-4">
+<h2 class="h4">{{ record.get_operation_display }}</h2>
+<dl><dt>Cantidad</dt><dd>{{ record.quantity }}</dd><dt>Fecha del hecho</dt><dd>{{ record.occurred_on|date:'d/m/Y' }}</dd><dt>Origen</dt><dd>{{ record.position.project.name|default:'Empresa' }}</dd><dt>Estado</dt><dd>{{ record.state_label }}</dd></dl>
+{% if record.worker_full_name %}<p class="text-break"><strong>Trabajador:</strong> {{ record.worker_full_name }}</p>{% endif %}
+{% if record.observation %}<p class="text-break"><strong>Observación:</strong> {{ record.observation|linebreaksbr }}</p>{% endif %}
+{% if record.voided_at %}<p class="text-break"><strong>Motivo:</strong> {{ record.void_reason }}</p><p>{{ record.state_label }} el {{ record.voided_at|date:'d/m/Y H:i:s T' }}.</p>{% endif %}
+{% if record.replaces_id %}<a href="{{ record.replaces.get_absolute_url }}">Ver registro anterior</a>{% endif %}
+{% if record.is_replaced %}<a href="{{ record.replacement.get_absolute_url }}">Ver reemplazo</a>{% endif %}
+<div class="d-flex flex-wrap gap-3 mt-4">
+{% if record.position.project_id %}
+<a href="{{ record.get_absolute_url }}">Ver historial del proyecto</a>
+{% elif not record.voided_at %}
+<a class="btn btn-primary" href="{% url 'stock:correct' item.pk record.pk %}">Corregir entrada</a>
+{% endif %}
+</div>
+</div></div>
+<p class="fw-semibold">Existencias comunes actuales: <span data-testid="common-balance">{{ balance }}</span></p>
+{% endblock %}
