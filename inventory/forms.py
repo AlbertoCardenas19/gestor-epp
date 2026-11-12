@@ -4,6 +4,8 @@ from django import forms
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 from .models import StockRecord
+from catalog.models import Item
+from projects.models import Project
 
 
 class StockForm(forms.Form):
@@ -27,7 +29,7 @@ class StockForm(forms.Form):
             for name in self.errors:
                 if name in self.fields and not self.fields[name].widget.is_hidden:
                     self.fields[name].widget.attrs.update({
-                        'class': 'form-control is-invalid', 'aria-invalid': 'true',
+                        'class': f"{self.fields[name].widget.attrs.get('class', 'form-control')} is-invalid", 'aria-invalid': 'true',
                         'aria-describedby': f'id_{name}_errors',
                     })
 
@@ -43,3 +45,18 @@ class DeliveryForm(StockForm):
         widget=forms.TextInput(attrs={'class': 'form-control', 'autocomplete': 'off'}),
     )
     field_order = ['worker_full_name', 'quantity', 'occurred_on', 'observation', 'submission_key']
+
+
+class DeliveryCorrectionForm(DeliveryForm):
+    destination_project = forms.ModelChoiceField(
+        label='Proyecto', queryset=Project.objects.all(), empty_label='Selecciona un proyecto',
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
+    destination_item = forms.ModelChoiceField(
+        label='Elemento', queryset=Item.objects.all(), empty_label='Selecciona un elemento',
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
+    reason = forms.CharField(label='Motivo de la corrección',
+                             widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
+    field_order = ['destination_project', 'destination_item', 'worker_full_name', 'quantity',
+                   'occurred_on', 'observation', 'reason', 'submission_key']

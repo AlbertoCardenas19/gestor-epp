@@ -6,10 +6,13 @@
   <p class="eyebrow text-break">{{ project.name }} · {{ item.name }}</p>
   <h1>Corregir registro</h1>
   <p>{{ original.get_operation_display }} · {{ original.quantity }} unidades · {{ original.occurred_on|date:'d/m/Y' }}</p>
+  {% if original.worker_full_name %}<p class="text-break"><strong>Destinatario original:</strong> {{ original.worker_full_name }}</p>{% endif %}
+  {% if original.observation %}<p class="text-break"><strong>Observación original:</strong> {{ original.observation }}</p>{% endif %}
   {% if original.voided_at %}
     <div class="alert alert-info">Este registro ya fue corregido. Abre el registro vigente para corregirlo.</div>
   {% else %}
-    <p class="text-body-secondary">Al guardar se anulará el original y se creará un reemplazo vinculado. El saldo contará solo el registro correcto.</p>
+    <p class="text-body-secondary">Al guardar se conservará el original como sustituido y se creará un reemplazo vinculado. El saldo contará solo el registro correcto.</p>
+    {% if original.operation == 'delivery' %}<p class="text-body-secondary">Si cambias proyecto o elemento, se rectificará el descuento en ambas posiciones. El destino necesita apertura y saldo suficiente. Esto no registra una transferencia física.</p>{% endif %}
     <div class="card"><div class="card-body p-4"><form method="post" novalidate>
       {% include 'inventory/fields.html' %}
       <div class="d-flex flex-column flex-sm-row gap-2">

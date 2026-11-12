@@ -12,8 +12,10 @@ Actualmente puedes:
   unidades del inventario del proyecto sin permitir superar el saldo disponible.
 
 Las entregas directas se descuentan; intermediarios, devoluciones y reposiciones
-siguen pendientes. Las correcciones actuales son de aperturas y entradas;
-la corrección de entregas aún no está habilitada. Esta versión está
+siguen pendientes. Se pueden corregir aperturas, entradas y entregas mediante
+reemplazos vinculados. En entregas se pueden rectificar los seis campos, incluido
+proyecto o elemento, conservando el original y validando ambos saldos.
+La anulación de una entrega sin reemplazo sigue pendiente. Esta versión está
 preparada para pruebas locales; cuentas, permisos y despliegue público siguen pendientes.
 
 ## Probar en tu PC

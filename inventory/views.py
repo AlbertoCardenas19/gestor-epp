@@ -7,7 +7,7 @@ from django.views.generic import FormView, TemplateView
 from catalog.models import Item
 from projects.models import Project
 
-from .forms import CorrectionForm, DeliveryForm, StockForm
+from .forms import CorrectionForm, DeliveryCorrectionForm, DeliveryForm, StockForm
 from .models import StockPosition, StockRecord, stock_delta_expression
 from .services import correct_record, deliver_stock, open_stock, receive_stock
 
@@ -49,7 +49,7 @@ class HistoryView(ProjectItemMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         position = StockPosition.objects.filter(project=self.project, item=self.item).first()
-        records = list(position.records.select_related('replaces', 'replacement')) if position else []
+        records = list(position.records.select_related('position', 'replaces__position', 'replacement__position')) if position else []
         balance = sum(record.delta for record in records if record.voided_at is None)
         return super().get_context_data(position=position, records=records, balance=balance, **kwargs)
 
@@ -93,14 +93,20 @@ class CorrectionView(ProjectItemMixin, FormView):
     form_class = CorrectionForm
 
     def get_original(self):
-        return get_object_or_404(StockRecord.objects.exclude(operation=StockRecord.Operation.DELIVERY), pk=self.kwargs['record_pk'],
+        return get_object_or_404(StockRecord, pk=self.kwargs['record_pk'],
                                  position__project=self.project, position__item=self.item)
+
+    def get_form_class(self):
+        return DeliveryCorrectionForm if self.get_original().operation == StockRecord.Operation.DELIVERY else CorrectionForm
 
     def get_form_kwargs(self):
         original = self.get_original()
         kwargs = super().get_form_kwargs()
         kwargs['operation'] = original.operation
         kwargs['initial'].update({key: getattr(original, key) for key in ['quantity', 'occurred_on', 'observation']})
+        if original.operation == StockRecord.Operation.DELIVERY:
+            kwargs['initial'].update(destination_project=self.project.pk, destination_item=self.item.pk,
+                                     worker_full_name=original.worker_full_name)
         return kwargs
 
     def get_context_data(self, **kwargs):
@@ -113,5 +119,5 @@ class CorrectionView(ProjectItemMixin, FormView):
         except ValidationError as error:
             form.add_error(None, error.messages)
             return self.form_invalid(form)
-        messages.success(self.request, 'Corrección guardada. El original se conserva anulado en el historial.')
-        return redirect(record.position.get_absolute_url() + f'#registro-{record.pk}')
+        messages.success(self.request, 'Corrección guardada. El original se conserva sustituido en el historial.')
+        return redirect(record.get_absolute_url())

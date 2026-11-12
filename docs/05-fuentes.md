@@ -3,7 +3,7 @@
 ## Procedencia
 Base reconstruida el 12 de noviembre de 2026 a partir del historial recuperado del proyecto de la amiga prevencionista, principalmente la conversación «Recordar proyecto amiga». No es una transcripción completa ni una revisión del repositorio. Las fechas se usan para localizar conversaciones, sin convertir marcas técnicas en horas locales.
 
-Los códigos S0–S10 son referencias internas de las fuentes, no IDs de decisiones previamente aprobadas.
+Los códigos S0–S12 son referencias internas de las fuentes, no IDs de decisiones previamente aprobadas.
 
 | Ref. | Conversación o momento | Evidencia recuperada |
 |---|---|---|
@@ -100,6 +100,39 @@ La aclaración 13 precisa las respuestas 7 y 8: no asignar finanzas a la prevenc
 - Las respuestas no cierran la corrección o anulación de entregas, ni el futuro
   flujo con intermediarios, RUT, cuentas, firmas, devoluciones o reposiciones.
 - Estas decisiones corresponden a la primera versión y no impiden revisarlas.
+
+## S11 — Alcance de las dos siguientes iteraciones
+
+12 de noviembre de 2026, instrucciones posteriores del usuario:
+
+- Confirmó haber descargado y probado las entregas directas en su PC.
+- Ratificó entrega directa con destinatario, elemento, proyecto, cantidad, fecha
+  y observación opcional, conservando descuento, bloqueo por saldo insuficiente
+  y destinatario visible en el historial. No se implementarán intermediarios.
+- Solicitó acordar las reglas antes de implementar correcciones en la primera
+  iteración y, después, acordar e implementar la anulación en una segunda.
+- Excluyó las devoluciones físicas de estas dos iteraciones. La propuesta previa
+  del asistente de hacer devoluciones como segunda iteración queda descartada.
+- Pidió pruebas por iteración, revisión en escritorio y móvil y Firefox si está
+  disponible, documentación de acuerdos y un commit separado por iteración, sin push.
+- Al formular esta solicitud no había aprobado los campos editables, el mecanismo
+  ni los efectos concretos de corrección o anulación. S12 recoge la aprobación
+  posterior de la corrección; la anulación sigue pendiente.
+
+## S12 — Corrección de entregas aprobada
+
+12 de noviembre de 2026, el usuario respondió «sí a todo» a las tres decisiones
+necesarias de la primera iteración:
+
+- Permitir corregir destinatario, elemento, proyecto, cantidad, fecha y observación.
+- Conservar el original, exigir motivo y crear un reemplazo vinculado, corrigiendo
+  únicamente el registro vigente y manteniendo la cadena de correcciones.
+- Aplicar el ajuste neto en una misma posición o revertir el descuento anterior
+  y aplicar el correcto si cambia proyecto o elemento. Si el destino no tiene
+  apertura o saldo suficiente, rechazar por completo sin cambiar registros ni saldos.
+
+La anulación sin reemplazo sigue sin reglas acordadas y corresponde a la segunda
+iteración. Las devoluciones físicas permanecen fuera de ambas iteraciones.
 
 ## Qué se excluyó
 - La idea de junio de automatizar documentos para distintos profesionales: no corresponde a este producto. Se excluyen sus requisitos de plantillas, generación PDF/Excel, IPER, AST, reportes de incidentes y charlas.

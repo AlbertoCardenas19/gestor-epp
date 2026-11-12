@@ -159,9 +159,9 @@ class DirectDeliveryTests(TestCase):
         self.assertEqual(self.opening.position.balance, 3)
         self.assertEqual(StockRecord.objects.count(), 3)
 
-    def test_delivery_corrections_remain_disabled(self):
+    def test_delivery_correction_requires_complete_destination_data(self):
         delivery = self.deliver()
-        self.assertEqual(self.client.get(self.url('correct', delivery.pk)).status_code, 404)
+        self.assertEqual(self.client.get(self.url('correct', delivery.pk)).status_code, 200)
         with self.assertRaises(ValidationError):
             correct_record(self.project, delivery.pk, data(2, reason='Cambio'))
         self.assertEqual(self.opening.position.balance, 7)

@@ -77,10 +77,49 @@ def deliver_stock(project, item, data):
 
 
 @transaction.atomic
+def correct_delivery(project, record_id, data):
+    original = StockRecord.objects.get(pk=record_id, position__project=project)
+    if original.operation != StockRecord.Operation.DELIVERY:
+        raise ValidationError('Este registro no es una entrega directa.')
+    destination_project = data.get('destination_project')
+    destination_item = data.get('destination_item')
+    if destination_project is None or destination_item is None:
+        raise ValidationError('Selecciona el proyecto y el elemento correctos.')
+    destination = StockPosition.objects.filter(project=destination_project, item=destination_item).first()
+    if destination is None:
+        raise ValidationError('El destino no tiene apertura. Registra primero su existencia inicial.')
+
+    # Un orden global de bloqueo evita ciclos cuando dos correcciones cruzan posiciones.
+    positions = {position.pk: position for position in StockPosition.objects.select_for_update().filter(
+        pk__in=[original.position_id, destination.pk],
+    ).order_by('pk')}
+    source = positions[original.position_id]
+    destination = positions[destination.pk]
+    original.refresh_from_db()
+    repeated = _repeated_submission(destination, StockRecord.Operation.DELIVERY, data, replaces=original)
+    if repeated:
+        return repeated
+    if original.voided_at is not None:
+        raise ValidationError('Este registro ya fue corregido. Abre el registro vigente para corregirlo.')
+    if not destination.records.filter(operation=StockRecord.Operation.OPENING, voided_at__isnull=True).exists():
+        raise ValidationError('El destino no tiene apertura. Registra primero su existencia inicial.')
+    reason = data.get('reason', '').strip()
+    if not reason:
+        raise ValidationError('Escribe el motivo de la corrección.')
+    original.voided_at = timezone.now()
+    original.void_reason = reason
+    original.save(update_fields=['voided_at', 'void_reason'])
+    replacement = _create_record(destination, StockRecord.Operation.DELIVERY, data, replaces=original)
+    if source.balance < 0 or destination.balance < 0:
+        raise ValidationError('La corrección supera el saldo disponible. No se modificó ningún registro ni saldo.')
+    return replacement
+
+
+@transaction.atomic
 def correct_record(project, record_id, data):
     original = StockRecord.objects.get(pk=record_id, position__project=project)
     if original.operation == StockRecord.Operation.DELIVERY:
-        raise ValidationError('La corrección de entregas todavía no está habilitada.')
+        return correct_delivery(project, record_id, data)
     position = StockPosition.objects.select_for_update().get(pk=original.position_id)
     original.refresh_from_db()
     repeated = _repeated_submission(position, original.operation, data, replaces=original)

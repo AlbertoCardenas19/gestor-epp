@@ -217,10 +217,10 @@ Límites de esta versión:
 - El saldo registrado no descuenta entregas efectuadas fuera de la aplicación.
 - La fecha debe ser válida; reglas adicionales sobre retroactividad o fechas
   futuras siguen pendientes. Las horas de registro muestran su zona horaria.
-- La corrección mantiene proyecto, elemento y clase de operación; corregir una
-  asignación a otro proyecto o elemento requiere definir ese flujo posteriormente.
-- Las correcciones actuales son de aperturas y entradas; la corrección o anulación
-  de entregas debe acordarse antes de habilitarla. No se ofrece ese enlace en sus registros.
+- Las correcciones de aperturas y entradas mantienen proyecto, elemento y operación.
+  En entregas, S12 permite corregir también proyecto, elemento y destinatario.
+- La corrección de entregas está habilitada; la anulación sin reemplazo aún debe
+  acordarse en la segunda iteración y no tiene acción disponible.
 
 Validación: migración `inventory/0001_initial.py` aplicada y 50 pruebas aprobadas
 en PostgreSQL (23 previas y 27 de inventario). Incluyen concurrencia, reenvíos,
@@ -292,6 +292,48 @@ Comprobaciones realizadas:
 - Formulario, historial e inventario sin desbordamiento a 320 píxeles. Los datos
   exclusivos de la prueba de navegador se retiraron.
 
-Este avance cubre el flujo directo. Intermediarios, corrección o anulación de
-entregas, devoluciones y reposiciones siguen pendientes de definición; no se
-presentan como funcionalidades ya implementadas.
+Al cerrar el primer avance de entregas directas quedaron pendientes intermediarios,
+corrección, anulación, devoluciones y reposiciones. Posteriormente S12 aprobó la
+corrección de entregas, implementada en la primera iteración descrita más abajo.
+Las demás funcionalidades no se presentan como ya implementadas.
+
+## Siguientes dos iteraciones — S11
+
+El alcance ratificado es entrega directa al trabajador, conservando los campos,
+el descuento y el control de saldo actuales. Se trabaja primero en corrección
+y después en anulación de registros equivocados, acordando las reglas antes de
+cada implementación. Las devoluciones físicas quedan fuera. Cada iteración cierra
+con sus comprobaciones y un commit propio, sin push. Los acuerdos y el diagnóstico
+se detallan en [07-iteraciones-entregas.md](07-iteraciones-entregas.md).
+
+## Iteración 1 completada — corrección de entregas, S12
+
+El formulario permite corregir destinatario, proyecto, elemento del catálogo,
+cantidad, fecha y observación, con motivo obligatorio. El original conserva todos
+esos datos y su fecha de captura; queda sustituido y enlazado a un reemplazo con
+su propia fecha de registro. Solo se puede corregir el registro vigente. Los
+enlaces entre historiales funcionan aunque cambie proyecto o elemento.
+
+En la misma posición se aplica el ajuste neto: saldo actual + cantidad anterior
+− cantidad corregida. Entre posiciones se revierte el descuento anterior y se
+aplica el nuevo. El destino debe tener apertura y saldo suficientes; no se generan
+aperturas ni entradas automáticas. Es una rectificación del registro, no un traslado
+de materiales. El servicio bloquea ambas posiciones en orden por identificador
+y aplica todo en una transacción. Un fallo conserva registros y saldos anteriores.
+
+Se reutilizan los campos de historial existentes: no hay migraciones ni paquetes
+nuevos. Pasaron 91 pruebas en PostgreSQL, incluidas las anteriores, validaciones,
+preservación del original, cadenas, enlaces, CSRF y correcciones cruzadas simultáneas.
+Chromium comprobó los seis campos, rechazos por apertura o saldo insuficiente,
+conservación de formulario, recarga y enlaces en escritorio y móvil, sin
+desbordamiento a 320/390/1440 píxeles. Firefox se intentó ejecutar, pero no está
+instalado (falta `/home/agent/.cache/ms-playwright/firefox-1538/firefox/firefox`).
+
+Ejemplo de navegador: dos entregas de 5 y 2 dejan el saldo Norte en 13; Sur tiene
+8. Corregir la primera a 3 en Sur deja Norte 18 y Sur 5. Corregir la segunda de
+2 a 4, manteniéndola en Norte, deja Norte 16 y Sur 5. Se comprobó el recorrido de
+ambos historiales y la conservación de nombres y datos originales. Los datos
+exclusivos de la comprobación se retiraron al cerrar la iteración.
+
+La siguiente iteración definirá anulación sin reemplazo, motivo, restitución única
+y distinción respecto de una devolución física. Todavía no está implementada.

@@ -71,3 +71,6 @@ class StockRecord(models.Model):
     @property
     def delta(self):
         return -self.quantity if self.operation == self.Operation.DELIVERY else self.quantity
+
+    def get_absolute_url(self):
+        return self.position.get_absolute_url() + f'#registro-{self.pk}'
