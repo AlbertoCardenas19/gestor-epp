@@ -110,31 +110,65 @@ class CatalogTableTests(TestCase):
         Item.objects.bulk_create([Item(name=f'Casco {i:02d}', item_type=Item.Type.EPP) for i in range(12)])
         Item.objects.create(name='Salida', item_type=Item.Type.SIGNAGE, description='Evacuación')
 
-    def test_pagination_and_search_by_name_type_and_description(self):
-        response = self.client.get(reverse('catalog:list'))
-        self.assertEqual(response.context['paginator'].count, 13)
-        self.assertEqual(len(response.context['items']), 10)
-        self.assertContains(response, '<table', count=1)
-        response = self.client.get(reverse('catalog:list'), {'q': 'Casco', 'sort': '-name', 'page': 2})
-        self.assertEqual([item.name for item in response.context['items']], ['Casco 01', 'Casco 00'])
-        self.assertContains(response, 'q=Casco')
-        for query in ['Señalética', 'Evacuación', 'Salida']:
-            response = self.client.get(reverse('catalog:list'), {'q': query})
-            self.assertEqual([item.name for item in response.context['items']], ['Salida'])
-
-    def test_invalid_parameters_and_empty_search(self):
-        response = self.client.get(reverse('catalog:list'), {'sort': 'invalid', 'per_page': '99999', 'page': '-1'})
-        self.assertEqual(response.context['sort'], 'name')
-        self.assertEqual(response.context['paginator'].per_page, 10)
+    def data(self, **parameters):
+        response = self.client.get(reverse('catalog:data'), parameters)
         self.assertEqual(response.status_code, 200)
-        response = self.client.get(reverse('catalog:list'), {'q': 'No existe'})
-        self.assertEqual(response.context['paginator'].count, 0)
-        self.assertContains(response, 'No hay elementos para esta consulta.')
+        return response.json()
 
+    def test_pagination_and_search_by_name_type_and_description(self):
+        result = self.data(draw=1)
+        self.assertEqual(result['draw'], 1)
+        self.assertEqual(result['recordsTotal'], 13)
+        self.assertEqual(len(result['data']), 10)
+        result = self.data(**{'search[value]': 'Casco', 'order[0][column]': 0, 'order[0][dir]': 'desc', 'start': 10})
+        self.assertEqual([item['name'] for item in result['data']], ['Casco 01', 'Casco 00'])
+        self.assertEqual(result['recordsFiltered'], 12)
+        for query in ['Señalética', 'Evacuación', 'Salida']:
+            result = self.data(**{'search[value]': query})
+            self.assertEqual([item['name'] for item in result['data']], ['Salida'])
+        result = self.data(**{'search[value]': 'Salida'})
+        self.assertEqual(result['recordsFiltered'], 1)
 
-    def test_descending_description_and_header_links(self):
-        response = self.client.get(reverse('catalog:list'), {'sort': '-description'})
-        self.assertEqual(response.context['items'][0].name, 'Salida')
-        self.assertContains(response, 'aria-sort="descending"')
-        self.assertNotContains(response, 'Ordenar por')
-        self.assertContains(response, 'popovertarget=')
+    def test_invalid_parameters_are_bounded_and_actions_are_not_searched_or_ordered(self):
+        result = self.data(**{'draw': '<script>', 'length': -1, 'start': -1, 'order[0][column]': 3,
+                              'order[0][dir]': 'desc', 'columns[0][data]': 'untrusted__field'})
+        self.assertEqual(result['draw'], 0)
+        self.assertEqual(len(result['data']), 10)
+        self.assertEqual(result['data'][0]['name'], 'Casco 00')
+        for query in ['No existe', 'Ver elemento', '.*']:
+            result = self.data(**{'search[value]': query, 'search[regex]': 'true'})
+            self.assertEqual(result['recordsFiltered'], 0)
+            self.assertEqual(result['data'], [])
+
+    def test_descending_description_and_bootstrap_integration(self):
+        result = self.data(**{'order[0][column]': 2, 'order[0][dir]': 'desc'})
+        self.assertEqual(result['data'][0]['name'], 'Salida')
+        self.assertIn('data-coreui-toggle="dropdown"', result['data'][0]['actions'])
+        response = self.client.get(reverse('catalog:list'))
+        for asset in ['dataTables.min.js', 'dataTables.bootstrap5.min.js', 'dataTables.bootstrap5.min.css',
+                      'jquery.min.js', 'coreui.bundle.min.js']:
+            self.assertContains(response, asset, count=1)
+        self.assertNotContains(response, 'data-live-cards')
+        self.assertNotContains(response, 'popovertarget')
+
+    def test_each_data_column_sorts_both_ways(self):
+        for column, key in [(0, 'name'), (1, 'type'), (2, 'description')]:
+            for direction in ['asc', 'desc']:
+                result = self.data(**{'length': 25, 'order[0][column]': column, 'order[0][dir]': direction})
+                values = [item[key] for item in result['data']]
+                # Empty descriptions are displayed as fallback text, so test the named field ordering separately.
+                if column != 2:
+                    self.assertEqual(values, sorted(values, reverse=direction == 'desc'))
+                else:
+                    self.assertEqual(result['data'][-1 if direction == 'asc' else 0]['name'], 'Salida')
+
+    def test_empty_one_row_and_read_only_endpoint(self):
+        Item.objects.all().delete()
+        self.assertEqual(self.data()['data'], [])
+        Item.objects.create(name='Único elemento', item_type=Item.Type.EPP)
+        result = self.data()
+        self.assertEqual(result['recordsTotal'], 1)
+        self.assertEqual(result['recordsFiltered'], 1)
+        self.assertEqual(len(result['data']), 1)
+        self.assertEqual(self.client.post(reverse('catalog:data'), {}).status_code, 405)
+        self.assertEqual(Item.objects.count(), 1)

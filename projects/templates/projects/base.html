@@ -6,15 +6,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Inicio{% endblock %} · Gestor EPP</title>
   <link rel="stylesheet" href="{% static 'vendor/coreui/coreui.min.css' %}">
+  {% block extra_styles %}{% endblock %}
   <link rel="stylesheet" href="{% static 'projects/app.css' %}">
   <link rel="icon" type="image/svg+xml" href="{% static 'projects/favicon.svg' %}">
-  <script src="{% static 'projects/sidebar.js' %}" defer></script>
-  <script src="{% static 'projects/table.js' %}" defer></script>
-  <script src="{% static 'projects/actions.js' %}" defer></script>
+  <script src="{% static 'vendor/coreui/coreui.bundle.min.js' %}" defer></script>
+  <script src="{% static 'projects/components.js' %}" defer></script>
+  {% block extra_scripts %}{% endblock %}
 </head>
 <body>
   <a class="visually-hidden-focusable skip-link" href="#contenido">Ir al contenido</a>
-  <aside class="app-sidebar" id="sidebar">
+  <aside class="sidebar app-sidebar" id="sidebar">
     <a class="brand" aria-label="Gestor EPP: inicio" href="{% url 'projects:home' %}"><span class="brand-mark" aria-hidden="true">E</span><span class="brand-copy">Gestor EPP</span></a>
     <nav aria-label="Principal">
       <a class="nav-link nav-home{% if request.resolver_match.view_name == 'projects:home' %} active{% endif %}" aria-label="Inicio" title="Inicio"{% if request.resolver_match.view_name == 'projects:home' %} aria-current="page"{% endif %} href="{% url 'projects:home' %}">Inicio</a>
@@ -23,7 +24,7 @@
       <hr class="nav-divider" aria-hidden="true">
       <a class="nav-link nav-catalog{% if request.resolver_match.app_name == 'catalog' %} active{% endif %}" aria-label="Catálogo" title="Catálogo"{% if request.resolver_match.app_name == 'catalog' %} aria-current="page"{% endif %} href="{% url 'catalog:list' %}">Catálogo</a>
     </nav>
-    <button class="sidebar-toggle" type="button" aria-controls="sidebar" aria-expanded="true" aria-label="Contraer menú" title="Contraer menú" hidden><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H4m7-7-7 7 7 7"/></svg></button>
+    <button class="sidebar-toggle" type="button" data-coreui-toggle="narrow" aria-controls="sidebar" aria-expanded="true" aria-label="Contraer menú" title="Contraer menú" hidden><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H4m7-7-7 7 7 7"/></svg></button>
   </aside>
   <div class="app-workspace">
     <header class="app-topbar"><a href="{% url 'projects:home' %}">Inicio</a>{% if request.resolver_match.view_name != 'projects:home' %}<span aria-hidden="true"> / </span>{% if request.resolver_match.app_name == 'catalog' %}Catálogo{% else %}<a href="{% url 'projects:list' %}">Proyectos</a>{% if project %}<span aria-hidden="true"> / </span><a href="{{ project.get_absolute_url }}">{{ project.name }}</a>{% endif %}{% endif %}{% endif %}</header>

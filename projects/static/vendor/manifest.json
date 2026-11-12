@@ -1,0 +1,84 @@
+[
+  {
+    "package": "@coreui/coreui",
+    "version": "5.4.3",
+    "url": "https://registry.npmjs.org/@coreui/coreui/-/coreui-5.4.3.tgz",
+    "integrity": "sha512-Tj+3LOcr4Qf2fGL/xDull+Q0d6+t3c/4HtxDtb+j964YOJjki4wqHxam+hQoemqnf2p1tLQ4nmoUjiFwA9FZBg==",
+    "files": [
+      {
+        "source": "package/dist/css/coreui.min.css",
+        "path": "coreui/coreui.min.css",
+        "sha256": "629dc90c0ede04cc5121a01de6824385ef38fa409c5f0ca2b1e5573b159a625e"
+      },
+      {
+        "source": "package/dist/js/coreui.bundle.min.js",
+        "path": "coreui/coreui.bundle.min.js",
+        "sha256": "836cba7aba4a9384b6d37fbefcae0f91a3c37e1b892d646cc27f9ec4e57f2256"
+      },
+      {
+        "source": "package/LICENSE",
+        "path": "coreui/LICENSE",
+        "sha256": "690245d4c3cc57d34b3daa328d1da34e13a9b85721518790d0aebdc371af4fc5"
+      }
+    ]
+  },
+  {
+    "package": "jquery",
+    "version": "3.7.1",
+    "url": "https://registry.npmjs.org/jquery/-/jquery-3.7.1.tgz",
+    "integrity": "sha512-m4avr8yL8kmFN8psrbFFFmB/If14iN5o9nw/NgnnM+kybDJpRsAynV2BsfpTYrTRysYUdADVD7CkUUizgkpLfg==",
+    "files": [
+      {
+        "source": "package/dist/jquery.min.js",
+        "path": "jquery/jquery.min.js",
+        "sha256": "fc9a93dd241f6b045cbff0481cf4e1901becd0e12fb45166a8f17f95823f0b1a"
+      },
+      {
+        "source": "package/LICENSE.txt",
+        "path": "jquery/LICENSE.txt",
+        "sha256": "d4db9ebe6f29f5168eac45ad713f055623ac5d0dcd5ba92da23d650ae012020d"
+      }
+    ]
+  },
+  {
+    "package": "datatables.net",
+    "version": "2.3.5",
+    "url": "https://registry.npmjs.org/datatables.net/-/datatables.net-2.3.5.tgz",
+    "integrity": "sha512-Qrwc+vuw8GHo42u1usWTuriNAMW0VvLPSW3j8g3GxvatiD8wS/ZGW32VAYLLfmF4Hz0C/fo2KB3xZBfcpqqVTQ==",
+    "files": [
+      {
+        "source": "package/js/dataTables.min.js",
+        "path": "datatables.net/dataTables.min.js",
+        "sha256": "4ed9cba7221afc108f6a2c864848325ac5458b75e39462cc347a77aed80a6542"
+      },
+      {
+        "source": "package/License.txt",
+        "path": "datatables.net/License.txt",
+        "sha256": "62b5fdd54371b4f6bd07a60dbc78b38814f49a8028213f540dc2733cad605382"
+      }
+    ]
+  },
+  {
+    "package": "datatables.net-bs5",
+    "version": "2.3.5",
+    "url": "https://registry.npmjs.org/datatables.net-bs5/-/datatables.net-bs5-2.3.5.tgz",
+    "integrity": "sha512-2JA2WZz1tBxdVpYAspiqI8POdqEoAZZzqp7tISKaof2P5ufBJb+OLaahxwuB0sF9qcQh1azlU+JH1zsLBXVwXg==",
+    "files": [
+      {
+        "source": "package/js/dataTables.bootstrap5.min.js",
+        "path": "datatables.net-bs5/dataTables.bootstrap5.min.js",
+        "sha256": "5adfe8c7957aaec56ef0403aa9e1fcdf7165785f092c34bb55c9075ea660ddbc"
+      },
+      {
+        "source": "package/css/dataTables.bootstrap5.min.css",
+        "path": "datatables.net-bs5/dataTables.bootstrap5.min.css",
+        "sha256": "e09c415c34bb9f0fd050010a68a2760c57b43c3207453f23bf20e8e49895abb2"
+      },
+      {
+        "source": "package/License.txt",
+        "path": "datatables.net-bs5/License.txt",
+        "sha256": "62b5fdd54371b4f6bd07a60dbc78b38814f49a8028213f540dc2733cad605382"
+      }
+    ]
+  }
+]

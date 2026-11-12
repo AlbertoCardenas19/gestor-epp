@@ -1,19 +1,23 @@
+from datetime import datetime
+
 from django.db.models import Case, CharField, Exists, OuterRef, Value, When
 from django.shortcuts import get_object_or_404
 from django.views.generic import CreateView, ListView, TemplateView
+from django.template.loader import render_to_string
 
 from inventory.models import StockRecord
 
 from .forms import ProjectForm
 from .models import Project
-from .tables import TableViewMixin
+from .cards import CardsViewMixin
+from .datatables import DataTableView
 
 
 class HomeView(TemplateView):
     template_name = 'projects/home.html'
 
 
-class ProjectListView(TableViewMixin, ListView):
+class ProjectListView(CardsViewMixin, ListView):
     model = Project
     template_name = 'projects/list.html'
     context_object_name = 'projects'
@@ -25,10 +29,9 @@ class ProjectListView(TableViewMixin, ListView):
         ('description', 'Descripción: A–Z', ('description', 'pk')),
         ('-description', 'Descripción: Z–A', ('-description', '-pk')),
     )
-    table_columns = (('Nombre', 'name', '-name'), ('Descripción', 'description', '-description'))
 
     def get_queryset(self):
-        return self.filter_table(super().get_queryset())
+        return self.filter_cards(super().get_queryset())
 
 
 class ProjectCreateView(CreateView):
@@ -37,31 +40,7 @@ class ProjectCreateView(CreateView):
     template_name = 'projects/form.html'
 
 
-class ProjectDetailView(TableViewMixin, ListView):
-    model = StockRecord
-    template_name = 'projects/detail.html'
-    context_object_name = 'deliveries'
-    search_fields = ('position__item__name', 'worker_full_name', 'observation')
-    default_sort = 'newest'
-    sort_options = (
-        ('newest', 'Fecha: más recientes', ('-occurred_on', '-pk')),
-        ('oldest', 'Fecha: más antiguas', ('occurred_on', 'pk')),
-        ('item', 'Elemento: A–Z', ('position__item__name', 'pk')),
-        ('-item', 'Elemento: Z–A', ('-position__item__name', '-pk')),
-        ('-worker', 'Trabajador: Z–A', ('-worker_full_name', '-pk')),
-        ('state', 'Estado: A–Z', ('state_label', 'pk')),
-        ('-state', 'Estado: Z–A', ('-state_label', '-pk')),
-        ('worker', 'Trabajador: A–Z', ('worker_full_name', 'pk')),
-        ('quantity', 'Cantidad: menor a mayor', ('quantity', 'pk')),
-        ('-quantity', 'Cantidad: mayor a menor', ('-quantity', '-pk')),
-    )
-
-    table_columns = (
-        ('Fecha', 'oldest', 'newest'), ('Elemento', 'item', '-item'),
-        ('Trabajador', 'worker', '-worker'), ('Cantidad', 'quantity', '-quantity'),
-        ('Estado', 'state', '-state'),
-    )
-
+class DeliveryQuerysetMixin:
     def dispatch(self, request, *args, **kwargs):
         self.project = get_object_or_404(Project, pk=kwargs['pk'])
         return super().dispatch(request, *args, **kwargs)
@@ -86,7 +65,35 @@ class ProjectDetailView(TableViewMixin, ListView):
             records = records.filter(voided_at__isnull=False, has_replacement=False)
         elif state == 'replaced':
             records = records.filter(voided_at__isnull=False, has_replacement=True)
-        return self.filter_table(records)
+        return records.order_by('-occurred_on', '-pk')
+
+
+class ProjectDetailView(DeliveryQuerysetMixin, ListView):
+    template_name = 'projects/detail.html'
+    context_object_name = 'deliveries'
+    paginate_by = 10
 
     def get_context_data(self, **kwargs):
         return super().get_context_data(project=self.project, state=self.delivery_state(), **kwargs)
+
+
+class DeliveryDataView(DeliveryQuerysetMixin, DataTableView):
+    order_columns = ('occurred_on', 'position__item__name', 'worker_full_name', 'quantity', 'state_label', None)
+    search_fields = ('occurred_on', 'position__item__name', 'worker_full_name', 'quantity', 'state_label', 'observation')
+    default_order = ('-occurred_on', '-pk')
+
+    def normalize_search(self, query):
+        try:
+            return datetime.strptime(query, '%d/%m/%Y').date().isoformat()
+        except ValueError:
+            return query
+
+    def serialize_record(self, record):
+        return {
+            'date': record.occurred_on.isoformat(), 'item': record.position.item.name,
+            'worker': record.worker_full_name, 'quantity': str(record.quantity), 'state': record.state_label,
+            'actions': render_to_string('projects/row_actions.html', {
+                'project': self.project, 'record': record, 'action_id': record.pk,
+                'action_label': record.worker_full_name, 'detail_url': record.get_absolute_url(), 'detail_label': 'Ver historial',
+            }),
+        }

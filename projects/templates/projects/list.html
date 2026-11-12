@@ -1,10 +1,11 @@
 {% extends 'projects/base.html' %}
 {% load static %}
 {% block title %}Proyectos{% endblock %}
+{% block extra_scripts %}<script src="{% static 'projects/cards.js' %}" defer></script>{% endblock %}
 {% block content %}
 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4"><h1>Proyectos</h1><a class="btn btn-primary" href="{% url 'projects:create' %}">＋ Nuevo proyecto</a></div>
-{% include 'projects/table_controls.html' with search_placeholder='Nombre o descripción' %}
-<div id="table-results" data-table-results aria-busy="false">
+{% include 'projects/cards_controls.html' with search_placeholder='Nombre o descripción' %}
+<div id="table-results" data-cards-results aria-busy="false">
 <div class="row g-3" tabindex="-1" data-results-focus>
 {% for project in projects %}
 <div class="col-12 col-md-6 col-xl-4"><article class="card project-card h-100"><div class="card-body p-4 d-flex flex-column align-items-start">

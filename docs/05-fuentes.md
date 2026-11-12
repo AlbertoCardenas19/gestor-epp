@@ -3,7 +3,7 @@
 ## Procedencia
 Base reconstruida el 12 de noviembre de 2026 a partir del historial recuperado del proyecto de la amiga prevencionista, principalmente la conversación «Recordar proyecto amiga». No es una transcripción completa ni una revisión del repositorio. Las fechas se usan para localizar conversaciones, sin convertir marcas técnicas en horas locales.
 
-Los códigos S0–S19 son referencias internas de las fuentes, no IDs de decisiones previamente aprobadas.
+Los códigos S0–S20 son referencias internas de las fuentes, no IDs de decisiones previamente aprobadas.
 
 | Ref. | Conversación o momento | Evidencia recuperada |
 |---|---|---|
@@ -246,6 +246,24 @@ Al retomar los pendientes de S16, el usuario confirmó:
 El diseño de implementación se prepara en [08-stock-comun-y-solicitudes.md](08-stock-comun-y-solicitudes.md).
 Las confirmaciones no significan que ya se haya migrado el inventario. El código
 actual conserva el modelo por proyecto mientras se prepara ese cambio.
+
+## S20 — Convenciones actuales de DataTables y CoreUI
+
+12 de noviembre de 2026: el usuario solicita explícitamente usar la biblioteca
+DataTables y su integración Bootstrap 5 en tablas con búsqueda, ordenación o
+paginación, con una configuración compartida y textos en español; las consultas
+deben cubrir todos sus registros y las acciones no se buscan ni ordenan.
+
+Solicita usar los componentes oficiales CoreUI para las interacciones estándar,
+incorporar su JS compatible y evitar cargas o inicializaciones duplicadas,
+conservando la paleta, transiciones, comportamiento móvil y tarjetas de Proyectos.
+Pide documentarlo como convenciones permanentes actuales en AGENTS.md y la guía
+técnica, justificar excepciones antes de usar alternativas y verificar biblioteca,
+backend, teclado, móvil y conservación del inventario. No autoriza cambios de
+reglas o datos de inventario, ni commit ni push en esta entrega.
+
+Esta es una instrucción nueva del usuario, no un acuerdo histórico recuperado.
+La implementación y reutilización se explican en [09-componentes-y-datatables.md](09-componentes-y-datatables.md).
 
 ## Qué se excluyó
 - La idea de junio de automatizar documentos para distintos profesionales: no corresponde a este producto. Se excluyen sus requisitos de plantillas, generación PDF/Excel, IPER, AST, reportes de incidentes y charlas.

@@ -27,3 +27,27 @@ Las siguientes pautas sirven para trabajar con esta documentación; no son nuevo
 - Conserva el trabajo existente. No sobrescribas instrucciones vigentes sin integrarlas y resolver contradicciones con el usuario.
 - Cuando trabajes en una funcionalidad solicitada, referencia RF-xx y explica qué decisión falta, si corresponde. Verifica el comportamiento modificado e informa el resultado real.
 - Si el usuario cierra una decisión pendiente, registra su respuesta y actualiza los documentos afectados. No presentes sugerencias propias como acuerdos previos.
+
+## Convenciones actuales de interfaz — instrucción del usuario (12 de noviembre de 2026)
+
+Estas convenciones se establecen en la solicitud actual, no en acuerdos históricos:
+
+- Mantener Django, PostgreSQL, CoreUI con su base Bootstrap y la interfaz en español.
+- Usar DataTables para toda tabla que requiera búsqueda, ordenación o paginación.
+  Reutilizar la configuración compartida de `projects/static/projects/datatables.js`
+  y el adaptador del servidor de `projects/datatables.py`, cuando corresponda.
+- Asegurar que búsqueda y ordenación cubran todos los registros de la consulta.
+  Elegir cliente o `serverSide` justificando volumen y arquitectura; nunca inicializar
+  DataTables en cliente sobre una única página parcial de Django.
+- Las columnas de acciones no se buscan ni ordenan. Conservar los filtros de negocio.
+- Usar componentes oficiales CoreUI para interacciones estándar que cubra: dropdown,
+  sidebar, modal, collapse, etc. El código propio debe limitarse a necesidades de la
+  app, integración entre componentes, persistencia y presentación específica.
+- Mantener versiones compatibles y fijadas, con sus licencias e integridad. No cargar
+  Bootstrap CSS/JS además de CoreUI ni duplicar bibliotecas, controles o inicializaciones.
+- Conservar los diseños elegidos, incluidas las tarjetas de proyectos. No convertir
+  todos los listados en tablas. Búsqueda de tarjetas no equivale a una tabla DataTables.
+- Justificar cualquier excepción técnica **antes** de introducir una implementación
+  alternativa; no reconstruir por comodidad componentes ya cubiertos por las bibliotecas.
+- Consultar `docs/09-componentes-y-datatables.md` para versiones, carga, reutilización
+  y verificación. Estas convenciones no autorizan cambiar reglas ni datos de inventario.

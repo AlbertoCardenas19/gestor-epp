@@ -1,14 +1,18 @@
 {% extends 'projects/base.html' %}
 {% block title %}Catálogo{% endblock %}
+{% block extra_styles %}{% include 'projects/datatables_styles.html' %}{% endblock %}
+{% block extra_scripts %}{% include 'projects/datatables_scripts.html' %}{% endblock %}
 {% block content %}
 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4"><h1>Catálogo</h1><a class="btn btn-primary" href="{% url 'catalog:create' %}">＋ Nuevo elemento</a></div>
-{% include 'projects/table_controls.html' with search_placeholder='Nombre, tipo o descripción' %}
-<div id="table-results" data-table-results aria-busy="false">
-<p class="d-md-none small text-body-secondary">Desliza la tabla para ver todas las columnas.</p>
-<div class="card"><div class="table-responsive" tabindex="0" data-results-focus role="region" aria-label="Tabla del catálogo"><table class="table table-striped mb-0 align-middle"><caption class="visually-hidden">Catálogo común de EPP y señaléticas</caption><thead><tr>{% include 'projects/table_headers.html' %}</tr></thead><tbody>
+<section data-datatable-panel>
+<p class="small text-danger" role="alert" data-datatable-error hidden></p>
+<div class="card datatable-shell"><div class="card-body">
+<table class="table table-striped mb-0 align-middle" style="width:100%" data-datatable data-source="{% url 'catalog:data' %}" data-order='[[0,"asc"]]'><caption class="visually-hidden">Catálogo común de EPP y señaléticas</caption>
+<thead><tr><th data-column="name" scope="col">Nombre</th><th data-column="type" scope="col">Tipo</th><th data-column="description" scope="col">Descripción</th><th data-column="actions" scope="col" data-actions>Acciones</th></tr></thead><tbody>
 {% for item in items %}<tr><td class="text-break">{{ item.name }}</td><td>{{ item.get_item_type_display }}</td><td class="text-break">{{ item.description|truncatechars:160|default:'Sin descripción.' }}</td><td>{% include 'projects/row_actions.html' with detail_url=item.get_absolute_url detail_label='Ver elemento' action_label=item.name action_id=item.pk %}</td></tr>
-{% empty %}<tr><td colspan="4" class="p-4">No hay elementos para esta consulta. <a href="{% url 'catalog:create' %}">Crear primer elemento</a></td></tr>{% endfor %}
-</tbody></table></div></div>
-{% include 'projects/pagination.html' %}
-</div>
+{% endfor %}
+</tbody></table>
+<noscript>{% if not items %}<p>No hay elementos para esta consulta. <a href="{% url 'catalog:create' %}">Crear primer elemento</a></p>{% endif %}{% include 'projects/pagination.html' %}</noscript>
+</div></div>
+</section>
 {% endblock %}

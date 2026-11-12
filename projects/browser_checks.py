@@ -1,0 +1,233 @@
+"""Optional UI regression suite: manage.py test projects.browser_checks.
+
+Uses Django's isolated PostgreSQL test database, never application records.
+Install requirements-dev.txt and a Playwright Chromium (or BROWSER_EXECUTABLE).
+"""
+import os
+import re
+import uuid
+from concurrent.futures import ThreadPoolExecutor
+from datetime import date, timedelta
+from pathlib import Path
+
+from django.db import connections
+
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from django.urls import reverse
+from playwright.sync_api import expect, sync_playwright
+
+from catalog.models import Item
+from inventory.models import StockRecord
+from inventory.services import cancel_delivery, correct_record, deliver_stock, open_stock
+from .models import Project
+
+
+def data(quantity, **extra):
+    return {'quantity': quantity, 'occurred_on': date(2026, 11, 12), 'observation': '',
+            'submission_key': uuid.uuid4(), **extra}
+
+
+class LibraryBrowserChecks(StaticLiveServerTestCase):
+    def setUp(self):
+        self.playwright = sync_playwright().start()
+        options = {'headless': True}
+        if os.environ.get('BROWSER_EXECUTABLE'):
+            options['executable_path'] = os.environ['BROWSER_EXECUTABLE']
+        self.browser = self.playwright.chromium.launch(**options)
+        self.context = self.browser.new_context(viewport={'width': 1440, 'height': 1000}, locale='es-CL')
+        self.page = self.context.new_page()
+        self.errors = []
+        self.page.on('pageerror', lambda error: self.errors.append(str(error)))
+        self.page.on('console', lambda message: self.errors.append(message.text) if message.type == 'error' else None)
+
+    def tearDown(self):
+        try:
+            self.capture(self._testMethodName)
+        finally:
+            self.context.close()
+            self.browser.close()
+            self.playwright.stop()
+        self.assertEqual(self.errors, [])
+
+    def capture(self, name):
+        if os.environ.get('UI_ARTIFACT_DIR'):
+            directory = Path(os.environ['UI_ARTIFACT_DIR'])
+            directory.mkdir(parents=True, exist_ok=True)
+            self.page.screenshot(path=str(directory / f'{name}.png'), full_page=True)
+
+    def db(self, operation):
+        # Playwright's sync API runs a loop on this thread. Keep Django ORM calls
+        # on a separate synchronous thread, without disabling Django's safeguards.
+        def execute():
+            try:
+                return operation()
+            finally:
+                connections.close_all()
+        with ThreadPoolExecutor(max_workers=1) as worker:
+            return worker.submit(execute).result()
+
+    def visit_table(self, path):
+        self.page.goto(self.live_server_url + path)
+        self.page.wait_for_function('window.DataTable && DataTable.tables({api:true}).ajax.json() !== undefined')
+
+    def table_action(self, action):
+        with self.page.expect_response(lambda response: '/datos/' in response.url) as pending:
+            action()
+        payload = pending.value.json()
+        self.page.wait_for_function('(draw) => DataTable.tables({api:true}).ajax.json().draw === draw', arg=payload['draw'])
+        return payload
+
+    def rows(self):
+        return self.page.locator('.dt-scroll-body tbody tr')
+
+    def search(self, query):
+        return self.table_action(lambda: self.page.locator('.dt-search input').fill(query))
+
+    def order(self, column):
+        return self.table_action(lambda: self.page.locator(f'.dt-scroll-head th[data-column="{column}"] .dt-column-order').click())
+
+    def test_catalog_empty_one_many_search_sort_and_reload_actions(self):
+        self.visit_table(reverse('catalog:list'))
+        expect(self.page.locator('.dt-empty')).to_have_text('No hay registros disponibles.')
+        item = self.db(lambda: Item.objects.create(name='Único casco', item_type=Item.Type.EPP))
+        self.visit_table(reverse('catalog:list'))
+        expect(self.rows()).to_have_count(1)
+        self.db(lambda: Item.objects.bulk_create([Item(name=f'Elemento {i:02d}', item_type=Item.Type.EPP) for i in range(40)]))
+        self.visit_table(reverse('catalog:list'))
+        expect(self.rows()).to_have_count(10)
+        self.assertNotIn('Elemento 39', self.rows().all_text_contents())
+        payload = self.search('Elemento 39')
+        self.assertEqual(payload['recordsFiltered'], 1)
+        expect(self.rows()).to_have_count(1)
+        expect(self.page.locator('.dt-search input')).to_be_focused()
+        self.rows().get_by_role('button', name=re.compile('^Acciones de')).click()
+        expect(self.page.locator('.dropdown-menu.show')).to_be_visible()
+        self.page.keyboard.press('ArrowDown')
+        expect(self.page.locator('.dropdown-menu.show a').first).to_be_focused()
+        self.page.keyboard.press('Escape')
+        expect(self.page.locator('.dropdown-menu.show')).to_have_count(0)
+        self.search('Elemento')
+        self.table_action(lambda: self.page.locator('.dt-paging .next').click())
+        expect(self.rows()).to_have_count(10)
+        payload = self.order('name')
+        self.assertEqual(payload['data'][0]['name'], 'Elemento 39')
+        self.table_action(lambda: self.page.locator('.dt-length select').select_option('25'))
+        expect(self.rows()).to_have_count(25)
+        self.page.evaluate('EppTables.init(); EppTables.init(); EppComponents.init()')
+        expect(self.page.locator('.dt-search')).to_have_count(1)
+        expect(self.page.locator('.dt-length')).to_have_count(1)
+        expect(self.page.locator('.dt-info')).to_have_count(1)
+        self.assertTrue(self.page.evaluate('DataTable.tables({api:true}).page.info().serverSide'))
+        self.rows().first.get_by_role('button', name=re.compile('^Acciones de')).click()
+        self.page.locator('.dropdown-menu.show').get_by_role('link', name='Ver elemento', exact=True).click()
+        expect(self.page.get_by_role('heading', level=1)).to_have_text('Elemento 39')
+        # A user-entered HTML name is rendered as text, never executed.
+        item.name = '<img src=x onerror="window.uiInjected=true">'
+        self.db(item.save)
+        self.visit_table(reverse('catalog:list'))
+        self.search('onerror')
+        expect(self.rows()).to_contain_text(item.name)
+        expect(self.page.locator('.dt-scroll-body tbody img')).to_have_count(0)
+        self.assertIsNone(self.page.evaluate('window.uiInjected'))
+
+    def test_delivery_dates_quantities_states_and_inventory_actions(self):
+        project, item, replacement, balance, count = self.db(self.seed_deliveries)
+        self.visit_table(project.get_absolute_url())
+        self.assertEqual(self.page.evaluate('DataTable.tables({api:true}).page.info().recordsTotal'), count - 1)
+        self.assertEqual(self.search('Otro proyecto')['recordsFiltered'], 0)
+        self.search('')
+        self.assertEqual(self.order('quantity')['data'][0]['quantity'], '1')
+        self.assertEqual(self.order('quantity')['data'][0]['quantity'], '19')
+        self.assertEqual(self.order('date')['data'][0]['date'], '2026-01-20')
+        result = self.table_action(lambda: self.page.get_by_label('Estado', exact=True).select_option('cancelled'))
+        self.assertEqual(result['recordsTotal'], 1)
+        self.rows().get_by_role('button', name=re.compile('^Acciones de')).click()
+        expect(self.page.locator('.dropdown-menu.show').get_by_role('link')).to_have_count(1)
+        self.page.keyboard.press('Escape')
+        self.table_action(lambda: self.page.get_by_label('Estado', exact=True).select_option('active'))
+        self.search('Persona corregida')
+        self.rows().get_by_role('button', name=re.compile('^Acciones de')).click()
+        self.page.locator('.dropdown-menu.show').get_by_role('link', name='Corregir', exact=True).click()
+        self.page.get_by_label('Cantidad', exact=False).fill('7')
+        self.page.get_by_label('Motivo de la corrección', exact=False).fill('Cantidad correcta')
+        self.page.get_by_role('button', name='Guardar corrección', exact=True).click()
+        expect(self.page.get_by_test_id('balance')).to_have_text(str(balance - 2))
+        self.visit_table(project.get_absolute_url())
+        self.search('Persona corregida')
+        self.rows().get_by_role('button', name=re.compile('^Acciones de')).click()
+        self.page.locator('.dropdown-menu.show').get_by_role('link', name='Anular', exact=True).click()
+        self.page.get_by_label('Motivo de la anulación', exact=False).fill('La entrega no ocurrió')
+        self.page.get_by_role('button', name='Confirmar anulación', exact=True).click()
+        expect(self.page.get_by_test_id('balance')).to_have_text(str(balance + 5))
+        expect(self.page.get_by_text('Anulado', exact=True).last).to_be_visible()
+        self.db(replacement.refresh_from_db)
+        self.assertIsNotNone(replacement.voided_at)
+
+    @staticmethod
+    def seed_deliveries():
+        project = Project.objects.create(name='Obra Norte')
+        other = Project.objects.create(name='Obra Sur')
+        item = Item.objects.create(name='Casco', item_type=Item.Type.EPP)
+        opening = open_stock(project, item, data(1000))
+        records = [deliver_stock(project, item, data(quantity, worker_full_name=f'Persona {i:02d}',
+                   occurred_on=date(2025, 12, 31) + timedelta(days=i * 10)))
+                   for i, quantity in enumerate([2, 10, 1] + list(range(3, 20)))]
+        cancel_delivery(project, records[0].pk, 'Registro de prueba equivocado')
+        replacement = correct_record(project, records[1].pk, data(5, worker_full_name='Persona corregida',
+            reason='Cantidad equivocada', destination_project=project, destination_item=item))
+        open_stock(other, item, data(50))
+        deliver_stock(other, item, data(1, worker_full_name='Otro proyecto'))
+        balance = opening.position.balance
+        return project, item, replacement, balance, len(records)
+
+    def test_mobile_menu_clipping_sidebar_and_project_cards(self):
+        projects = self.db(lambda: [Project.objects.create(name=f'Obra {i:02d}') for i in range(14)])
+        self.db(lambda: Item.objects.bulk_create([Item(name=f'Elemento {i:02d}', item_type=Item.Type.EPP) for i in range(14)]))
+        for width in [320, 390, 1440]:
+            self.page.set_viewport_size({'width': width, 'height': 900})
+            self.visit_table(reverse('catalog:list'))
+            sidebar = self.page.locator('#sidebar')
+            button = self.page.locator('.sidebar-toggle')
+            if width < 768:
+                expect(sidebar).to_have_class(re.compile('sidebar-narrow'))
+            before = button.bounding_box()['y']
+            self.assertNotEqual(sidebar.evaluate('(e)=>getComputedStyle(e).transitionDuration'), '0s')
+            button.focus()
+            self.page.keyboard.press('Enter')
+            self.page.wait_for_timeout(300)
+            self.assertAlmostEqual(button.bounding_box()['y'], before, delta=1)
+            if 'sidebar-narrow' not in sidebar.get_attribute('class'):
+                button.click()
+                self.page.wait_for_timeout(300)
+            self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+            header = self.page.locator('.dt-scroll-head th').first
+            self.assertEqual(header.evaluate('(e)=>getComputedStyle(e).backgroundColor'), 'rgb(51, 65, 85)')
+            self.assertEqual(header.evaluate('(e)=>getComputedStyle(e).color'), 'rgb(255, 255, 255)')
+            stripe = self.rows().first.locator('td').first.evaluate('(e)=>getComputedStyle(e).boxShadow')
+            self.assertIn('226, 232, 240', stripe)
+
+            self.rows().last.get_by_role('button', name=re.compile('^Acciones de')).click()
+            menu = self.page.locator('.dropdown-menu.show')
+            expect(menu).to_be_visible()
+            rectangle = menu.bounding_box()
+            self.assertGreaterEqual(rectangle['x'], 0)
+            self.assertLessEqual(rectangle['x'] + rectangle['width'], width)
+            # Actual hit test: not merely within viewport but outside table clipping too.
+            hit = menu.locator('a').first.evaluate('(e)=>{const r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}')
+            self.assertTrue(hit)
+            self.capture(f'menu-{width}')
+            self.page.keyboard.press('Escape')
+            self.page.goto(self.live_server_url + reverse('projects:list'))
+            expect(self.page.locator('.project-card')).to_have_count(10)
+            expect(self.page.locator('[data-datatable]')).to_have_count(0)
+            self.page.get_by_role('link', name='Siguiente', exact=True).click()
+            expect(self.page.locator('.project-card')).to_have_count(4)
+            self.page.get_by_label('Buscar', exact=True).fill('Obra 13')
+            expect(self.page.locator('.project-card')).to_have_count(1)
+            self.page.get_by_role('link', name=re.compile('^Ver proyecto')).click()
+            expect(self.page.get_by_role('heading', level=1)).to_have_text(projects[-1].name)
+            self.page.reload()
+            expect(self.page.locator('#sidebar')).to_have_class(re.compile('sidebar-narrow'))
+        self.page.emulate_media(reduced_motion='reduce')
+        self.assertEqual(self.page.locator('#sidebar').evaluate('(e)=>getComputedStyle(e).transitionDuration'), '0s')
+        self.assertEqual(self.db(StockRecord.objects.count), 0)

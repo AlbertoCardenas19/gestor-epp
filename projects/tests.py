@@ -120,26 +120,69 @@ class DeliveryTableTests(TestCase):
         self.assertEqual(response.context['paginator'].count, 15)
         self.assertNotContains(response, 'Otro proyecto')
 
-    def test_delivery_header_order_and_sorting_states_and_workers(self):
-        response = self.client.get(self.project.get_absolute_url(), {'state': 'all', 'sort': 'state', 'per_page': 25})
-        records = list(response.context['deliveries'])
-        self.assertEqual(records[0].pk, self.cancelled.pk)
-        self.assertEqual(records[1].pk, self.original.pk)
-        self.assertEqual(response.context['columns'][0]['label'], 'Fecha')
-        for sort, expected in [('worker', 'Original sustituido'), ('-worker', 'Reemplazo vigente')]:
-            response = self.client.get(self.project.get_absolute_url(), {'state': 'replaced' if sort == 'worker' else 'active', 'sort': sort})
-            self.assertEqual(response.context['deliveries'][0].worker_full_name, expected)
+    def data(self, **parameters):
+        response = self.client.get(reverse('projects:delivery-data', args=[self.project.pk]), parameters)
+        self.assertEqual(response.status_code, 200)
+        return response.json()
+
+    def test_delivery_sorting_states_and_workers(self):
+        result = self.data(**{'state': 'all', 'order[0][column]': 4, 'order[0][dir]': 'asc', 'length': 25})
+        self.assertEqual([row['state'] for row in result['data'][:2]], ['Anulado', 'Sustituido'])
+        for direction, state, expected in [('asc', 'replaced', 'Original sustituido'), ('desc', 'active', 'Reemplazo vigente')]:
+            result = self.data(**{'state': state, 'order[0][column]': 2, 'order[0][dir]': direction})
+            self.assertEqual(result['data'][0]['worker'], expected)
 
     def test_search_order_and_page_parameters_do_not_change_balances(self):
         balance = self.position.balance
-        response = self.client.get(self.project.get_absolute_url(), {'q': 'Persona', 'sort': 'quantity', 'page': 2})
-        self.assertEqual([record.quantity for record in response.context['deliveries']], [11, 12])
-        response = self.client.get(self.project.get_absolute_url(), {'sort': 'invalid', 'state': 'invalid', 'per_page': '0', 'page': 'bad'})
-        self.assertEqual(response.context['sort'], 'newest')
-        self.assertEqual(response.context['state'], 'active')
-        self.assertEqual(response.context['page_obj'].number, 1)
-        self.assertEqual(response.context['paginator'].per_page, 10)
+        result = self.data(**{'search[value]': 'Persona', 'order[0][column]': 3, 'order[0][dir]': 'asc', 'start': 10})
+        self.assertEqual([record['quantity'] for record in result['data']], ['11', '12'])
+        result = self.data(**{'order[0][column]': 'invalid', 'state': 'invalid', 'length': '0', 'start': 'bad'})
+        self.assertEqual(result['recordsTotal'], 13)
+        self.assertEqual(len(result['data']), 10)
         self.assertEqual(self.position.balance, balance)
+
+    def test_all_record_search_and_project_state_scoping(self):
+        result = self.data(**{'search[value]': 'Persona 00'})
+        self.assertEqual(result['recordsTotal'], 13)
+        self.assertEqual(result['recordsFiltered'], 1)
+        self.assertEqual(result['data'][0]['worker'], 'Persona 00')
+        self.assertEqual(self.data(**{'search[value]': 'Otro proyecto', 'state': 'all'})['data'], [])
+        for state, worker in [('cancelled', 'Entrega anulada'), ('replaced', 'Original sustituido')]:
+            result = self.data(state=state)
+            self.assertEqual(result['recordsTotal'], 1)
+            self.assertEqual(result['data'][0]['worker'], worker)
+            self.assertNotIn('>Corregir<', result['data'][0]['actions'])
+            self.assertNotIn('>Anular<', result['data'][0]['actions'])
+        self.assertEqual(self.data(state='all')['recordsTotal'], 15)
+
+    def test_dates_and_quantities_are_ordered_as_database_types(self):
+        from datetime import date
+        self.deliveries[0].occurred_on = date(2025, 12, 31)
+        self.deliveries[0].save()
+        self.deliveries[1].occurred_on = date(2026, 2, 1)
+        self.deliveries[1].save()
+        result = self.data(**{'search[value]': 'Persona', 'order[0][column]': 0, 'order[0][dir]': 'asc'})
+        self.assertEqual([row['date'] for row in result['data'][:2]], ['2025-12-31', '2026-02-01'])
+        result = self.data(**{'search[value]': '01/02/2026'})
+        self.assertEqual([row['worker'] for row in result['data']], ['Persona 01'])
+        result = self.data(**{'search[value]': 'Persona', 'order[0][column]': 3, 'order[0][dir]': 'desc'})
+        self.assertEqual([row['quantity'] for row in result['data'][:3]], ['12', '11', '10'])
+
+    def test_large_quantity_is_not_rounded_by_json_or_javascript(self):
+        from inventory.models import StockRecord
+        StockRecord.objects.filter(position=self.position, operation='opening').update(quantity=9223372036854775807)
+        self.deliveries[0].quantity = 9007199254740993
+        self.deliveries[0].save()
+        result = self.data(**{'search[value]': 'Persona 00'})
+        self.assertEqual(result['data'][0]['quantity'], '9007199254740993')
+
+    def test_actions_order_parameter_is_ignored_and_endpoint_is_read_only(self):
+        before = self.position.balance
+        result = self.data(**{'order[0][column]': 5, 'order[0][dir]': 'asc'})
+        self.assertEqual(result['data'], self.data()['data'])
+        self.assertEqual(self.client.post(reverse('projects:delivery-data', args=[self.project.pk])).status_code, 405)
+        self.assertEqual(self.client.get(reverse('projects:delivery-data', args=[999999])).status_code, 404)
+        self.assertEqual(self.position.balance, before)
 
 
 class ProjectCardsTests(TestCase):

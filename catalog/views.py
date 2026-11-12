@@ -3,32 +3,38 @@ from django.views.generic import CreateView, DetailView, ListView
 
 from .forms import ItemForm
 from .models import Item
-from projects.tables import TableViewMixin
+from projects.datatables import DataTableView
+from django.template.loader import render_to_string
 
 
-class ItemListView(TableViewMixin, ListView):
+class ItemQuerysetMixin:
+    def get_queryset(self):
+        return Item.objects.annotate(type_label=Case(
+            When(item_type=Item.Type.EPP, then=Value('EPP')),
+            default=Value('Señalética'), output_field=CharField(),
+        )).order_by('name', 'pk')
+
+
+class ItemListView(ItemQuerysetMixin, ListView):
     model = Item
     template_name = 'catalog/list.html'
     context_object_name = 'items'
-    search_fields = ('name', 'description', 'type_label')
-    default_sort = 'name'
-    sort_options = (
-        ('name', 'Nombre: A–Z', ('name', 'pk')),
-        ('-name', 'Nombre: Z–A', ('-name', '-pk')),
-        ('type', 'Tipo: A–Z', ('type_label', 'name', 'pk')),
-        ('-type', 'Tipo: Z–A', ('-type_label', 'name', 'pk')),
-        ('-description', 'Descripción: Z–A', ('-description', '-pk')),
-        ('description', 'Descripción: A–Z', ('description', 'pk')),
-    )
+    paginate_by = 10
 
-    table_columns = (('Nombre', 'name', '-name'), ('Tipo', 'type', '-type'), ('Descripción', 'description', '-description'))
 
-    def get_queryset(self):
-        items = super().get_queryset().annotate(type_label=Case(
-            When(item_type=Item.Type.EPP, then=Value('EPP')),
-            default=Value('Señalética'), output_field=CharField(),
-        ))
-        return self.filter_table(items)
+class ItemDataView(ItemQuerysetMixin, DataTableView):
+    order_columns = ('name', 'type_label', 'description', None)
+    search_fields = ('name', 'type_label', 'description')
+    default_order = ('name', 'pk')
+
+    def serialize_record(self, item):
+        return {
+            'name': item.name, 'type': item.get_item_type_display(), 'description': item.description or 'Sin descripción.',
+            'actions': render_to_string('projects/row_actions.html', {
+                'action_id': item.pk, 'action_label': item.name,
+                'detail_url': item.get_absolute_url(), 'detail_label': 'Ver elemento',
+            }),
+        }
 
 
 class ItemCreateView(CreateView):

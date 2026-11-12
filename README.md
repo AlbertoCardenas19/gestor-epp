@@ -102,7 +102,7 @@ presiona `Ctrl+C`. Las próximas veces solo necesitas iniciar PostgreSQL y ejecu
 
 ### 5. Recorrido de prueba
 
-1. En Proyectos, crea un proyecto, por ejemplo «Obra Norte». Las tablas de Catálogo y Entregas tienen
+1. En Proyectos, crea un proyecto, por ejemplo «Obra Norte». Las tablas de Catálogo y Entregas usan DataTables y tienen
    un botón «Acciones» por fila que abre un menú para consultar sus registros.
    Proyectos se muestra con tarjetas y enlaces «Ver proyecto».
 2. En «Catálogo», crea «Casco de seguridad» de tipo EPP.
@@ -141,8 +141,13 @@ puerto coincida. Si aparece «password authentication failed», verifica que
 Para actualizar una copia limpia más adelante: `git pull`, instalar nuevamente
 `requirements.txt` y ejecutar `manage.py migrate` antes de iniciar el servidor.
 
+Las tablas usan los controles de DataTables en español y procesamiento en PostgreSQL.
+Proyectos conserva sus tarjetas. CoreUI gestiona el menú lateral y los desplegables;
+no se necesita npm ni conexión a un CDN para ejecutar la app.
+
 ## Documentación
 
+- [DataTables, componentes CoreUI y pruebas](docs/09-componentes-y-datatables.md).
 - [Requisitos, acuerdos y pendientes](docs/README.md).
 - [Desarrollo en el entorno de nube y detalles de implementación](docs/06-desarrollo.md).
 - [Prueba manual de corrección y anulación de entregas](docs/07-iteraciones-entregas.md#recorrido-manual-para-ambas-iteraciones).

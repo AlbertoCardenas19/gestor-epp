@@ -514,3 +514,32 @@ la prueba. No hay dependencias ni migraciones nuevas en este ajuste.
 
 El siguiente desarrollo corresponde a S16/S19; su diseño y verificación prevista
 están en [08-stock-comun-y-solicitudes.md](08-stock-comun-y-solicitudes.md).
+
+
+## Integración oficial de DataTables y CoreUI — S20
+
+Se completó sobre el trabajo parcial conservado, sin reiniciar la implementación.
+Catálogo y Entregas usan DataTables 2.3.5, integración Bootstrap 5 2.3.5 y jQuery
+3.7.1 locales, con `serverSide` en PostgreSQL y configuración compartida. CoreUI
+5.4.3 conserva su CSS y ahora usa su bundle oficial con Popper para Sidebar y
+Dropdown, sin cargar Bootstrap separado. Se mantienen paleta y tarjetas de Proyectos.
+
+Búsqueda y ordenación preceden a la paginación del queryset completo. Se mantienen
+alcance por proyecto, estados y acciones; Acciones no se busca ni ordena. Los
+archivos propios sustituidos se retiraron y la búsqueda de tarjetas queda separada.
+Se añadieron convenciones permanentes actuales a AGENTS.md, sin atribuirlas a
+acuerdos históricos. No se modificaron modelos, servicios, datos ni migraciones de
+inventario; el futuro stock común de S16/S19 continúa fuera de esta integración.
+
+Verificación final: 125 pruebas Django en PostgreSQL y 3 pruebas automatizadas de
+navegador con PostgreSQL temporal aprobadas. Se comprobaron tablas vacías, una fila,
+varias páginas, búsqueda fuera de la primera página, fechas/cantidades, filtros,
+acciones tras redibujar, ausencia de controles duplicados, teclado, sidebar y
+menús sin recorte a 320/390/1440 píxeles, tarjetas, corrección/anulación y saldos.
+No hubo errores de consola. Se verificaron contraste de encabezados/franjas e
+integridad de recursos locales; pasan comprobaciones Django, migraciones y diff.
+Firefox se intentó ejecutar; sigue faltando el binario. Sin commit ni push.
+
+Versiones, reemplazos, configuración reutilizable, pruebas reproducibles y pasos
+para PC están en [09-componentes-y-datatables.md](09-componentes-y-datatables.md).
+El estado de continuidad está en [09-continuidad-ui.md](09-continuidad-ui.md).
