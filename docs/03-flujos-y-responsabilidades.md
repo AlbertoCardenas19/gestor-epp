@@ -18,7 +18,10 @@ Proceso descrito por el usuario [S1, respuestas 4 y 6; S2, respuesta 12]:
 2. Posteriormente se entregan EPP a trabajadores.
 3. El sistema debe permitir conocer a cuáles trabajadores llegaron.
 
-No se recuperó una definición del cargo del intermediario ni de quién registra cada etapa. Tampoco se acordó si todas las entregas pasan obligatoriamente por intermediario o si pueden existir entregas directas.
+Posteriormente el usuario acordó comenzar con entrega directa al trabajador,
+identificado por nombre completo, y descontar la cantidad al entregar. Una entrega
+que supere el saldo disponible se bloquea. [S10] El cargo del intermediario y la
+distribución posterior no forman parte de esta primera versión y siguen pendientes.
 
 ## 3. Inventario, devoluciones y reposiciones
 Se pidió inventario por proyecto y registro de entregas, devoluciones y reposiciones. [S1, respuestas 5 y 6]
@@ -29,7 +32,8 @@ entradas mayores que cero. La prevencionista registra todas estas operaciones.
 Las correcciones anulan con motivo y crean un reemplazo vinculado, conservando
 el original; el saldo suma únicamente los registros vigentes. [S9]
 
-Los efectos de salidas, entregas, devoluciones y reposiciones siguen pendientes.
+S10 añade entregas directas que restan unidades del saldo del proyecto.
+Las demás salidas, devoluciones y reposiciones siguen pendientes.
 No trasladar reglas de ventas de otro proyecto a este sistema.
 
 ## 4. Finanzas por proyecto

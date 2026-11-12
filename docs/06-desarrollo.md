@@ -9,7 +9,10 @@ está asociado a un proyecto y no guarda cantidades ni movimientos de inventario
 El inventario por proyecto permite registrar una apertura por elemento, nuevas
 entradas y correcciones con anulación y reemplazo vinculado. La consulta distingue
 «Sin registro inicial» de una apertura en cero y muestra el historial completo.
-Avance de RF-01, RF-03, RF-04 y RF-05; no constituye el MVP completo. Los campos usan texto
+También permite entregas directas a trabajadores identificados por nombre completo,
+que descuentan unidades del proyecto sin permitir cantidades superiores al saldo.
+Avance de RF-01, RF-03, RF-04, RF-05 y del flujo directo de RF-08/RF-09;
+no constituye el MVP completo. Los campos usan texto
 sin una restricción de longitud o unicidad de negocio aún no acordada.
 La interfaz está en español y usa CoreUI 5.4.3, basado en Bootstrap 5, servido
 localmente para no depender de una CDN al abrir las pantallas.
@@ -180,14 +183,17 @@ Flujo implementado conforme a S9:
 4. Corregir cantidad, fecha u observación mediante un reemplazo con motivo obligatorio.
    La operación, proyecto y elemento se mantienen en esta versión. El original
    conserva sus datos y queda anulado; ambos registros se enlazan en el historial.
+5. Conforme a S10, registrar entregas directas con nombre completo del trabajador,
+   cantidad positiva, fecha de entrega y observación opcional. Se requiere apertura
+   previa y saldo suficiente en ese proyecto. No se crean cuentas para trabajadores.
 
 La persona que registra se guarda como «Prevencionista», según la única usuaria
 actual. Es una identificación funcional, no una cuenta autenticada. Se conserva
 la fecha y hora de carga además de la fecha del hecho. La autenticación y
 la identificación personal de futuras cuentas permanecen pendientes en P-03.
 
-El saldo es la suma de la apertura y entradas vigentes, calculada desde el
-historial. No se guarda una cantidad en el catálogo ni se actualiza un saldo
+El saldo es la suma de la apertura y entradas vigentes menos las entregas directas,
+calculado desde el historial. No se guarda una cantidad en el catálogo ni se actualiza un saldo
 independiente. Las correcciones no admiten anular sin crear el reemplazo: ambas
 acciones se guardan en una única transacción, conservando la apertura lógica.
 El reemplazo vigente puede corregirse nuevamente y conserva la cadena anterior.
@@ -205,13 +211,16 @@ Sur permanece en 6 y los registros anulados siguen visibles.
 
 Límites de esta versión:
 
-- No se implementan salidas, entregas, devoluciones, reposiciones, transferencias,
-  stock mínimo, compras, ajustes automáticos ni nuevos permisos.
+- Se implementan únicamente entregas directas; otras salidas, intermediarios,
+  devoluciones, reposiciones, transferencias, stock mínimo, compras, ajustes
+  automáticos y nuevos permisos siguen pendientes.
 - El saldo registrado no descuenta entregas efectuadas fuera de la aplicación.
 - La fecha debe ser válida; reglas adicionales sobre retroactividad o fechas
   futuras siguen pendientes. Las horas de registro muestran su zona horaria.
 - La corrección mantiene proyecto, elemento y clase de operación; corregir una
   asignación a otro proyecto o elemento requiere definir ese flujo posteriormente.
+- Las correcciones actuales son de aperturas y entradas; la corrección o anulación
+  de entregas debe acordarse antes de habilitarla. No se ofrece ese enlace en sus registros.
 
 Validación: migración `inventory/0001_initial.py` aplicada y 50 pruebas aprobadas
 en PostgreSQL (23 previas y 27 de inventario). Incluyen concurrencia, reenvíos,
@@ -246,3 +255,43 @@ Comprobaciones de esta entrega:
   de proyectos, catálogo, apertura, entrada y corrección con saldo esperado 13.
 - La base temporal y los datos de las comprobaciones visuales se retiraron.
   Las instrucciones para Windows y macOS no se han ejecutado en esos sistemas.
+
+## Entregas directas — RF-08 y RF-09, primera versión
+
+Acuerdos S10 implementados: desde el historial del elemento de un proyecto,
+«Registrar entrega» pide nombre completo del trabajador, cantidad entera positiva,
+fecha de entrega y observación opcional. La prevencionista carga la operación y
+se conserva la fecha de registro además de la fecha del hecho. No se piden RUT,
+cuentas, firmas ni datos del intermediario.
+
+Cada entrega conserva su destinatario y descuenta unidades únicamente de ese
+proyecto. El nombre se guarda en el registro, sin crear un maestro de personas
+ni asumir que dos nombres iguales representan a la misma persona. El saldo de
+la lista, el detalle y las validaciones usan el mismo cálculo con signo.
+
+La entrega se valida y guarda bajo un bloqueo transaccional de la posición.
+Si supera el saldo disponible, se revierte por completo y se conservan los datos
+del formulario para corregirlos. El control de reenvíos incluye el destinatario,
+evitando descontar otra vez la misma solicitud. La corrección de aperturas o
+entradas también se revierte si deja un saldo negativo por entregas ya guardadas.
+
+Se agregó la migración `inventory/0002_remove_stockrecord_inventory_valid_operation_quantity_and_more.py`:
+añade el destinatario, la operación de entrega y sus restricciones. Los registros
+anteriores mantienen sus datos y llevan nombre de trabajador vacío. En una copia
+del PC actualizada, ejecutar `python manage.py migrate` antes de iniciar la app.
+
+Comprobaciones realizadas:
+
+- 69 pruebas aprobadas sobre PostgreSQL: las 50 anteriores y 19 nuevas. Incluyen
+  nombre obligatorio, cantidades y fechas válidas, saldo insuficiente, descuento
+  hasta cero, separación de proyectos, CSRF, escape de nombres, reenvíos y concurrencia.
+- Chromium recorrió el formulario y el historial en escritorio y móvil. En un
+  proyecto con 10 unidades se entregaron 3 a Ana Pérez y 2 a Luis Soto: saldo 5.
+  Otro proyecto con el mismo elemento conservó su saldo 4. Se comprobó rechazo
+  por cantidad excesiva, conservación de campos y recarga del historial.
+- Formulario, historial e inventario sin desbordamiento a 320 píxeles. Los datos
+  exclusivos de la prueba de navegador se retiraron.
+
+Este avance cubre el flujo directo. Intermediarios, corrección o anulación de
+entregas, devoluciones y reposiciones siguen pendientes de definición; no se
+presentan como funcionalidades ya implementadas.

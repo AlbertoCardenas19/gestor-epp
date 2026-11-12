@@ -2,8 +2,8 @@
 {% block title %}Inventario · {{ project.name }}{% endblock %}
 {% block content %}
 <a class="back-link" href="{{ project.get_absolute_url }}">← Volver al proyecto</a>
-<div class="mt-4 mb-4"><p class="eyebrow text-break">{{ project.name }}</p><h1>Inventario</h1><p class="text-body-secondary">Existencias iniciales y entradas de los elementos del catálogo común.</p></div>
-<p class="small text-body-secondary">El saldo registrado aún no incluye salidas ni entregas.</p>
+<div class="mt-4 mb-4"><p class="eyebrow text-break">{{ project.name }}</p><h1>Inventario</h1><p class="text-body-secondary">Existencias iniciales, entradas y entregas directas de los elementos del catálogo común.</p></div>
+<p class="small text-body-secondary">Cada entrega al trabajador descuenta unidades solo de este proyecto.</p>
 <div class="row g-3">
 {% for row in rows %}
 <div class="col-12 col-md-6 col-xl-4"><article class="card h-100"><div class="card-body p-4">

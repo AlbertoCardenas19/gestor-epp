@@ -17,10 +17,12 @@ class StockForm(forms.Form):
 
     def __init__(self, *args, operation, **kwargs):
         super().__init__(*args, **kwargs)
-        if operation == StockRecord.Operation.RECEIPT:
+        if operation in [StockRecord.Operation.RECEIPT, StockRecord.Operation.DELIVERY]:
             self.fields['quantity'].min_value = 1
             self.fields['quantity'].validators = [MinValueValidator(1), MaxValueValidator(9223372036854775807)]
             self.fields['quantity'].widget.attrs['min'] = 1
+        if operation == StockRecord.Operation.DELIVERY:
+            self.fields['occurred_on'].label = 'Fecha de entrega'
         if self.is_bound:
             for name in self.errors:
                 if name in self.fields and not self.fields[name].widget.is_hidden:
@@ -33,3 +35,11 @@ class StockForm(forms.Form):
 class CorrectionForm(StockForm):
     reason = forms.CharField(label='Motivo de la corrección',
                               widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
+
+
+class DeliveryForm(StockForm):
+    worker_full_name = forms.CharField(
+        label='Nombre completo del trabajador',
+        widget=forms.TextInput(attrs={'class': 'form-control', 'autocomplete': 'off'}),
+    )
+    field_order = ['worker_full_name', 'quantity', 'occurred_on', 'observation', 'submission_key']

@@ -7,9 +7,9 @@ from django.views.generic import FormView, TemplateView
 from catalog.models import Item
 from projects.models import Project
 
-from .forms import CorrectionForm, StockForm
-from .models import StockPosition, StockRecord
-from .services import correct_record, open_stock, receive_stock
+from .forms import CorrectionForm, DeliveryForm, StockForm
+from .models import StockPosition, StockRecord, stock_delta_expression
+from .services import correct_record, deliver_stock, open_stock, receive_stock
 
 
 class ProjectMixin:
@@ -37,7 +37,7 @@ class InventoryListView(ProjectMixin, TemplateView):
         positions = {
             position.item_id: position
             for position in StockPosition.objects.filter(project=self.project).annotate(
-                total=Sum('records__quantity', filter=Q(records__voided_at__isnull=True)),
+                total=Sum(stock_delta_expression('records__'), filter=Q(records__voided_at__isnull=True)),
             )
         }
         rows = [{'item': item, 'position': positions.get(item.pk)} for item in Item.objects.all()]
@@ -50,7 +50,7 @@ class HistoryView(ProjectItemMixin, TemplateView):
     def get_context_data(self, **kwargs):
         position = StockPosition.objects.filter(project=self.project, item=self.item).first()
         records = list(position.records.select_related('replaces', 'replacement')) if position else []
-        balance = sum(record.quantity for record in records if record.voided_at is None)
+        balance = sum(record.delta for record in records if record.voided_at is None)
         return super().get_context_data(position=position, records=records, balance=balance, **kwargs)
 
 
@@ -59,6 +59,9 @@ class RecordCreateView(ProjectItemMixin, FormView):
     form_class = StockForm
     operation = StockRecord.Operation.OPENING
 
+    def get_form_class(self):
+        return DeliveryForm if self.operation == StockRecord.Operation.DELIVERY else StockForm
+
     def get_form_kwargs(self):
         return {**super().get_form_kwargs(), 'operation': self.operation}
 
@@ -66,12 +69,16 @@ class RecordCreateView(ProjectItemMixin, FormView):
         position = StockPosition.objects.filter(project=self.project, item=self.item).first()
         is_opening = self.operation == StockRecord.Operation.OPENING
         return super().get_context_data(
-            position=position, is_opening=is_opening,
+            position=position, is_opening=is_opening, is_delivery=self.operation == StockRecord.Operation.DELIVERY,
             can_record=(position is None if is_opening else position is not None), **kwargs,
         )
 
     def form_valid(self, form):
-        service = open_stock if self.operation == StockRecord.Operation.OPENING else receive_stock
+        service = {
+            StockRecord.Operation.OPENING: open_stock,
+            StockRecord.Operation.RECEIPT: receive_stock,
+            StockRecord.Operation.DELIVERY: deliver_stock,
+        }[self.operation]
         try:
             record = service(self.project, self.item, form.cleaned_data)
         except ValidationError as error:
@@ -86,7 +93,7 @@ class CorrectionView(ProjectItemMixin, FormView):
     form_class = CorrectionForm
 
     def get_original(self):
-        return get_object_or_404(StockRecord, pk=self.kwargs['record_pk'],
+        return get_object_or_404(StockRecord.objects.exclude(operation=StockRecord.Operation.DELIVERY), pk=self.kwargs['record_pk'],
                                  position__project=self.project, position__item=self.item)
 
     def get_form_kwargs(self):

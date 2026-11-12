@@ -11,8 +11,8 @@ Todos los RF de esta tabla corresponden a necesidades expresadas por el usuario 
 | RF-05 | Gestionar inicialmente EPP y señaléticas, con posibilidad de añadir otros elementos más adelante. | S2, respuesta 14; S8 | Primera versión: catálogo común a todos los proyectos, nombre y tipo obligatorios (EPP o señalética), descripción opcional. Otros atributos y ampliación de tipos siguen pendientes. |
 | RF-06 | Contemplar la lista de necesidades y las cotizaciones que la prevencionista obtiene y presenta al jefe. | S1, respuesta 9 | Registro, comparación y estados dentro de la aplicación. |
 | RF-07 | Contemplar que el jefe aprueba la compra y, tras esa aprobación, la prevencionista la realiza. | S2, respuesta 11 | Cómo se registra o realiza la aprobación y si el jefe usa la app. |
-| RF-08 | Registrar entregas de los elementos; el proceso incluye que la prevencionista entrega a otra persona. | S1, respuestas 4 y 6 | Identificación del receptor, campos y responsable de registrar. |
-| RF-09 | Conocer a qué trabajadores se entregan posteriormente los EPP; la trazabilidad debe llegar a ellos. | S2, respuesta 12 | Quién registra la entrega posterior y cómo se vincula con la inicial. |
+| RF-08 | Registrar entregas de los elementos; el proceso conversado incluye que la prevencionista entrega a otra persona. | S1, respuestas 4 y 6; S10 | Primera versión limitada a entrega directa al trabajador, con nombre completo y descuento de inventario al entregar. El flujo con intermediarios y las correcciones de entregas siguen pendientes. |
+| RF-09 | Conocer a qué trabajadores se entregan los EPP; la trazabilidad debe llegar a ellos. | S2, respuesta 12; S10 | Primera versión: destinatario por nombre completo en cada entrega directa. La distribución mediante intermediarios sigue pendiente. |
 | RF-10 | Registrar devoluciones. | S1, respuesta 6 | Motivos, destinos y efecto sobre el inventario. |
 | RF-11 | Registrar reposiciones. | S1, respuesta 6 | Motivos, condiciones y relación con entregas anteriores. |
 | RF-12 | Permitir adjuntar facturas, comprobantes de transferencia y cotizaciones. | S1, respuesta 9 | Registro al que se adjuntan, formatos, límites y acceso. |
@@ -21,6 +21,8 @@ Todos los RF de esta tabla corresponden a necesidades expresadas por el usuario 
 
 ## Lectura conjunta de los requisitos
 - RF-08 y RF-09 deben leerse juntos: registrar solo la entrega al intermediario no satisface la trazabilidad pedida.
+- S10 limita el primer flujo a entregas directas y bloquea cantidades superiores
+  al saldo disponible del proyecto. No da por implementada la distribución posterior.
 - RF-07 describe una condición del proceso de negocio. No prueba que exista o deba existir ya una pantalla para que el jefe apruebe.
 - RF-13 y RF-14 deben leerse con la aclaración de S2: la necesidad financiera de la empresa no asigna esas funciones a la prevencionista.
 - RF-05 expresa extensibilidad del tipo de elementos, no un catálogo adicional ya definido.

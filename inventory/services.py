@@ -20,6 +20,7 @@ def _repeated_submission(position, operation, data, replaces=None):
         existing.position_id == position.pk and existing.operation == operation
         and existing.quantity == data['quantity'] and existing.occurred_on == data['occurred_on']
         and existing.observation == data['observation']
+        and existing.worker_full_name == data.get('worker_full_name', '').strip()
         and existing.replaces_id == (replaces.pk if replaces else None)
         and (replaces is None or replaces.void_reason == data.get('reason', '').strip())
     )
@@ -30,6 +31,7 @@ def _repeated_submission(position, operation, data, replaces=None):
 
 def _create_record(position, operation, data, replaces=None):
     record = StockRecord(position=position, operation=operation, replaces=replaces,
+                         worker_full_name=data.get('worker_full_name', '').strip(),
                          **{key: data[key] for key in ['quantity', 'occurred_on', 'observation', 'submission_key']})
     record.full_clean()
     record.save()
@@ -60,8 +62,25 @@ def receive_stock(project, item, data):
 
 
 @transaction.atomic
+def deliver_stock(project, item, data):
+    position = StockPosition.objects.select_for_update().filter(project=project, item=item).first()
+    if position is None or not position.records.filter(operation=StockRecord.Operation.OPENING, voided_at__isnull=True).exists():
+        raise ValidationError('Registra primero la existencia inicial de este elemento en el proyecto.')
+    repeated = _repeated_submission(position, StockRecord.Operation.DELIVERY, data)
+    if repeated:
+        return repeated
+    # Validar y guardar dentro del bloqueo; un error posterior revierte la entrega.
+    record = _create_record(position, StockRecord.Operation.DELIVERY, data)
+    if position.balance < 0:
+        raise ValidationError('La cantidad supera el saldo disponible del proyecto. No se registró la entrega.')
+    return record
+
+
+@transaction.atomic
 def correct_record(project, record_id, data):
     original = StockRecord.objects.get(pk=record_id, position__project=project)
+    if original.operation == StockRecord.Operation.DELIVERY:
+        raise ValidationError('La corrección de entregas todavía no está habilitada.')
     position = StockPosition.objects.select_for_update().get(pk=original.position_id)
     original.refresh_from_db()
     repeated = _repeated_submission(position, original.operation, data, replaces=original)
@@ -75,4 +94,7 @@ def correct_record(project, record_id, data):
     original.voided_at = timezone.now()
     original.void_reason = reason
     original.save(update_fields=['voided_at', 'void_reason'])
-    return _create_record(position, original.operation, data, replaces=original)
+    replacement = _create_record(position, original.operation, data, replaces=original)
+    if position.balance < 0:
+        raise ValidationError('La corrección dejaría un saldo negativo por las entregas registradas. No se aplicó ningún cambio.')
+    return replacement

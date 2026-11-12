@@ -8,8 +8,12 @@ Actualmente puedes:
 - Crear y consultar un catálogo común de EPP y señaléticas.
 - Registrar existencias iniciales y entradas por proyecto.
 - Consultar saldos e historial y corregir registros conservando sus originales.
+- Registrar entregas directas a trabajadores por nombre completo, descontando
+  unidades del inventario del proyecto sin permitir superar el saldo disponible.
 
-El inventario todavía no descuenta salidas ni entregas. Esta versión está
+Las entregas directas se descuentan; intermediarios, devoluciones y reposiciones
+siguen pendientes. Las correcciones actuales son de aperturas y entradas;
+la corrección de entregas aún no está habilitada. Esta versión está
 preparada para pruebas locales; cuentas, permisos y despliegue público siguen pendientes.
 
 ## Probar en tu PC
@@ -100,6 +104,9 @@ presiona `Ctrl+C`. Las próximas veces solo necesitas iniciar PostgreSQL y ejecu
 4. Registra una apertura de 10 cascos y después una entrada de 5: saldo 15.
 5. Corrige la apertura a 8, indicando un motivo: saldo 13. El original queda anulado.
 6. Crea otro proyecto y comprueba que el mismo casco comienza «Sin registro inicial».
+7. En el historial del casco de Obra Norte, registra una entrega de 3 unidades
+   a un trabajador, indicando su nombre completo y la fecha: saldo 10.
+8. Intenta entregar 11 unidades: debe rechazarse y conservarse el saldo 10.
 
 Los datos que registres se guardan en tu PostgreSQL local. No se incluyen bases
 de datos ni registros de prueba de la nube en GitHub.

@@ -8,12 +8,12 @@ Esta lista explicita huecos de la evidencia recuperada para evitar que Codex los
 |---|---|---|
 | P-01 | Primera entrega | Se acordó iniciar con crear, listar y consultar proyectos (S7). El alcance completo del MVP y el orden de los siguientes flujos siguen pendientes. |
 | P-02 | Proyectos | Primera etapa: nombre obligatorio y descripción opcional, aceptados por el usuario en S7. Otros datos y el ciclo de vida siguen pendientes. |
-| P-03 | Personas y acceso | Identificación de usuarios, trabajadores e intermediarios; cuentas y permisos. |
+| P-03 | Personas y acceso | S10 confirma nombre completo del trabajador en cada entrega directa. Identificación adicional, intermediarios, cuentas y permisos siguen pendientes. |
 | P-04 | Catálogo | S8 confirma catálogo común, nombre y tipo obligatorios y descripción opcional para la primera versión. Otros atributos y la forma de incorporar más tipos siguen pendientes. |
-| P-05 | Inventario | S9 confirma apertura inicial por proyecto y elemento, entradas posteriores, cantidades enteras y registro por la prevencionista para esta versión. Correcciones acordadas mediante anulación con motivo y reemplazo vinculado, conservando el original. También quedan pendientes las reglas de salidas y otros movimientos. Los acuerdos actuales pueden revisarse en el futuro. |
+| P-05 | Inventario | S9 confirma apertura inicial por proyecto y elemento, entradas posteriores, cantidades enteras y registro por la prevencionista para esta versión. Correcciones de aperturas y entradas mediante anulación con motivo y reemplazo vinculado. S10 añade descuento por entrega directa y bloqueo por saldo insuficiente. Otras salidas y movimientos siguen pendientes. Los acuerdos actuales pueden revisarse en el futuro. |
 | P-06 | Cotización y aprobación | Datos y estados; cómo registrar la aprobación del jefe y si participa directamente en la app. |
 | P-07 | Compra | Información que se registra y relación entre compra, proyecto e inventario. |
-| P-08 | Entrega posterior | Quién registra al destinatario final y cómo se conserva el vínculo con la entrega al intermediario. |
+| P-08 | Entregas | S10 confirma entrega directa al trabajador por nombre completo, con descuento y bloqueo por saldo insuficiente. Distribución mediante intermediarios y corrección o anulación de entregas siguen pendientes. |
 | P-09 | Devolución y reposición | Motivos, condiciones y efectos sobre stock y entregas. |
 | P-10 | Adjuntos | Registro asociado, formatos, límites y acceso. |
 | P-11 | Finanzas | Responsable, permisos, operaciones y relación de presupuestos con ingresos/egresos. |

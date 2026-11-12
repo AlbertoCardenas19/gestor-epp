@@ -3,7 +3,7 @@
 ## Procedencia
 Base reconstruida el 12 de noviembre de 2026 a partir del historial recuperado del proyecto de la amiga prevencionista, principalmente la conversación «Recordar proyecto amiga». No es una transcripción completa ni una revisión del repositorio. Las fechas se usan para localizar conversaciones, sin convertir marcas técnicas en horas locales.
 
-Los códigos S0–S9 son referencias internas de las fuentes, no IDs de decisiones previamente aprobadas.
+Los códigos S0–S10 son referencias internas de las fuentes, no IDs de decisiones previamente aprobadas.
 
 | Ref. | Conversación o momento | Evidencia recuperada |
 |---|---|---|
@@ -17,6 +17,7 @@ Los códigos S0–S9 son referencias internas de las fuentes, no IDs de decision
 | S7 | 12 de noviembre de 2026, inicio del desarrollo | Django, PostgreSQL, CoreUI con Bootstrap y campos y primer flujo de proyectos aceptados. |
 | S8 | 12 de noviembre de 2026, propuesta del catálogo | Campos iniciales y catálogo común para todos los proyectos aceptados. |
 | S9 | 12 de noviembre de 2026, definición inicial de inventario | Cantidades, apertura previa a entradas, responsable y datos mínimos aceptados. Correcciones por anulación con motivo y reemplazo vinculado aceptadas. |
+| S10 | 12 de noviembre de 2026, definición inicial de entregas | Entrega directa al trabajador, identificado por nombre completo; descuento al entregar y bloqueo si supera el saldo disponible. |
 
 ## S7 — Decisiones posteriores al diagnóstico del repositorio
 
@@ -87,6 +88,18 @@ La aclaración 13 precisa las respuestas 7 y 8: no asignar finanzas a la prevenc
 - Al cerrar estos acuerdos el inventario aún no estaba implementado; el estado
   de desarrollo posterior se detalla en `06-desarrollo.md`. No se cierran salidas, entregas,
   devoluciones, reposiciones, transferencias, stock mínimo ni ajustes automáticos.
+
+## S10 — Primera versión de entregas directas
+
+12 de noviembre de 2026, respuestas del usuario a la propuesta de RF-08 y RF-09:
+
+- Aceptó comenzar de momento con entregas directas, sin intermediarios en este flujo.
+- Aceptó identificar al trabajador únicamente por nombre completo por ahora.
+- Confirmó descontar el inventario al entregar al trabajador.
+- Confirmó bloquear una entrega si supera el saldo disponible del proyecto.
+- Las respuestas no cierran la corrección o anulación de entregas, ni el futuro
+  flujo con intermediarios, RUT, cuentas, firmas, devoluciones o reposiciones.
+- Estas decisiones corresponden a la primera versión y no impiden revisarlas.
 
 ## Qué se excluyó
 - La idea de junio de automatizar documentos para distintos profesionales: no corresponde a este producto. Se excluyen sus requisitos de plantillas, generación PDF/Excel, IPER, AST, reportes de incidentes y charlas.
