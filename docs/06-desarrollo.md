@@ -1,0 +1,248 @@
+# Desarrollo local — proyectos, catálogo e inventario
+
+## Alcance implementado
+
+Crear, listar y consultar proyectos con nombre obligatorio y descripción opcional.
+También crear, listar y consultar elementos del catálogo común, con nombre y
+tipo obligatorios (EPP o señalética), y descripción opcional. Este catálogo no
+está asociado a un proyecto y no guarda cantidades ni movimientos de inventario.
+El inventario por proyecto permite registrar una apertura por elemento, nuevas
+entradas y correcciones con anulación y reemplazo vinculado. La consulta distingue
+«Sin registro inicial» de una apertura en cero y muestra el historial completo.
+Avance de RF-01, RF-03, RF-04 y RF-05; no constituye el MVP completo. Los campos usan texto
+sin una restricción de longitud o unicidad de negocio aún no acordada.
+La interfaz está en español y usa CoreUI 5.4.3, basado en Bootstrap 5, servido
+localmente para no depender de una CDN al abrir las pantallas.
+
+Estos flujos son de desarrollo local. Todavía no se han definido cuentas,
+permisos ni despliegue público (P-03 y P-12). El servidor se inicia en loopback.
+
+## Dependencias
+
+Para probar en un PC, sigue primero el [README principal](../README.md), que
+incluye instalación con PostgreSQL local y comandos de Windows, Linux y macOS.
+Las rutas `/workspace` de esta guía corresponden únicamente al entorno de nube.
+
+Python 3.12, PostgreSQL 17 y los paquetes fijados en `requirements.txt`.
+El `.venv` que estaba versionado se retiró del seguimiento de Git sin borrarlo
+del disco y está excluido mediante `.gitignore`. No debe usarse: contiene rutas
+de otra máquina. Crea un entorno propio fuera del checkout, por ejemplo:
+
+```bash
+cd /workspace/gestor-epp
+python3 -m venv /workspace/.venvs/gestor-epp
+/workspace/.venvs/gestor-epp/bin/python -m pip install -r requirements.txt
+```
+
+El archivo fija Django, Psycopg y python-dotenv, junto con sus dependencias transitivas
+para Python 3.12. `tzdata` está fijado mediante un marcador exclusivo de Windows.
+El extra `binary` de Psycopg fija también su paquete binario
+a la misma versión. No se exporta el entorno global de la máquina ni se incluyen
+paquetes de navegador o herramientas ajenas al funcionamiento de la aplicación.
+CoreUI está incluido localmente con versión, integridad y licencia en
+`projects/static/vendor/coreui/README.md`; no requiere instalar paquetes npm.
+
+## Variables y credenciales
+
+`.env.example` contiene únicamente ejemplos para conectar con un PostgreSQL
+existente. `PGDATABASE` y `PGUSER` identifican la base y la cuenta; `PGHOST` y
+`PGPORT` indican su dirección; `PGPASSWORD` aporta la contraseña cuando se requiere.
+`config/settings.py` carga `.env` automáticamente mediante python-dotenv. Las
+variables existentes en el proceso tienen prioridad. Prepara tu archivo desde
+la raíz del repositorio:
+
+```bash
+# Copiar solo si aún no tienes .env; no sobrescribir una configuración existente.
+test -e .env || cp .env.example .env
+chmod 600 .env
+# Edita .env localmente con los valores de tu instancia.
+```
+
+El archivo `.env` usa el formato dotenv (clave=valor, con comillas opcionales), y queda
+ignorado junto con sus variantes; únicamente `.env.example` se comparte.
+Los valores de ejemplo no crean usuarios ni bases de datos. No incluyas claves
+reales en el ejemplo ni en Git. Para la base aislada de `dev-db.sh`, usa el socket,
+puerto y usuario documentados abajo, con contraseña vacía. Esa configuración
+local no admite conexiones TCP y no necesita una contraseña compartida.
+
+## Base local
+
+Con PostgreSQL instalado, `scripts/dev-db.sh` inicializa una base aislada,
+sin acceso TCP y accesible únicamente por un socket dentro de `.local/`.
+No necesita contraseñas para ese socket local, cuyo directorio es privado.
+La cuenta local tiene permisos para crear la base temporal de pruebas.
+No reutilizar esta configuración como configuración de producción.
+
+```bash
+cd /workspace/gestor-epp
+# Solo si los binarios no están en /usr/lib/postgresql/17/bin:
+export PG_BIN=/workspace/.cloud/postgresql/usr/lib/postgresql/17/bin
+bash scripts/dev-db.sh start
+export PGHOST="$PWD/.local/pgsocket"
+export PGPORT=55432 PGUSER=gestor_epp PGDATABASE=gestor_epp
+export DJANGO_SETTINGS_MODULE=config.settings PYTHONDONTWRITEBYTECODE=1
+/workspace/.venvs/gestor-epp/bin/python manage.py migrate --noinput
+/workspace/.venvs/gestor-epp/bin/python manage.py runserver 127.0.0.1:8001 --noreload
+```
+
+Para una base PostgreSQL existente, configura `PGHOST`, `PGPORT`, `PGUSER`,
+`PGDATABASE` y, si corresponde, `PGPASSWORD` mediante tu entorno seguro.
+No ejecutes `dev-db.sh` para administrar esa base externa.
+No hay retorno automático a SQLite.
+
+## Comprobaciones
+
+Con las mismas variables de conexión:
+
+```bash
+/workspace/.venvs/gestor-epp/bin/python manage.py check
+/workspace/.venvs/gestor-epp/bin/python manage.py makemigrations --check --dry-run
+/workspace/.venvs/gestor-epp/bin/python manage.py test projects catalog inventory
+```
+
+Las pruebas usan una base PostgreSQL temporal, separada de los datos locales.
+Comprueban creación, consulta, descripción opcional, nombre vacío o con espacios,
+conservación del formulario inválido, escape de HTML, CSRF y proyecto inexistente.
+Para el catálogo también verifican ambos tipos permitidos, rechazo del tipo vacío
+o desconocido (incluida la restricción PostgreSQL), consulta común al navegar
+entre proyectos, elemento inexistente y navegación de la sección activa.
+
+Prueba manual: abrir la lista, crear un proyecto, consultar el detalle, volver a
+la lista y recargar. Repetir en tamaño móvil; probar también guardar sin nombre.
+Para el catálogo, abrir «Catálogo» desde la navegación principal, crear un EPP y
+una señalética, consultar sus detalles y recargar. Comprobar nombre y tipo
+obligatorios, descripción opcional y conservación de datos al corregir errores.
+
+Para detener la base local: `bash scripts/dev-db.sh stop` con el mismo `PG_BIN`.
+Los procesos deben reiniciarse en cada nueva sesión; los datos quedan en `.local/`.
+
+## Validación realizada el 12 de noviembre de 2026
+
+- `check` sin errores y `makemigrations --check --dry-run` sin cambios pendientes.
+- Migraciones aplicadas y 10 pruebas aprobadas sobre PostgreSQL 17.
+- Chromium: creación, validación, consulta y recarga a 1366 × 900 y 390 × 844,
+  sin desbordamiento horizontal ni errores de JavaScript.
+- Persistencia comprobada tras detener e iniciar PostgreSQL. Se retiraron los
+  dos registros creados exclusivamente por la comprobación de navegador.
+- Instalación repetida sin migraciones pendientes; formulario, lista y CSS local
+  responden HTTP 200. Estas comprobaciones no certifican despliegue público,
+  permisos ni funcionalidades que todavía no se han implementado.
+
+## Preparación del repositorio antes del catálogo
+
+- Se retiraron 5.701 archivos de `.venv/` del índice de Git mediante
+  `git rm --cached`, conservando el entorno en disco. La eliminación del índice
+  forma parte de la entrega del código; no elimina archivos de commits anteriores.
+- Se mantiene la exclusión de `.venv/` y se excluyen `.env` y sus variantes,
+  con la excepción explícita de `.env.example`.
+- Se revisaron las dependencias declaradas contra sus metadatos: corresponden
+  al proyecto, con versiones fijadas, sin incorporar herramientas de la máquina.
+- La configuración PostgreSQL lee `PGPASSWORD` del entorno con respaldo vacío;
+  no hay contraseña PostgreSQL literal en esa configuración ni archivos `.env`
+  o `.pgpass` en el índice. El ejemplo contiene únicamente valores ficticios.
+- Después de los ajustes: `pip check`, comprobaciones de Django, consistencia
+  de migraciones y las 10 pruebas sobre PostgreSQL pasaron. Chromium verificó
+  lista, formulario, validación con conservación de descripción y cancelación
+  a 1366 × 900 y 390 × 844, sin desbordamiento horizontal. También se comprobó
+  la carga de las variables de ejemplo sin conectar con la base ficticia.
+- No se hicieron commits ni push. Se conservaron los cambios previos del flujo
+  de proyectos. En esa revisión el catálogo aún estaba pendiente; posteriormente
+  se acordaron sus campos y alcance en S8 y se implementó el flujo descrito arriba.
+
+## Catálogo RF-05 — validación del 12 de noviembre de 2026
+
+- Nueva tabla `catalog_item`, común a todos los proyectos, con nombre, tipo y
+  descripción. La elección de tipo se valida en el formulario y en PostgreSQL.
+  No se añadió una relación con proyectos, stock ni reglas de inventario.
+- Migración `catalog/0001_initial.py` aplicada. Las comprobaciones de Django y
+  de consistencia entre modelos y migraciones pasan.
+- 23 pruebas aprobadas sobre PostgreSQL: 10 de proyectos y 13 de catálogo.
+- Chromium verificó nombre y tipo obligatorios, conservación de campos al
+  corregir errores, alta de EPP y señalética, detalle, recarga, lista y navegación
+  a proyectos en escritorio (1366 × 900) y móvil (390 × 844).
+- Se comprobaron pantallas sin desbordamiento horizontal y sin errores de
+  JavaScript. Los dos elementos creados por la prueba se retiraron por sus
+  identificadores y nombres únicos, conservando los demás datos.
+- No se añadieron dependencias, commits ni push. Se mantienen pendientes los
+  atributos adicionales, edición, eliminación, acceso y reglas de inventario.
+
+## Inventario por proyecto — RF-04
+
+Desde el detalle de un proyecto, «Ver inventario» muestra los elementos del
+catálogo común. Cada combinación proyecto–elemento tiene sus propios registros.
+La lista distingue «Sin registro inicial» de una apertura con cantidad cero.
+
+Flujo implementado conforme a S9:
+
+1. Registrar la apertura con cantidad entera de cero o más y fecha del conteo.
+2. Registrar nuevas entradas con cantidad entera mayor que cero y fecha de recepción.
+3. Consultar el saldo registrado y el historial del elemento dentro del proyecto.
+4. Corregir cantidad, fecha u observación mediante un reemplazo con motivo obligatorio.
+   La operación, proyecto y elemento se mantienen en esta versión. El original
+   conserva sus datos y queda anulado; ambos registros se enlazan en el historial.
+
+La persona que registra se guarda como «Prevencionista», según la única usuaria
+actual. Es una identificación funcional, no una cuenta autenticada. Se conserva
+la fecha y hora de carga además de la fecha del hecho. La autenticación y
+la identificación personal de futuras cuentas permanecen pendientes en P-03.
+
+El saldo es la suma de la apertura y entradas vigentes, calculada desde el
+historial. No se guarda una cantidad en el catálogo ni se actualiza un saldo
+independiente. Las correcciones no admiten anular sin crear el reemplazo: ambas
+acciones se guardan en una única transacción, conservando la apertura lógica.
+El reemplazo vigente puede corregirse nuevamente y conserva la cadena anterior.
+
+La unicidad de proyecto–elemento y de apertura vigente se protege en PostgreSQL.
+Los servicios de `inventory/services.py` serializan las escrituras por posición
+para evitar dobles aperturas o correcciones simultáneas sobre un mismo registro.
+Un identificador oculto del formulario evita duplicar una operación al reenviar
+la misma solicitud. Las nuevas escrituras de inventario deben usar estos servicios.
+
+Ejemplo comprobado: el mismo casco tiene apertura 10 y entrada 5 en Norte
+(saldo 15), y apertura 4 y entrada 2 en Sur (saldo 6). Corregir la apertura de
+Norte a 8 cambia su saldo a 13; corregir su entrada de 5 a 2 lo deja en 10.
+Sur permanece en 6 y los registros anulados siguen visibles.
+
+Límites de esta versión:
+
+- No se implementan salidas, entregas, devoluciones, reposiciones, transferencias,
+  stock mínimo, compras, ajustes automáticos ni nuevos permisos.
+- El saldo registrado no descuenta entregas efectuadas fuera de la aplicación.
+- La fecha debe ser válida; reglas adicionales sobre retroactividad o fechas
+  futuras siguen pendientes. Las horas de registro muestran su zona horaria.
+- La corrección mantiene proyecto, elemento y clase de operación; corregir una
+  asignación a otro proyecto o elemento requiere definir ese flujo posteriormente.
+
+Validación: migración `inventory/0001_initial.py` aplicada y 50 pruebas aprobadas
+en PostgreSQL (23 previas y 27 de inventario). Incluyen concurrencia, reenvíos,
+validación de cantidades y fechas, separación de proyectos, conservación del
+historial, motivo obligatorio y reversión completa ante una corrección inválida.
+En Chromium se recorrieron apertura, entrada, corrección de ambas operaciones,
+consulta y recarga para dos proyectos con un elemento común; las pantallas se
+comprobaron sin desbordamiento a 320, 390 y 1366 píxeles. No se añaden dependencias.
+
+## Presentación visual y prueba en PC — 12 de noviembre de 2026
+
+Se aplicó una presentación común a los flujos existentes: navegación lateral
+en escritorio, navegación superior en móvil, paleta verde, tarjetas, formularios,
+ilustración local y distinción visual entre registros vigentes y anulados.
+CoreUI/Bootstrap continúa sirviéndose desde los archivos estáticos del proyecto.
+No se agregaron pantallas de funciones aún pendientes ni cifras simuladas.
+
+El README principal explica cómo clonar y ejecutar la app con PostgreSQL local.
+Se incorporó python-dotenv para cargar `.env` automáticamente sin reemplazar
+variables del proceso, y se fijó tzdata para Windows. La clave Django de desarrollo
+es un valor ficticio y puede sustituirse mediante `DJANGO_SECRET_KEY`.
+
+Comprobaciones de esta entrega:
+
+- 50 pruebas aprobadas sobre PostgreSQL, sin cambios de modelos ni migraciones
+  adicionales por el trabajo visual; `check` y consistencia de migraciones pasan.
+- Chromium revisó siete pantallas, validación y navegación a 320, 390, 768 y
+  1440 píxeles, sin desbordamiento horizontal, errores JavaScript ni recursos fallidos.
+- Se extrajo una copia limpia del árbol preparado para Git en un directorio
+  temporal de esta máquina Linux. Con una base PostgreSQL nueva y configuración
+  leída solo desde `.env`, se ejecutaron `check`, las migraciones y un recorrido
+  de proyectos, catálogo, apertura, entrada y corrección con saldo esperado 13.
+- La base temporal y los datos de las comprobaciones visuales se retiraron.
+  Las instrucciones para Windows y macOS no se han ejecutado en esos sistemas.

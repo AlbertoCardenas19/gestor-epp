@@ -4,11 +4,11 @@ Todos los RF de esta tabla corresponden a necesidades expresadas por el usuario 
 
 | ID | Necesidad confirmada | Fuente | Detalle no cerrado |
 |---|---|---|---|
-| RF-01 | Contemplar una empresa con varios proyectos. | S1, respuesta 1 | Datos de cada proyecto y su ciclo de vida. |
+| RF-01 | Contemplar una empresa con varios proyectos. | S1, respuesta 1; S7 | Primera etapa: nombre obligatorio y descripción opcional. Otros datos y el ciclo de vida siguen pendientes. |
 | RF-02 | Permitir el uso inicial por la prevencionista y contemplar incorporar más usuarios posteriormente. | S1, respuesta 2 | Cuentas, autenticación, permisos y momento de ampliación. |
 | RF-03 | Ser una aplicación web utilizable desde computador y celular. | S0, S1, respuesta 3 | Diseño de pantallas y dispositivos/navegadores específicos. |
-| RF-04 | Mantener inventario por proyecto. | S1, respuesta 5 | Entradas, stock inicial, ajustes y reglas de movimientos. |
-| RF-05 | Gestionar inicialmente EPP y señaléticas, con posibilidad de añadir otros elementos más adelante. | S2, respuesta 14 | Estructura del catálogo y atributos de cada tipo. |
+| RF-04 | Mantener inventario por proyecto. | S1, respuesta 5; S9 | Primera versión: una apertura por proyecto y elemento, antes de entradas posteriores; cantidades enteras, apertura de cero o más y entradas mayores que cero. La prevencionista registra todo. Correcciones mediante anulación con motivo y reemplazo vinculado, conservando el original y contando solo registros válidos. Otras reglas de movimientos siguen pendientes. |
+| RF-05 | Gestionar inicialmente EPP y señaléticas, con posibilidad de añadir otros elementos más adelante. | S2, respuesta 14; S8 | Primera versión: catálogo común a todos los proyectos, nombre y tipo obligatorios (EPP o señalética), descripción opcional. Otros atributos y ampliación de tipos siguen pendientes. |
 | RF-06 | Contemplar la lista de necesidades y las cotizaciones que la prevencionista obtiene y presenta al jefe. | S1, respuesta 9 | Registro, comparación y estados dentro de la aplicación. |
 | RF-07 | Contemplar que el jefe aprueba la compra y, tras esa aprobación, la prevencionista la realiza. | S2, respuesta 11 | Cómo se registra o realiza la aprobación y si el jefe usa la app. |
 | RF-08 | Registrar entregas de los elementos; el proceso incluye que la prevencionista entrega a otra persona. | S1, respuestas 4 y 6 | Identificación del receptor, campos y responsable de registrar. |
@@ -27,6 +27,6 @@ Todos los RF de esta tabla corresponden a necesidades expresadas por el usuario 
 - RF-02 expresa crecimiento futuro de usuarios; no permite asumir una matriz completa de roles.
 
 ## Lo que esta lista no fija
-No se recuperaron campos definitivos, fórmulas, escalas, estados, umbrales de rendimiento, criterios de stock, firmas ni una prioridad por requisito. Los detalles permanecen en [pendientes](04-pendientes.md), de acuerdo con lo indicado por el usuario en S3.
+S7 confirma nombre obligatorio y descripción opcional para proyectos en esta etapa. S8 confirma los campos iniciales y el alcance común del catálogo descritos en RF-05. S9 registra los acuerdos iniciales de inventario y sus límites; su primer flujo está implementado según la [guía de desarrollo](06-desarrollo.md). Las demás reglas permanecen en [pendientes](04-pendientes.md), de acuerdo con lo indicado por el usuario en S3.
 
 Referencias: [fuentes](05-fuentes.md).

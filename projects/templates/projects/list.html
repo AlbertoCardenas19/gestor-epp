@@ -1,0 +1,38 @@
+{% extends 'projects/base.html' %}
+{% load static %}
+{% block content %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
+  <div><p class="eyebrow">ESPACIO DE TRABAJO</p><h1>Proyectos</h1><p class="text-body-secondary mb-0">Crea y consulta los proyectos de la empresa.</p></div>
+  <a class="btn btn-primary" href="{% url 'projects:create' %}"><span aria-hidden="true">＋</span> Nuevo proyecto</a>
+</div>
+<section class="workspace-banner mb-4" aria-label="Gestión de proyectos">
+  <div><p class="eyebrow">CADA PROYECTO, SU PROPIO ESPACIO</p><h2>Organiza hoy.<br>Trabaja con tranquilidad.</h2><p>Consulta tus proyectos y lleva el registro de sus elementos en un solo lugar.</p></div>
+  <img src="{% static 'projects/helmet.svg' %}" alt="" width="200" height="180" class="banner-illustration">
+</section>
+<div class="section-heading mb-3"><h2 class="h6 mb-0">Tus proyectos</h2><span class="count-label">{{ projects|length }} registrado{{ projects|length|pluralize:'s' }}</span></div>
+{% if projects %}
+<div class="row g-3">
+  {% for project in projects %}
+  <div class="col-12 col-md-6 col-xl-4">
+    <article class="card h-100 project-card">
+      <div class="card-body p-4 d-flex flex-column align-items-start">
+        <span class="project-icon mb-3" aria-hidden="true"><img src="{% static 'projects/folder.svg' %}" alt="" width="24" height="24"></span>
+        <h2 class="h5 text-break">{{ project.name }}</h2>
+        <p class="text-body-secondary text-break">{{ project.description|truncatechars:160|default:'Sin descripción.' }}</p>
+        <a class="project-link mt-auto" href="{{ project.get_absolute_url }}">Ver proyecto <span aria-hidden="true">→</span><span class="visually-hidden">: {{ project.name }}</span></a>
+      </div>
+    </article>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<section class="card text-center empty-state">
+  <div class="card-body py-5 px-3">
+    <span class="project-icon mb-3" aria-hidden="true">▤</span>
+    <h2 class="h4">Tu primer proyecto empieza aquí</h2>
+    <p class="text-body-secondary mb-4">Aún no hay proyectos registrados. Crea uno con su nombre y una descripción opcional.</p>
+    <a class="btn btn-primary" href="{% url 'projects:create' %}">Crear primer proyecto</a>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

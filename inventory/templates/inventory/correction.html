@@ -1,0 +1,22 @@
+{% extends 'projects/base.html' %}
+{% block title %}Corregir registro{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'inventory:history' project.pk item.pk %}">← Volver al historial</a>
+<div class="form-shell mt-4">
+  <p class="eyebrow text-break">{{ project.name }} · {{ item.name }}</p>
+  <h1>Corregir registro</h1>
+  <p>{{ original.get_operation_display }} · {{ original.quantity }} unidades · {{ original.occurred_on|date:'d/m/Y' }}</p>
+  {% if original.voided_at %}
+    <div class="alert alert-info">Este registro ya fue corregido. Abre el registro vigente para corregirlo.</div>
+  {% else %}
+    <p class="text-body-secondary">Al guardar se anulará el original y se creará un reemplazo vinculado. El saldo contará solo el registro correcto.</p>
+    <div class="card"><div class="card-body p-4"><form method="post" novalidate>
+      {% include 'inventory/fields.html' %}
+      <div class="d-flex flex-column flex-sm-row gap-2">
+        <button class="btn btn-primary" type="submit">Guardar corrección</button>
+        <a class="btn btn-outline-secondary" href="{% url 'inventory:history' project.pk item.pk %}">Cancelar</a>
+      </div>
+    </form></div></div>
+  {% endif %}
+</div>
+{% endblock %}

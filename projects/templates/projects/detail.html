@@ -1,0 +1,11 @@
+{% extends 'projects/base.html' %}
+{% block title %}{{ project.name }}{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'projects:list' %}">← Volver a proyectos</a>
+<div class="mt-4 mb-4"><p class="eyebrow">PROYECTO</p><h1 class="text-break">{{ project.name }}</h1></div>
+<a class="btn btn-primary mb-4" href="{% url 'inventory:list' project.pk %}">Ver inventario</a>
+<section class="card"><div class="card-body p-4 p-md-5">
+  <h2 class="h5 mb-3">Descripción</h2>
+  {% if project.description %}<div class="project-description text-break">{{ project.description|linebreaksbr }}</div>{% else %}<p class="text-body-secondary mb-0">Este proyecto aún no tiene descripción.</p>{% endif %}
+</div></section>
+{% endblock %}

@@ -31,6 +31,14 @@ El usuario quiere desarrollar este software como su práctica profesional de Ana
 La comercialización futura no define por sí sola un SaaS, múltiples empresas, planes de pago ni condiciones de licencia. No se recuperaron acuerdos que cierren esas decisiones.
 
 ## Nivel de definición
-El usuario indicó que las reglas de negocio detalladas se verán más adelante durante el desarrollo. No se ha recuperado un alcance de MVP cerrado ni aceptación explícita de un stack. [S3, S6]
+El usuario indicó que las reglas de negocio detalladas se verán más adelante durante el desarrollo. No se ha cerrado el alcance completo del MVP. [S3] Posteriormente, el usuario confirmó Django, PostgreSQL y CoreUI con Bootstrap, y aceptó nombre obligatorio y descripción opcional para la primera etapa de proyectos. [S7]
 
 Referencias: [fuentes](05-fuentes.md).
+
+## Catálogo inicial acordado
+
+La primera versión del catálogo será común a todos los proyectos, con nombre
+y tipo obligatorios (EPP o señalética) y descripción opcional. [S8] El inventario
+por proyecto permanece separado del catálogo. Sus primeras reglas de apertura,
+entradas y correcciones se acordaron posteriormente en S9; los demás movimientos
+siguen pendientes.

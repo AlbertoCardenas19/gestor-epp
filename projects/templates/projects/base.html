@@ -1,0 +1,35 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Proyectos{% endblock %} · Gestor EPP</title>
+  <link rel="stylesheet" href="{% static 'vendor/coreui/coreui.min.css' %}">
+  <link rel="stylesheet" href="{% static 'projects/app.css' %}">
+  <link rel="icon" type="image/svg+xml" href="{% static 'projects/favicon.svg' %}">
+</head>
+<body>
+  <a class="visually-hidden-focusable skip-link" href="#contenido">Ir al contenido</a>
+  <aside class="app-sidebar">
+    <a class="brand" href="{% url 'projects:list' %}"><span class="brand-mark" aria-hidden="true">E</span><span>Gestor EPP<small>PREVENCIÓN Y GESTIÓN</small></span></a>
+    <p class="sidebar-caption">ESPACIO DE TRABAJO</p>
+    <nav aria-label="Principal">
+        <a class="nav-link{% if request.resolver_match.app_name == 'projects' or request.resolver_match.app_name == 'inventory' %} active{% endif %}"{% if request.resolver_match.app_name == 'projects' or request.resolver_match.app_name == 'inventory' %} aria-current="page"{% endif %} href="{% url 'projects:list' %}">Proyectos</a>
+        <a class="nav-link{% if request.resolver_match.app_name == 'catalog' %} active{% endif %}"{% if request.resolver_match.app_name == 'catalog' %} aria-current="page"{% endif %} href="{% url 'catalog:list' %}">Catálogo</a>
+      </nav>
+    <div class="sidebar-note"><span aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m12 3 8 3v6c0 5-8 9-8 9S4 17 4 12V6Z"/><path d="m8 12 3 3 5-6"/></svg></span><p>Todo en su proyecto.</p><small>Organiza los elementos y conserva el historial de tu inventario.</small></div>
+  </aside>
+  <div class="app-workspace">
+  <header class="app-topbar"><div class="container-fluid d-flex align-items-center justify-content-between gap-3">
+    <p class="mb-0"><span class="topbar-home">Espacio de trabajo</span><span class="topbar-divider" aria-hidden="true">/</span>{% if request.resolver_match.app_name == 'catalog' %}Catálogo{% elif request.resolver_match.app_name == 'inventory' %}Inventario por proyecto{% else %}Proyectos{% endif %}</p>
+    <span class="topbar-tag">Gestión de prevención</span>
+  </div></header>
+  <main id="contenido" class="container-fluid workspace-content">
+    {% for message in messages %}<div class="alert alert-success" role="status">{{ message }}</div>{% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="app-footer"><span>Gestor EPP</span><span>Proyectos · Catálogo · Inventario</span></footer>
+  </div>
+</body>
+</html>

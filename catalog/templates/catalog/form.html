@@ -1,0 +1,28 @@
+{% extends 'projects/base.html' %}
+{% block title %}Nuevo elemento{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'catalog:list' %}">← Volver al catálogo</a>
+<div class="form-shell mt-4">
+  <p class="eyebrow">CATÁLOGO COMÚN</p>
+  <h1>Nuevo elemento</h1>
+  <p class="text-body-secondary mb-4">Añade un EPP o señalética. La descripción es opcional.</p>
+  <div class="card"><div class="card-body p-4 p-md-5">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% if form.errors %}<div class="alert alert-danger" role="alert">Revisa los campos indicados para guardar el elemento.</div>{% endif %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+      <div class="mb-4">
+        <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }} {% if field.field.required %}<span class="text-body-secondary fw-normal">(obligatorio)</span>{% else %}<span class="text-body-secondary fw-normal">(opcional)</span>{% endif %}</label>
+        {{ field }}
+        {% if field.errors %}<div id="{{ field.id_for_label }}_errors" class="invalid-feedback">{% for error in field.errors %}{{ error }}{% endfor %}</div>{% endif %}
+      </div>
+      {% endfor %}
+      <div class="d-flex flex-column flex-sm-row gap-2 pt-2">
+        <button class="btn btn-primary" type="submit">Guardar elemento</button>
+        <a class="btn btn-outline-secondary" href="{% url 'catalog:list' %}">Cancelar</a>
+      </div>
+    </form>
+  </div></div>
+</div>
+{% endblock %}

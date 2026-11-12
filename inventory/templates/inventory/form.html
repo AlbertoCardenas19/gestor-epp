@@ -1,0 +1,23 @@
+{% extends 'projects/base.html' %}
+{% block title %}{% if is_opening %}Registrar apertura{% else %}Registrar entrada{% endif %}{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'inventory:history' project.pk item.pk %}">← Volver al inventario del elemento</a>
+<div class="form-shell mt-4">
+  <p class="eyebrow text-break">{{ project.name }}</p>
+  <h1>{% if is_opening %}Registrar apertura{% else %}Registrar entrada{% endif %}</h1>
+  <p class="text-break fw-semibold">{{ item.name }} · {{ item.get_item_type_display }}</p>
+  {% if can_record %}
+    <p class="text-body-secondary">{% if is_opening %}Indica cuántas unidades hay al comenzar el registro, incluido cero si no hay existencias.{% else %}Indica cuántas unidades nuevas recibió este proyecto.{% endif %}</p>
+    <div class="card"><div class="card-body p-4"><form method="post" novalidate>
+      {% include 'inventory/fields.html' %}
+      <div class="d-flex flex-column flex-sm-row gap-2">
+        <button class="btn btn-primary" type="submit">Guardar {% if is_opening %}apertura{% else %}entrada{% endif %}</button>
+        <a class="btn btn-outline-secondary" href="{% url 'inventory:history' project.pk item.pk %}">Cancelar</a>
+      </div>
+    </form></div></div>
+  {% else %}
+    <div class="alert alert-info">{% if is_opening %}Este elemento ya tiene una apertura. Para cambiarla, corrige el registro existente.{% else %}Registra primero la existencia inicial de este elemento en el proyecto.{% endif %}</div>
+    {% if not is_opening %}<a class="btn btn-primary" href="{% url 'inventory:open' project.pk item.pk %}">Registrar apertura</a>{% endif %}
+  {% endif %}
+</div>
+{% endblock %}

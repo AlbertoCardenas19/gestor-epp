@@ -13,6 +13,7 @@ Documentación del proyecto de gestión para la amiga prevencionista. Se reconst
 | [03-flujos-y-responsabilidades.md](03-flujos-y-responsabilidades.md) | Proceso conversado y responsabilidades conocidas |
 | [04-pendientes.md](04-pendientes.md) | Aspectos que las conversaciones no dejan definidos |
 | [05-fuentes.md](05-fuentes.md) | Procedencia, exclusiones y límites de la recuperación |
+| [06-desarrollo.md](06-desarrollo.md) | Instalación, PostgreSQL y comprobaciones de proyectos, catálogo e inventario |
 
 ## Cómo usarlo
 Coloca `AGENTS.md` en la raíz del repositorio y esta carpeta `docs/` también en la raíz. Si ya existen archivos con esos nombres, integra su contenido. Si copiaste el paquete anterior equivocado, reemplaza sus documentos por los de este paquete; no conserves aquel backlog como alcance de este producto.
@@ -27,4 +28,4 @@ Para Codex puedes usar este encargo:
 - **Pendiente:** no se recuperó una decisión suficiente. No significa rechazo ni ausencia definitiva en el proyecto.
 - **Propuesta previa:** recomendación del asistente sin aceptación recuperada; no es requisito aprobado.
 
-La numeración y la distribución en archivos se introducen en esta entrega para facilitar referencias. No se han creado prioridades, un backlog de implementación, criterios de aceptación nuevos ni un MVP cerrado. Tampoco se ha revisado código.
+La numeración y la distribución inicial de archivos se introdujeron para facilitar referencias, sin cerrar el MVP. Posteriormente se acordó comenzar con crear, listar y consultar proyectos; el estado de esa implementación y sus comprobaciones se explica en la guía de desarrollo.

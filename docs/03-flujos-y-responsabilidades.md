@@ -23,7 +23,14 @@ No se recuperó una definición del cargo del intermediario ni de quién registr
 ## 3. Inventario, devoluciones y reposiciones
 Se pidió inventario por proyecto y registro de entregas, devoluciones y reposiciones. [S1, respuestas 5 y 6]
 
-No se definieron sus efectos exactos sobre las existencias ni una política de stock. No trasladar reglas de ventas de otro proyecto a este sistema.
+Posteriormente se acordó el primer flujo de inventario: una apertura por proyecto
+y elemento antes de las entradas, cantidades enteras, apertura de cero o más y
+entradas mayores que cero. La prevencionista registra todas estas operaciones.
+Las correcciones anulan con motivo y crean un reemplazo vinculado, conservando
+el original; el saldo suma únicamente los registros vigentes. [S9]
+
+Los efectos de salidas, entregas, devoluciones y reposiciones siguen pendientes.
+No trasladar reglas de ventas de otro proyecto a este sistema.
 
 ## 4. Finanzas por proyecto
 La empresa necesita gestionar presupuestos y el dinero que ingresa y sale de cada proyecto. La prevencionista no administra dinero. [S1, respuestas 7 y 8; S2, respuesta 13]

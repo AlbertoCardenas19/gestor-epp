@@ -3,7 +3,7 @@
 ## Procedencia
 Base reconstruida el 12 de noviembre de 2026 a partir del historial recuperado del proyecto de la amiga prevencionista, principalmente la conversación «Recordar proyecto amiga». No es una transcripción completa ni una revisión del repositorio. Las fechas se usan para localizar conversaciones, sin convertir marcas técnicas en horas locales.
 
-Los códigos S0–S6 son referencias internas de esta entrega, no IDs de decisiones previamente aprobadas.
+Los códigos S0–S9 son referencias internas de las fuentes, no IDs de decisiones previamente aprobadas.
 
 | Ref. | Conversación o momento | Evidencia recuperada |
 |---|---|---|
@@ -14,6 +14,19 @@ Los códigos S0–S6 son referencias internas de esta entrega, no IDs de decisio
 | S4 | 20 de octubre de 2026, contexto de colaboración y práctica | Desarrollar el producto comercial junto con su amiga; intención de práctica profesional y eventual aporte menor de la empresa. |
 | S5 | 12 de noviembre de 2026, corrección en la conversación actual | El usuario identifica que el paquete previo se basó en otra idea y confirma que el proyecto correcto es la app de gestión para su amiga prevencionista. Solicita solo contenido de este proyecto, sin inventar. |
 | S6 | 19 de octubre de 2026, recomendación técnica del asistente | Django + PostgreSQL + Render fueron sugeridos; no se recuperó aprobación explícita. No se usan como requisito. |
+| S7 | 12 de noviembre de 2026, inicio del desarrollo | Django, PostgreSQL, CoreUI con Bootstrap y campos y primer flujo de proyectos aceptados. |
+| S8 | 12 de noviembre de 2026, propuesta del catálogo | Campos iniciales y catálogo común para todos los proyectos aceptados. |
+| S9 | 12 de noviembre de 2026, definición inicial de inventario | Cantidades, apertura previa a entradas, responsable y datos mínimos aceptados. Correcciones por anulación con motivo y reemplazo vinculado aceptadas. |
+
+## S7 — Decisiones posteriores al diagnóstico del repositorio
+
+12 de noviembre de 2026, conversación de inicio del desarrollo:
+
+- El usuario indicó conservar Django y comenzar con PostgreSQL.
+- Eligió CoreUI y Bootstrap para la interfaz, y confirmó que «codeui» se refería a CoreUI.
+- Aceptó nombre obligatorio y descripción opcional para proyectos en esta etapa; señaló que podrían añadirse más datos después.
+- Tras el diagnóstico y la propuesta, autorizó avanzar con crear, listar y consultar proyectos como primer flujo.
+- Estas decisiones no cierran el alojamiento, las reglas de inventario, los permisos ni el mecanismo de aprobación.
 
 ## S1 — Respuestas 1–10 del usuario
 Resumen de las respuestas recuperadas; no son citas textuales:
@@ -39,6 +52,42 @@ Resumen de las respuestas recuperadas; no son citas textuales:
 
 La aclaración 13 precisa las respuestas 7 y 8: no asignar finanzas a la prevencionista. No se recuperó una respuesta numerada 15.
 
+## S8 — Primera versión del catálogo
+
+12 de noviembre de 2026, respuesta del usuario a la propuesta de RF-05:
+
+- Aceptó nombre obligatorio, tipo obligatorio (EPP o señalética) y descripción
+  opcional como campos suficientes para la primera versión.
+- Confirmó que el catálogo será común para todos los proyectos.
+- El flujo propuesto comprende crear, listar y consultar elementos.
+- Esto no define cantidades, movimientos, reglas de stock, tallas, medidas,
+  modelos, unicidad de nombres, edición, eliminación ni ampliación de tipos.
+
+## S9 — Acuerdos iniciales de inventario por proyecto
+
+12 de noviembre de 2026, respuestas del usuario a la propuesta de RF-04:
+
+- Aceptó cantidades enteras, existencia inicial de cero o más y entradas mayores
+  que cero; no se admiten cantidades negativas en esos formularios.
+- Tras aclarar el ejemplo, aceptó registrar primero un conteo inicial por cada
+  proyecto y elemento, incluido cero cuando corresponda, y después nuevas entradas.
+  La apertura se registra una sola vez para esa combinación. No tener apertura
+  significa que todavía no se ha registrado el conteo; no equivale a contar cero.
+- La prevencionista registrará todo, como única usuaria por el momento. Esto no
+  cierra la implementación de cuentas ni la identificación técnica de la autora.
+- Consideró suficiente por ahora la información propuesta: proyecto, elemento
+  del catálogo común, operación, cantidad, fecha del hecho, persona que registra
+  y observación opcional.
+- Confirmó que es necesario corregir registros ya guardados y luego aceptó
+  hacerlo mediante anulación con motivo y creación de un registro correcto
+  vinculado al anterior. Se conserva el original en el historial y el saldo
+  cuenta únicamente los registros válidos. Aplica a aperturas y entradas.
+- Aclaró que acepta esta forma de trabajo de momento y que podría cambiar en
+  el futuro. No se interpreta como requisito de implementar configuración de reglas.
+- Al cerrar estos acuerdos el inventario aún no estaba implementado; el estado
+  de desarrollo posterior se detalla en `06-desarrollo.md`. No se cierran salidas, entregas,
+  devoluciones, reposiciones, transferencias, stock mínimo ni ajustes automáticos.
+
 ## Qué se excluyó
 - La idea de junio de automatizar documentos para distintos profesionales: no corresponde a este producto. Se excluyen sus requisitos de plantillas, generación PDF/Excel, IPER, AST, reportes de incidentes y charlas.
 - Requisitos, decisiones y tecnología de otros proyectos del usuario.
@@ -48,7 +97,7 @@ La aclaración 13 precisa las respuestas 7 y 8: no asignar finanzas a la prevenc
 La exclusión significa que no se incorporan a esta base como acuerdos; no prohíbe que el usuario los solicite en el futuro.
 
 ## Límites
-No se recuperaron decisiones adicionales suficientes para cerrar el MVP, tecnologías, permisos, campos o reglas de stock. Eso no demuestra que no existan conversaciones adicionales. Se documentan únicamente los acuerdos que pudieron recuperarse y atribuirse a este proyecto.
+La reconstrucción inicial no recuperó decisiones suficientes para cerrar el MVP, tecnologías, permisos, campos o reglas de stock. S7 registra las decisiones posteriores sobre tecnologías y los campos iniciales de proyectos; S8 registra los campos y el alcance del catálogo inicial. Eso no demuestra que no existan conversaciones adicionales. Se documentan únicamente los acuerdos que pudieron recuperarse y atribuirse a este proyecto.
 
 No se certifican funcionalidades ya implementadas, cumplimiento normativo, contratos, aprobación de práctica, presupuesto de infraestructura ni estado de un repositorio.
 

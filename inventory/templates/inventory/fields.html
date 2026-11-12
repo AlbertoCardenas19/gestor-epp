@@ -1,0 +1,11 @@
+{% csrf_token %}
+{% if form.errors %}<div class="alert alert-danger" role="alert">Revisa los campos indicados antes de guardar.{{ form.non_field_errors }}{% for field in form.hidden_fields %}{{ field.errors }}{% endfor %}</div>{% endif %}
+{% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+{% for field in form.visible_fields %}
+<div class="mb-4">
+  <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }} <span class="text-body-secondary fw-normal">{% if field.field.required %}(obligatorio){% else %}(opcional){% endif %}</span></label>
+  {{ field }}
+  {% if field.errors %}<div class="invalid-feedback" id="{{ field.id_for_label }}_errors">{% for error in field.errors %}{{ error }}{% endfor %}</div>{% endif %}
+</div>
+{% endfor %}
+<p class="small text-body-secondary">Registrado por: Prevencionista.</p>
