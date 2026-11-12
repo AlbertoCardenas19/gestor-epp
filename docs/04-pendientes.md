@@ -13,7 +13,7 @@ Esta lista explicita huecos de la evidencia recuperada para evitar que Codex los
 | P-05 | Inventario | S9 confirma apertura inicial por proyecto y elemento, entradas posteriores, cantidades enteras y registro por la prevencionista para esta versión. Correcciones de aperturas y entradas mediante anulación con motivo y reemplazo vinculado. S10 añade descuento por entrega directa y bloqueo por saldo insuficiente. Otras salidas y movimientos siguen pendientes. Los acuerdos actuales pueden revisarse en el futuro. |
 | P-06 | Cotización y aprobación | Datos y estados; cómo registrar la aprobación del jefe y si participa directamente en la app. |
 | P-07 | Compra | Información que se registra y relación entre compra, proyecto e inventario. |
-| P-08 | Entregas | S10 confirma entrega directa al trabajador por nombre completo, con descuento y bloqueo por saldo insuficiente. S12 aprueba corrección de los seis campos con original conservado, motivo y reemplazo vinculado. La anulación sin reemplazo se definirá en la segunda iteración. Intermediarios siguen fuera del alcance actual. |
+| P-08 | Entregas | S10 confirma entrega directa; S12, corrección de seis campos con original conservado y reemplazo; S13, anulación de una entrega vigente o reemplazo vigente, con motivo y restitución única. Estas dos iteraciones están implementadas. Intermediarios y devoluciones físicas siguen fuera de su alcance. |
 | P-09 | Devolución y reposición | Motivos, condiciones y efectos sobre stock y entregas. |
 | P-10 | Adjuntos | Registro asociado, formatos, límites y acceso. |
 | P-11 | Finanzas | Responsable, permisos, operaciones y relación de presupuestos con ingresos/egresos. |

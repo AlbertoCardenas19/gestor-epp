@@ -23,6 +23,11 @@ identificado por nombre completo, y descontar la cantidad al entregar. Una entre
 que supere el saldo disponible se bloquea. [S10] El cargo del intermediario y la
 distribución posterior no forman parte de esta primera versión y siguen pendientes.
 
+S12 permite corregir los seis campos de una entrega mediante un reemplazo vinculado,
+conservando el original. S13 permite anular una entrega vigente equivocada con
+motivo obligatorio y restitución única en su proyecto y elemento actuales. Un
+original sustituido no puede anularse. Esto no representa una devolución física.
+
 ## 3. Inventario, devoluciones y reposiciones
 Se pidió inventario por proyecto y registro de entregas, devoluciones y reposiciones. [S1, respuestas 5 y 6]
 

@@ -7,9 +7,9 @@ from django.views.generic import FormView, TemplateView
 from catalog.models import Item
 from projects.models import Project
 
-from .forms import CorrectionForm, DeliveryCorrectionForm, DeliveryForm, StockForm
+from .forms import CorrectionForm, DeliveryCancellationForm, DeliveryCorrectionForm, DeliveryForm, StockForm
 from .models import StockPosition, StockRecord, stock_delta_expression
-from .services import correct_record, deliver_stock, open_stock, receive_stock
+from .services import cancel_delivery, correct_record, deliver_stock, open_stock, receive_stock
 
 
 class ProjectMixin:
@@ -120,4 +120,32 @@ class CorrectionView(ProjectItemMixin, FormView):
             form.add_error(None, error.messages)
             return self.form_invalid(form)
         messages.success(self.request, 'Corrección guardada. El original se conserva sustituido en el historial.')
+        return redirect(record.get_absolute_url())
+
+
+class DeliveryCancellationView(ProjectItemMixin, FormView):
+    template_name = 'inventory/cancellation.html'
+    form_class = DeliveryCancellationForm
+
+    def get_original(self):
+        return get_object_or_404(
+            StockRecord.objects.select_related('replacement__position'),
+            pk=self.kwargs['record_pk'], operation=StockRecord.Operation.DELIVERY,
+            position__project=self.project, position__item=self.item,
+        )
+
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(original=self.get_original(), **kwargs)
+
+    def form_valid(self, form):
+        original = self.get_original()
+        try:
+            record, changed = cancel_delivery(self.project, original.pk, form.cleaned_data['reason'])
+        except ValidationError as error:
+            form.add_error(None, error.messages)
+            return self.form_invalid(form)
+        if changed:
+            messages.success(self.request, 'Entrega anulada. Su cantidad se restituyó una sola vez al saldo del proyecto.')
+        else:
+            messages.info(self.request, 'La entrega ya estaba anulada. No se modificó el saldo.')
         return redirect(record.get_absolute_url())

@@ -219,8 +219,8 @@ Límites de esta versión:
   futuras siguen pendientes. Las horas de registro muestran su zona horaria.
 - Las correcciones de aperturas y entradas mantienen proyecto, elemento y operación.
   En entregas, S12 permite corregir también proyecto, elemento y destinatario.
-- La corrección de entregas está habilitada; la anulación sin reemplazo aún debe
-  acordarse en la segunda iteración y no tiene acción disponible.
+- La corrección de entregas está habilitada; S13 habilita también la anulación
+  sin reemplazo de una entrega vigente equivocada, con restitución única.
 
 Validación: migración `inventory/0001_initial.py` aplicada y 50 pruebas aprobadas
 en PostgreSQL (23 previas y 27 de inventario). Incluyen concurrencia, reenvíos,
@@ -335,5 +335,44 @@ Ejemplo de navegador: dos entregas de 5 y 2 dejan el saldo Norte en 13; Sur tien
 ambos historiales y la conservación de nombres y datos originales. Los datos
 exclusivos de la comprobación se retiraron al cerrar la iteración.
 
-La siguiente iteración definirá anulación sin reemplazo, motivo, restitución única
-y distinción respecto de una devolución física. Todavía no está implementada.
+Al cerrar la primera iteración quedó pendiente la anulación sin reemplazo.
+Posteriormente se aprobó en S13 y se implementó según el cierre siguiente.
+
+## Iteración 2 completada — anulación de entregas, S13
+
+Desde una entrega vigente, «Anular entrega» abre una confirmación con sus datos
+y motivo obligatorio. El GET no modifica existencias. El POST bloquea la posición,
+comprueba que no exista un reemplazo y conserva el registro con `voided_at` y
+`void_reason`; el saldo deja de descontarlo. No se genera una entrada de stock,
+un reemplazo ni un movimiento de devolución física.
+
+La misma operación se aplica a un reemplazo vigente, restituyendo la cantidad
+en su proyecto y elemento actuales. Un original sustituido se rechaza incluso
+si después se anuló su reemplazo. El historial diferencia «Sustituido» de «Anulado»,
+conserva los enlaces entre proyectos y muestra datos, motivo y fecha. Una entrega
+anulada ya no ofrece corrección ni otra confirmación de anulación.
+
+Repetir una solicitud válida devuelve «ya anulada» sin cambiar motivo, fecha ni
+saldo. Las solicitudes simultáneas usan el mismo bloqueo que correcciones y
+entregas. Todo se guarda en una transacción; si la escritura falla, se revierte
+la marca de anulación y el saldo calculado permanece igual. La restitución está
+implícita en excluir una sola vez el registro, sin un contador que pueda duplicarse.
+
+Verificación: 109 pruebas aprobadas en PostgreSQL (91 anteriores y 18 nuevas).
+Se cubrieron entrega vigente, reemplazo vigente en otra posición, original
+sustituido rechazado, motivo, datos intactos, historial, CSRF, reenvíos, solicitudes
+simultáneas y carreras con corrección o nueva entrega. Un fallo simulado después
+de ejecutar la actualización SQL confirmó reversión completa del estado y saldo.
+`check`, consistencia de migraciones y `migrate --check` pasan. No se requieren
+migraciones ni dependencias nuevas.
+
+Chromium recorrió corrección y anulación en escritorio y móvil: Norte/Casco pasó
+de 13 a 18 al corregir una entrega hacia Sur/Guantes, que quedó en 5. Anular el
+reemplazo restituyó Sur/Guantes a 8. Anular otra entrega directa de Norte restituyó
+su saldo a 20. Los reenvíos mantuvieron 20/8 y conservaron el primer motivo.
+Las pantallas no desbordaron a 320/390/1440 píxeles. Firefox se intentó ejecutar
+nuevamente, pero sigue faltando su ejecutable. Los datos de navegador se retiraron.
+
+El commit `ad800f5` de la primera iteración se conserva y esta segunda iteración
+se cierra con otro commit, sin push. El recorrido manual de ambas está en
+[07-iteraciones-entregas.md](07-iteraciones-entregas.md#recorrido-manual-para-ambas-iteraciones).

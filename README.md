@@ -15,7 +15,9 @@ Las entregas directas se descuentan; intermediarios, devoluciones y reposiciones
 siguen pendientes. Se pueden corregir aperturas, entradas y entregas mediante
 reemplazos vinculados. En entregas se pueden rectificar los seis campos, incluido
 proyecto o elemento, conservando el original y validando ambos saldos.
-La anulación de una entrega sin reemplazo sigue pendiente. Esta versión está
+También se puede anular una entrega vigente registrada por error, con motivo e
+historial conservados y restitución de existencias una sola vez. Esto no registra
+una devolución física. Esta versión está
 preparada para pruebas locales; cuentas, permisos y despliegue público siguen pendientes.
 
 ## Probar en tu PC
@@ -134,3 +136,4 @@ Para actualizar una copia limpia más adelante: `git pull`, instalar nuevamente
 
 - [Requisitos, acuerdos y pendientes](docs/README.md).
 - [Desarrollo en el entorno de nube y detalles de implementación](docs/06-desarrollo.md).
+- [Prueba manual de corrección y anulación de entregas](docs/07-iteraciones-entregas.md#recorrido-manual-para-ambas-iteraciones).

@@ -9,7 +9,7 @@
   {% if original.worker_full_name %}<p class="text-break"><strong>Destinatario original:</strong> {{ original.worker_full_name }}</p>{% endif %}
   {% if original.observation %}<p class="text-break"><strong>Observación original:</strong> {{ original.observation }}</p>{% endif %}
   {% if original.voided_at %}
-    <div class="alert alert-info">Este registro ya fue corregido. Abre el registro vigente para corregirlo.</div>
+    <div class="alert alert-info">{% if original.is_cancelled %}Esta entrega está anulada y no se puede corregir.{% else %}Este registro ya fue corregido. Abre el registro vigente para corregirlo.{% endif %}</div>
   {% else %}
     <p class="text-body-secondary">Al guardar se conservará el original como sustituido y se creará un reemplazo vinculado. El saldo contará solo el registro correcto.</p>
     {% if original.operation == 'delivery' %}<p class="text-body-secondary">Si cambias proyecto o elemento, se rectificará el descuento en ambas posiciones. El destino necesita apertura y saldo suficiente. Esto no registra una transferencia física.</p>{% endif %}

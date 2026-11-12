@@ -3,7 +3,7 @@
 ## Procedencia
 Base reconstruida el 12 de noviembre de 2026 a partir del historial recuperado del proyecto de la amiga prevencionista, principalmente la conversación «Recordar proyecto amiga». No es una transcripción completa ni una revisión del repositorio. Las fechas se usan para localizar conversaciones, sin convertir marcas técnicas en horas locales.
 
-Los códigos S0–S12 son referencias internas de las fuentes, no IDs de decisiones previamente aprobadas.
+Los códigos S0–S13 son referencias internas de las fuentes, no IDs de decisiones previamente aprobadas.
 
 | Ref. | Conversación o momento | Evidencia recuperada |
 |---|---|---|
@@ -131,8 +131,26 @@ necesarias de la primera iteración:
   y aplicar el correcto si cambia proyecto o elemento. Si el destino no tiene
   apertura o saldo suficiente, rechazar por completo sin cambiar registros ni saldos.
 
-La anulación sin reemplazo sigue sin reglas acordadas y corresponde a la segunda
-iteración. Las devoluciones físicas permanecen fuera de ambas iteraciones.
+Al aprobar S12, la anulación sin reemplazo seguía pendiente para la segunda
+iteración; posteriormente se acordó en S13. Las devoluciones físicas permanecen
+fuera de ambas iteraciones.
+
+## S13 — Anulación de entregas aprobada
+
+12 de noviembre de 2026, el usuario confirmó las cinco reglas propuestas y pidió
+implementar la segunda iteración:
+
+1. Anular completamente solo una entrega vigente, con motivo obligatorio.
+2. Conservar sus datos, motivo y fecha de anulación, sin crear un reemplazo.
+3. Restituir una sola vez la cantidad al proyecto y elemento del registro vigente.
+4. Ante solicitudes repetidas o simultáneas, informar que ya está anulada sin
+   modificar el saldo otra vez.
+5. Rechazar la anulación de un original sustituido; actuar sobre su reemplazo vigente.
+
+La anulación corresponde a un registro equivocado y no representa una devolución
+física. El usuario exigió reversión completa ante fallos, pruebas en PostgreSQL,
+escritorio y móvil, informar la limitación de Firefox, conservar el commit de la
+primera iteración y crear otro separado sin push, además de pasos de prueba manual.
 
 ## Qué se excluyó
 - La idea de junio de automatizar documentos para distintos profesionales: no corresponde a este producto. Se excluyen sus requisitos de plantillas, generación PDF/Excel, IPER, AST, reportes de incidentes y charlas.

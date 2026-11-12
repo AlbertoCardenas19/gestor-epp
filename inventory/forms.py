@@ -60,3 +60,19 @@ class DeliveryCorrectionForm(DeliveryForm):
                              widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
     field_order = ['destination_project', 'destination_item', 'worker_full_name', 'quantity',
                    'occurred_on', 'observation', 'reason', 'submission_key']
+
+
+class DeliveryCancellationForm(forms.Form):
+    reason = forms.CharField(
+        label='Motivo de la anulación',
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+        error_messages={'required': 'Escribe el motivo de la anulación.'},
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.is_bound and 'reason' in self.errors:
+            self.fields['reason'].widget.attrs.update({
+                'class': 'form-control is-invalid', 'aria-invalid': 'true',
+                'aria-describedby': 'id_reason_errors',
+            })

@@ -1,0 +1,32 @@
+{% extends 'projects/base.html' %}
+{% block title %}Anular entrega{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'inventory:history' project.pk item.pk %}">← Volver al historial</a>
+<div class="form-shell mt-4">
+  <p class="eyebrow text-break">{{ project.name }} · {{ item.name }}</p>
+  <h1>Anular entrega</h1>
+  <div class="card mb-4"><div class="card-body p-4">
+    <p class="text-break"><strong>Trabajador destinatario:</strong> {{ original.worker_full_name }}</p>
+    <p><strong>Cantidad:</strong> {{ original.quantity }} unidades<br><strong>Fecha de entrega:</strong> {{ original.occurred_on|date:'d/m/Y' }}</p>
+    {% if original.observation %}<p class="text-break mb-0"><strong>Observación:</strong> {{ original.observation }}</p>{% endif %}
+  </div></div>
+  {% if original.is_replaced %}
+    <div class="alert alert-info">Este registro fue sustituido. Solo puedes anular su reemplazo vigente.</div>
+    <a class="project-link" href="{{ original.replacement.get_absolute_url }}">Ver reemplazo</a>
+  {% elif original.is_cancelled %}
+    <div class="alert alert-info">La entrega ya está anulada. No se modificará el saldo nuevamente.</div>
+    <p class="text-break"><strong>Motivo de anulación:</strong> {{ original.void_reason }}</p>
+    <p>Anulado el {{ original.voided_at|date:'d/m/Y H:i:s T' }}.</p>
+  {% else %}
+    <p class="text-body-secondary">Usa esta acción únicamente para un registro equivocado. Se conservarán sus datos y se restituirán {{ original.quantity }} unidades al saldo de {{ project.name }} · {{ item.name }}. No se creará un reemplazo.</p>
+    <p class="text-body-secondary">Esto no registra una devolución física. Si solo necesitas rectificar datos de la entrega, usa la corrección.</p>
+    <div class="card"><div class="card-body p-4"><form method="post" novalidate>
+      {% include 'inventory/fields.html' %}
+      <div class="d-flex flex-column flex-sm-row gap-2">
+        <button class="btn btn-danger" type="submit">Confirmar anulación</button>
+        <a class="btn btn-outline-secondary" href="{% url 'inventory:history' project.pk item.pk %}">Cancelar</a>
+      </div>
+    </form></div></div>
+  {% endif %}
+</div>
+{% endblock %}

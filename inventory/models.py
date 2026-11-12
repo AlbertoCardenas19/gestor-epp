@@ -74,3 +74,12 @@ class StockRecord(models.Model):
 
     def get_absolute_url(self):
         return self.position.get_absolute_url() + f'#registro-{self.pk}'
+
+    @property
+    def is_replaced(self):
+        return self.voided_at is not None and hasattr(self, 'replacement')
+
+    @property
+    def is_cancelled(self):
+        return (self.operation == self.Operation.DELIVERY and self.voided_at is not None
+                and not self.is_replaced)

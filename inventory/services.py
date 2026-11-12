@@ -77,6 +77,29 @@ def deliver_stock(project, item, data):
 
 
 @transaction.atomic
+def cancel_delivery(project, record_id, reason):
+    record = StockRecord.objects.get(pk=record_id, position__project=project)
+    if record.operation != StockRecord.Operation.DELIVERY:
+        raise ValidationError('Solo se pueden anular entregas directas.')
+    # El mismo bloqueo usado por entregas y correcciones protege el estado y el saldo.
+    StockPosition.objects.select_for_update().get(pk=record.position_id)
+    record.refresh_from_db()
+    reason = reason.strip()
+    if not reason:
+        raise ValidationError('Escribe el motivo de la anulación.')
+    if StockRecord.objects.filter(replaces=record).exists():
+        raise ValidationError('Este registro fue sustituido. Solo puedes anular su reemplazo vigente.')
+    if record.voided_at is not None:
+        return record, False
+    record.voided_at = timezone.now()
+    record.void_reason = reason
+    record.full_clean()
+    record.save(update_fields=['voided_at', 'void_reason'])
+    # No se crea una entrada: el saldo excluye este descuento una sola vez.
+    return record, True
+
+
+@transaction.atomic
 def correct_delivery(project, record_id, data):
     original = StockRecord.objects.get(pk=record_id, position__project=project)
     if original.operation != StockRecord.Operation.DELIVERY:
@@ -100,6 +123,8 @@ def correct_delivery(project, record_id, data):
     if repeated:
         return repeated
     if original.voided_at is not None:
+        if original.is_cancelled:
+            raise ValidationError('Esta entrega está anulada y no se puede corregir.')
         raise ValidationError('Este registro ya fue corregido. Abre el registro vigente para corregirlo.')
     if not destination.records.filter(operation=StockRecord.Operation.OPENING, voided_at__isnull=True).exists():
         raise ValidationError('El destino no tiene apertura. Registra primero su existencia inicial.')
