@@ -47,8 +47,8 @@
         }
         if (mode === 'push') history.pushState(null, '', url);
         if (mode === 'replace') history.replaceState(null, '', url);
-        feedback.textContent = results.querySelector('.table-summary p').textContent;
-        if (focusTable) results.querySelector('[role="region"]').focus({ preventScroll: true });
+        feedback.textContent = '';
+        if (focusTable) results.querySelector('[data-results-focus]').focus({ preventScroll: true });
       } catch (error) {
         if (current !== revision || error.name === 'AbortError') return;
         feedback.textContent = 'No se pudo actualizar la tabla. Se mantienen los resultados anteriores. Pulsa Aplicar para reintentar.';

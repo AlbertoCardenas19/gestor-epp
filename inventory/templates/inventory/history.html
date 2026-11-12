@@ -3,7 +3,7 @@
 {% block content %}
 <a class="back-link" href="{% url 'inventory:list' project.pk %}">← Volver al inventario del proyecto</a>
 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mt-4 mb-4">
-  <div><h1 class="text-break">{{ item.name }}</h1><span class="badge text-bg-light border">{{ item.get_item_type_display }}</span></div>
+  <div><h1 class="text-break">{{ item.name }}</h1></div>
   {% if position %}<div class="d-flex flex-column flex-sm-row gap-2"><a class="btn btn-outline-secondary" href="{% url 'inventory:receive' project.pk item.pk %}">Registrar entrada</a><a class="btn btn-primary" href="{% url 'inventory:deliver' project.pk item.pk %}">Registrar entrega</a></div>{% else %}<a class="btn btn-primary" href="{% url 'inventory:open' project.pk item.pk %}">Registrar apertura</a>{% endif %}
 </div>
 <div class="card balance-card mb-4"><div class="card-body p-4">

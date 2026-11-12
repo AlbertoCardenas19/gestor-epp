@@ -1,9 +1,8 @@
-<select class="form-select row-actions" data-row-action aria-label="Acciones de {{ action_label }}">
-  <option value="">Selecciona una acción</option>
-  <option value="{{ detail_url }}">{{ detail_label|default:'Ver detalle' }}</option>
+<button class="action-trigger" type="button" popovertarget="actions-{{ action_id }}" aria-label="Acciones de {{ action_label }}">Acciones <span aria-hidden="true">▾</span></button>
+<div class="action-menu" id="actions-{{ action_id }}" popover aria-label="Acciones de {{ action_label }}">
+  <a href="{{ detail_url }}">{{ detail_label|default:'Ver detalle' }}</a>
   {% if record and not record.voided_at %}
-  <option value="{% url 'inventory:correct' project.pk record.position.item_id record.pk %}">Corregir</option>
-  <option value="{% url 'inventory:cancel' project.pk record.position.item_id record.pk %}">Anular</option>
+  <a href="{% url 'inventory:correct' project.pk record.position.item_id record.pk %}">Corregir</a>
+  <a class="action-danger" href="{% url 'inventory:cancel' project.pk record.position.item_id record.pk %}">Anular</a>
   {% endif %}
-</select>
-<noscript><a href="{{ detail_url }}">{{ detail_label|default:'Ver detalle' }}</a>{% if record and not record.voided_at %} · <a href="{% url 'inventory:correct' project.pk record.position.item_id record.pk %}">Corregir</a> · <a href="{% url 'inventory:cancel' project.pk record.position.item_id record.pk %}">Anular</a>{% endif %}</noscript>
+</div>

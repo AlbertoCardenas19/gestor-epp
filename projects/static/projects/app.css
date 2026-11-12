@@ -124,7 +124,6 @@ html[data-sidebar-collapsed="true"] .sidebar-toggle svg { transform: rotate(180d
 .table th a { display: flex; align-items: center; justify-content: space-between; gap: 16px; color: #FFFFFF; text-decoration: none; }
 .table th a:hover { color: #FFFFFF; text-decoration: underline; }
 .table th a span { flex-shrink: 0; }
-.row-actions { min-width: 190px; width: 100%; padding-right: 2.5rem; }
 /* Alturas constantes: la flecha permanece a la misma altura al contraer. */
 .nav-link { height: 48px; min-height: 48px; }
 .nav-divider { height: 0; min-height: 0; }
@@ -135,3 +134,13 @@ html[data-sidebar-collapsed="true"] .sidebar-toggle svg { transform: rotate(180d
   .app-sidebar, .app-workspace, .sidebar-toggle svg { transition: none; }
 }
 .errorlist { list-style: none; padding-left: 0; margin-bottom: .5rem; }
+
+.action-trigger { border: 1px solid #64748B; border-radius: 10px; background: #FFFFFF; color: #334155; padding: 7px 12px; font-size: .85rem; white-space: nowrap; }
+.action-trigger:hover, .action-trigger[aria-expanded="true"] { background: #E2E8F0; }
+.action-trigger span { margin-left: 8px; }
+.action-menu { position: fixed; margin: 0; width: 168px; padding: 8px 0; border: 1px solid #CBD5E1; border-radius: 10px; background: #FFFFFF; color: #0F172A; box-shadow: 0 8px 24px #0f172a18; }
+.action-menu:not([style]) { margin: auto; }
+.action-menu a { display: block; padding: 12px 18px; color: #334155; text-decoration: none; font-size: .85rem; }
+.action-menu a:hover { background: #F1F5F9; }
+.action-menu a.action-danger { color: #b42332; }
+.action-menu a:focus-visible { outline-offset: -3px; }

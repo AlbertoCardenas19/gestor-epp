@@ -8,7 +8,7 @@
 <div class="row g-3">
 {% for row in rows %}
 <div class="col-12 col-md-6 col-xl-4"><article class="card h-100"><div class="card-body p-4">
-  <span class="badge text-bg-light border mb-3">{{ row.item.get_item_type_display }}</span>
+
   <h2 class="h5 text-break">{{ row.item.name }}</h2>
   {% if row.position %}
     <p class="mb-1 text-body-secondary">Saldo registrado</p><p class="fs-2 fw-semibold">{{ row.position.total }}</p>

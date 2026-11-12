@@ -1,14 +1,20 @@
 {% extends 'projects/base.html' %}
+{% load static %}
 {% block title %}Proyectos{% endblock %}
 {% block content %}
 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4"><h1>Proyectos</h1><a class="btn btn-primary" href="{% url 'projects:create' %}">＋ Nuevo proyecto</a></div>
 {% include 'projects/table_controls.html' with search_placeholder='Nombre o descripción' %}
 <div id="table-results" data-table-results aria-busy="false">
-<p class="d-md-none small text-body-secondary">Desliza la tabla para ver todas las columnas.</p>
-<div class="card"><div class="table-responsive" tabindex="0" role="region" aria-label="Tabla de proyectos"><table class="table table-striped mb-0 align-middle"><caption class="visually-hidden">Proyectos de la empresa</caption><thead><tr>{% include 'projects/table_headers.html' %}</tr></thead><tbody>
-{% for project in projects %}<tr><td class="text-break">{{ project.name }}</td><td class="text-break">{{ project.description|truncatechars:160|default:'Sin descripción.' }}</td><td>{% include 'projects/row_actions.html' with detail_url=project.get_absolute_url detail_label='Ver proyecto' action_label=project.name %}</td></tr>
-{% empty %}<tr><td colspan="3" class="p-4">No hay proyectos para esta consulta. <a href="{% url 'projects:create' %}">Crear primer proyecto</a></td></tr>{% endfor %}
-</tbody></table></div></div>
+<div class="row g-3" tabindex="-1" data-results-focus>
+{% for project in projects %}
+<div class="col-12 col-md-6 col-xl-4"><article class="card project-card h-100"><div class="card-body p-4 d-flex flex-column align-items-start">
+  <span class="project-icon mb-3" aria-hidden="true"><img src="{% static 'projects/folder.svg' %}" alt="" width="24" height="24"></span>
+  <h2 class="h5 text-break">{{ project.name }}</h2>
+  <p class="text-body-secondary text-break">{{ project.description|truncatechars:160|default:'Sin descripción.' }}</p>
+  <a class="project-link mt-auto" href="{{ project.get_absolute_url }}">Ver proyecto →<span class="visually-hidden">: {{ project.name }}</span></a>
+</div></article></div>
+{% empty %}<div class="col-12"><div class="card"><div class="card-body p-4">No hay proyectos para esta consulta. <a href="{% url 'projects:create' %}">Crear primer proyecto</a></div></div></div>{% endfor %}
+</div>
 {% include 'projects/pagination.html' %}
 </div>
 {% endblock %}

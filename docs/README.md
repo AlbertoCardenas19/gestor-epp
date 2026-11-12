@@ -15,6 +15,7 @@ Documentación del proyecto de gestión para la amiga prevencionista. Se reconst
 | [05-fuentes.md](05-fuentes.md) | Procedencia, exclusiones y límites de la recuperación |
 | [06-desarrollo.md](06-desarrollo.md) | Instalación, PostgreSQL y comprobaciones de proyectos, catálogo e inventario |
 | [07-iteraciones-entregas.md](07-iteraciones-entregas.md) | Acuerdos, verificación y prueba manual de corrección y anulación de entregas |
+| [08-stock-comun-y-solicitudes.md](08-stock-comun-y-solicitudes.md) | Acuerdos y diseño para migrar a stock común y solicitudes con reserva, todavía sin implementar |
 
 ## Cómo usarlo
 Coloca `AGENTS.md` en la raíz del repositorio y esta carpeta `docs/` también en la raíz. Si ya existen archivos con esos nombres, integra su contenido. Si copiaste el paquete anterior equivocado, reemplaza sus documentos por los de este paquete; no conserves aquel backlog como alcance de este producto.

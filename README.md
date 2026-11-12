@@ -102,8 +102,9 @@ presiona `Ctrl+C`. Las próximas veces solo necesitas iniciar PostgreSQL y ejecu
 
 ### 5. Recorrido de prueba
 
-1. En Proyectos, crea un proyecto, por ejemplo «Obra Norte». Las tablas tienen
-   un selector «Acciones» por fila para consultar sus registros.
+1. En Proyectos, crea un proyecto, por ejemplo «Obra Norte». Las tablas de Catálogo y Entregas tienen
+   un botón «Acciones» por fila que abre un menú para consultar sus registros.
+   Proyectos se muestra con tarjetas y enlaces «Ver proyecto».
 2. En «Catálogo», crea «Casco de seguridad» de tipo EPP.
 3. Desde Inicio, entra en Proyectos. Abre el proyecto y selecciona la pestaña «Inventario».
 4. Registra una apertura de 10 cascos y después una entrada de 5: saldo 15.

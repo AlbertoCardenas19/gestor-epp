@@ -142,21 +142,21 @@ class DeliveryTableTests(TestCase):
         self.assertEqual(self.position.balance, balance)
 
 
-class ProjectTableTests(TestCase):
+class ProjectCardsTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         Project.objects.bulk_create([Project(name=f'Obra {i:02d}', description=f'Descripción {11-i:02d}') for i in range(12)])
 
-    def test_search_pagination_and_each_column_in_both_directions(self):
+    def test_cards_preserve_search_pagination_and_order_parameters(self):
         response = self.client.get(reverse('projects:list'))
         self.assertEqual(response.context['paginator'].count, 12)
         self.assertEqual(len(response.context['projects']), 10)
-        self.assertContains(response, 'data-row-action')
+        self.assertContains(response, 'project-card', count=10)
+        self.assertNotContains(response, '<table')
         self.assertNotContains(response, 'Ordenar por')
         for sort, expected in [('name', 'Obra 00'), ('-name', 'Obra 11'), ('description', 'Obra 11'), ('-description', 'Obra 00')]:
             response = self.client.get(reverse('projects:list'), {'sort': sort, 'q': 'Obra', 'page': 1})
             self.assertEqual(response.context['projects'][0].name, expected)
-            self.assertContains(response, 'aria-sort="descending"' if sort.startswith('-') else 'aria-sort="ascending"')
             self.assertContains(response, 'q=Obra')
         response = self.client.get(reverse('projects:list'), {'q': 'Obra 01'})
         self.assertEqual(response.context['paginator'].count, 1)

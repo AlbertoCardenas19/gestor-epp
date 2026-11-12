@@ -487,3 +487,30 @@ corregir, éxito sin avisos ni responsable visible, ausencia de desborde de pág
 a 320/390/1440 píxeles y enlaces equivalentes sin JavaScript. Firefox se intentó
 iniciar; sigue faltando su ejecutable. Los datos exclusivos de la comprobación
 se retiraron. No hay dependencias ni migraciones nuevas; S16 sigue sin implementar.
+
+
+## Menú Acciones y tarjetas — S18 (RF-01, RF-03, RF-05, RF-08 y RF-09)
+
+Acciones es un botón que abre enlaces en un menú como la referencia del usuario,
+no un select. El menú se muestra sobre la tabla sin recortarse por su contenedor,
+se adapta al espacio disponible y permite clic exterior, Escape y teclado.
+Conserva solo las acciones implementadas y las confirmaciones previas a escrituras.
+Utiliza Popover API nativa; en navegadores compatibles también funciona sin JS.
+
+Se elimina el mensaje duplicado de resultados que aparecía arriba al ordenar;
+se conserva el resumen habitual de la paginación inferior y los errores de red.
+Se quitan las etiquetas de tipo de los títulos del detalle de catálogo e historial
+y de las tarjetas de inventario. El tipo permanece como dato del catálogo y en
+la tabla. Proyectos vuelve a tarjetas, manteniendo búsqueda automática, páginas
+y enlaces de consulta.
+
+Verificación: 119 pruebas aprobadas en PostgreSQL, adaptando las comprobaciones
+de tarjetas y menú. Chromium comprobó menú sin recorte, teclado, Escape, clic
+exterior, enlaces y estados, ausencia del mensaje duplicado al ordenar, tarjetas
+con búsqueda y páginas, etiquetas retiradas y saldo sin cambios. Se revisaron
+320/390/1440 píxeles y navegación nativa sin JavaScript. Firefox se intentó
+iniciar y sigue faltando su ejecutable. Se retiraron solo los datos creados por
+la prueba. No hay dependencias ni migraciones nuevas en este ajuste.
+
+El siguiente desarrollo corresponde a S16/S19; su diseño y verificación prevista
+están en [08-stock-comun-y-solicitudes.md](08-stock-comun-y-solicitudes.md).

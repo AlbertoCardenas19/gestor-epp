@@ -5,9 +5,10 @@
 <div class="mt-4 mb-4">
 
   <h1 class="text-break">{{ item.name }}</h1>
-  <span class="badge text-bg-light border">{{ item.get_item_type_display }}</span>
+
 </div>
 <section class="card"><div class="card-body p-4 p-md-5">
+  <dl class="mb-4"><dt>Tipo</dt><dd>{{ item.get_item_type_display }}</dd></dl>
   <h2 class="h5 mb-3">Descripción</h2>
   {% if item.description %}<div class="project-description text-break">{{ item.description|linebreaksbr }}</div>{% else %}<p class="text-body-secondary mb-0">Este elemento aún no tiene descripción.</p>{% endif %}
 </div></section>

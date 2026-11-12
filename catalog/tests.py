@@ -137,4 +137,4 @@ class CatalogTableTests(TestCase):
         self.assertEqual(response.context['items'][0].name, 'Salida')
         self.assertContains(response, 'aria-sort="descending"')
         self.assertNotContains(response, 'Ordenar por')
-        self.assertContains(response, 'data-row-action')
+        self.assertContains(response, 'popovertarget=')

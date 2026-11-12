@@ -3,7 +3,7 @@
 ## Procedencia
 Base reconstruida el 12 de noviembre de 2026 a partir del historial recuperado del proyecto de la amiga prevencionista, principalmente la conversación «Recordar proyecto amiga». No es una transcripción completa ni una revisión del repositorio. Las fechas se usan para localizar conversaciones, sin convertir marcas técnicas en horas locales.
 
-Los códigos S0–S17 son referencias internas de las fuentes, no IDs de decisiones previamente aprobadas.
+Los códigos S0–S19 son referencias internas de las fuentes, no IDs de decisiones previamente aprobadas.
 
 | Ref. | Conversación o momento | Evidencia recuperada |
 |---|---|---|
@@ -205,9 +205,9 @@ En las siguientes respuestas confirmó:
 - Los datos actuales de su PC son solo de prueba. Esto no autoriza borrarlos:
   se conserva el trabajo existente y se preparará una transición explícita.
 
-Antes de implementar hay que concretar la transición del historial y la relación
-entre solicitudes y las correcciones/anulaciones de entregas. No se asume su
-comportamiento sobre las reservas ni se modifica el historial actual.
+Las decisiones de transición, reservas al corregir/anular y selección de solicitud
+de destino se aclararon posteriormente en S19. La implementación del stock común
+sigue pendiente; no se modifica el historial actual por estas aclaraciones.
 
 ## S17 — Tablas, errores y comportamiento del sidebar
 
@@ -222,6 +222,30 @@ de acciones dentro de un select por fila.
 Son cambios de presentación y ubicación de errores. No modifican las reglas de
 existencias, corrección ni anulación. El stock común y las solicitudes de S16
 siguen pendientes de implementación.
+
+## S18 — Menú Acciones y regreso a tarjetas
+
+El usuario aportó una imagen de un botón «Acciones» que abre un menú y aclaró
+que ese era el comportamiento deseado, en lugar del select de S17. Pidió quitar
+el mensaje de resultados que aparece al ordenar, retirar las etiquetas de tipo
+bajo los títulos y volver a mostrar Proyectos con tarjetas. Mantiene las acciones
+existentes; la referencia visual no solicita implementar edición/desactivación
+del catálogo. También pidió retomar después el desarrollo del producto.
+
+## S19 — Transición al stock común y correcciones vinculadas a solicitudes
+
+Al retomar los pendientes de S16, el usuario confirmó:
+
+- Trasladar también los saldos anteriores al stock común, conservando el historial.
+- Si se anula una entrega o se corrige a una cantidad menor, las unidades vuelven
+  a quedar pendientes y reservadas para la misma solicitud.
+- Si una corrección cambia proyecto o elemento, seleccionar una solicitud de
+  destino existente con cantidad pendiente suficiente. No crear solicitudes
+  automáticamente durante la corrección.
+
+El diseño de implementación se prepara en [08-stock-comun-y-solicitudes.md](08-stock-comun-y-solicitudes.md).
+Las confirmaciones no significan que ya se haya migrado el inventario. El código
+actual conserva el modelo por proyecto mientras se prepara ese cambio.
 
 ## Qué se excluyó
 - La idea de junio de automatizar documentos para distintos profesionales: no corresponde a este producto. Se excluyen sus requisitos de plantillas, generación PDF/Excel, IPER, AST, reportes de incidentes y charlas.

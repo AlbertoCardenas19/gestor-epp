@@ -32,8 +32,11 @@ entregas parciales y reducción/cancelación de lo pendiente con motivo e histor
 liberando la reserva sin alterar entregas anteriores. Los datos actuales del PC
 son de prueba; no se ha solicitado borrarlos.
 
-Pendiente de concretar antes de implementar: transición del historial actual y
-comportamiento de reservas ante corrección/anulación de entregas vinculadas.
+S19 confirma trasladar los saldos anteriores al stock común, conservar historial
+y devolver unidades a la reserva pendiente de la misma solicitud al reducir o
+anular una entrega. Las correcciones entre proyectos/elementos requieren una
+solicitud existente de destino con pendiente suficiente. Resta implementar y
+verificar la transición conforme al [diseño](08-stock-comun-y-solicitudes.md).
 No se convierte una corrección/anulación de entrega en devolución física.
 
 ## Recomendaciones anteriores que no son decisiones cerradas
