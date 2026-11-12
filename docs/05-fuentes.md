@@ -1,0 +1,56 @@
+# Fuentes, trazabilidad y límites
+
+## Procedencia
+Base reconstruida el 12 de noviembre de 2026 a partir del historial recuperado del proyecto de la amiga prevencionista, principalmente la conversación «Recordar proyecto amiga». No es una transcripción completa ni una revisión del repositorio. Las fechas se usan para localizar conversaciones, sin convertir marcas técnicas en horas locales.
+
+Los códigos S0–S6 son referencias internas de esta entrega, no IDs de decisiones previamente aprobadas.
+
+| Ref. | Conversación o momento | Evidencia recuperada |
+|---|---|---|
+| S0 | 19 de octubre de 2026, presentación del proyecto | App web para la prevencionista, gestión de EPP y dinero/proyectos. |
+| S1 | 19 de octubre de 2026, cuestionario, respuestas 1–10 | Detalle resumido debajo. |
+| S2 | 19 de octubre de 2026, aclaraciones, respuestas 11–14 | Detalle resumido debajo. |
+| S3 | 19 de octubre de 2026, mensaje posterior a las aclaraciones | El usuario deja las reglas de negocio detalladas para más adelante durante el desarrollo. |
+| S4 | 20 de octubre de 2026, contexto de colaboración y práctica | Desarrollar el producto comercial junto con su amiga; intención de práctica profesional y eventual aporte menor de la empresa. |
+| S5 | 12 de noviembre de 2026, corrección en la conversación actual | El usuario identifica que el paquete previo se basó en otra idea y confirma que el proyecto correcto es la app de gestión para su amiga prevencionista. Solicita solo contenido de este proyecto, sin inventar. |
+| S6 | 19 de octubre de 2026, recomendación técnica del asistente | Django + PostgreSQL + Render fueron sugeridos; no se recuperó aprobación explícita. No se usan como requisito. |
+
+## S1 — Respuestas 1–10 del usuario
+Resumen de las respuestas recuperadas; no son citas textuales:
+
+1. Empresa con varios proyectos.
+2. Inicialmente solo ella; posibilidad de más usuarios.
+3. Uso desde computador y celular.
+4. Ella pide los elementos y los entrega a otra persona.
+5. Inventario por proyecto.
+6. Registrar entregas, devoluciones y reposiciones.
+7. Selección de una opción de gestión financiera completa, aclarada después en S2.
+8. Cada proyecto tiene presupuesto, aunque no le influye a ella en su función.
+9. Adjuntar facturas, comprobantes de transferencia y cotizaciones. Preparar lista de necesidades, cotizar y presentar al jefe.
+10. No hay sistema definido; principalmente se usa WhatsApp.
+
+## S2 — Aclaraciones 11–14 del usuario
+Resumen de las respuestas recuperadas; no son citas textuales:
+
+11. El jefe aprueba y ella realiza la compra.
+12. Se necesita saber a qué trabajadores se entregaron los EPP posteriormente.
+13. Ella no administra dinero, pero la empresa debe gestionar presupuestos. La opción más cercana es abarcar el dinero que ingresa y sale de cada proyecto.
+14. Inicialmente EPP y señaléticas; quizá más elementos después.
+
+La aclaración 13 precisa las respuestas 7 y 8: no asignar finanzas a la prevencionista. No se recuperó una respuesta numerada 15.
+
+## Qué se excluyó
+- La idea de junio de automatizar documentos para distintos profesionales: no corresponde a este producto. Se excluyen sus requisitos de plantillas, generación PDF/Excel, IPER, AST, reportes de incidentes y charlas.
+- Requisitos, decisiones y tecnología de otros proyectos del usuario.
+- Propuestas del asistente que no tienen aceptación recuperada, salvo la mención explícita de S6 para evitar que se confunda con una decisión.
+- Reglas, criterios de aceptación y prioridades que exigirían inventar detalle.
+
+La exclusión significa que no se incorporan a esta base como acuerdos; no prohíbe que el usuario los solicite en el futuro.
+
+## Límites
+No se recuperaron decisiones adicionales suficientes para cerrar el MVP, tecnologías, permisos, campos o reglas de stock. Eso no demuestra que no existan conversaciones adicionales. Se documentan únicamente los acuerdos que pudieron recuperarse y atribuirse a este proyecto.
+
+No se certifican funcionalidades ya implementadas, cumplimiento normativo, contratos, aprobación de práctica, presupuesto de infraestructura ni estado de un repositorio.
+
+## Corrección del paquete anterior
+Esta entrega reemplaza por completo la documentación anterior basada erróneamente en la app de automatización documental. Sus requisitos RF-001 y siguientes y su backlog no son fuente válida para este proyecto. Los identificadores RF-01 a RF-14 de esta entrega corresponden al alcance de gestión recuperado aquí.
