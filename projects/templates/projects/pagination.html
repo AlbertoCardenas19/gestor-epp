@@ -1,0 +1,6 @@
+<div class="table-summary"><p class="mb-0 text-body-secondary">{% if paginator.count %}{{ page_obj.start_index }}–{{ page_obj.end_index }} de {{ paginator.count }} registros{% else %}0 registros{% endif %}</p>
+{% if is_paginated %}<nav aria-label="Páginas de la tabla"><ul class="pagination mb-0">
+{% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="{% querystring page=page_obj.previous_page_number %}">Anterior</a></li>{% endif %}
+<li class="page-item active"><span class="page-link" aria-current="page">{{ page_obj.number }} / {{ paginator.num_pages }}</span></li>
+{% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="{% querystring page=page_obj.next_page_number %}">Siguiente</a></li>{% endif %}
+</ul></nav>{% endif %}</div>

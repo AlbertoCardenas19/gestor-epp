@@ -1,0 +1,7 @@
+<form method="get" class="table-controls mb-4" role="search">
+  <div class="search-field"><label class="form-label" for="table-query">Buscar</label><input class="form-control" type="search" id="table-query" name="q" value="{{ q }}" placeholder="{{ search_placeholder }}"></div>
+  {% if state %}<div><label class="form-label" for="table-state">Estado</label><select class="form-select" id="table-state" name="state"><option value="active"{% if state == 'active' %} selected{% endif %}>Vigentes</option><option value="all"{% if state == 'all' %} selected{% endif %}>Todos</option><option value="cancelled"{% if state == 'cancelled' %} selected{% endif %}>Anuladas</option><option value="replaced"{% if state == 'replaced' %} selected{% endif %}>Sustituidas</option></select></div>{% endif %}
+  <div><label class="form-label" for="table-sort">Ordenar por</label><select class="form-select" id="table-sort" name="sort">{% for key,label in sort_options %}<option value="{{ key }}"{% if sort == key %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+  <div><label class="form-label" for="table-size">Filas</label><select class="form-select" id="table-size" name="per_page"><option{% if per_page == 10 %} selected{% endif %}>10</option><option{% if per_page == 25 %} selected{% endif %}>25</option><option{% if per_page == 50 %} selected{% endif %}>50</option></select></div>
+  <button class="btn btn-primary" type="submit">Aplicar</button>
+</form>

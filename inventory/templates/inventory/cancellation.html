@@ -3,7 +3,7 @@
 {% block content %}
 <a class="back-link" href="{% url 'inventory:history' project.pk item.pk %}">← Volver al historial</a>
 <div class="form-shell mt-4">
-  <p class="eyebrow text-break">{{ project.name }} · {{ item.name }}</p>
+
   <h1>Anular entrega</h1>
   <div class="card mb-4"><div class="card-body p-4">
     <p class="text-break"><strong>Trabajador destinatario:</strong> {{ original.worker_full_name }}</p>

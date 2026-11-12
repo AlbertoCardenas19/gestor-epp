@@ -171,7 +171,7 @@ Los procesos deben reiniciarse en cada nueva sesión; los datos quedan en `.loca
 
 ## Inventario por proyecto — RF-04
 
-Desde el detalle de un proyecto, «Ver inventario» muestra los elementos del
+Desde el detalle de un proyecto, la pestaña «Inventario» muestra los elementos del
 catálogo común. Cada combinación proyecto–elemento tiene sus propios registros.
 La lista distingue «Sin registro inicial» de una apertura con cantidad cero.
 
@@ -232,7 +232,7 @@ comprobaron sin desbordamiento a 320, 390 y 1366 píxeles. No se añaden depende
 
 ## Presentación visual y prueba en PC — 12 de noviembre de 2026
 
-Se aplicó una presentación común a los flujos existentes: navegación lateral
+La primera presentación (reemplazada por S14, descrita al final) aplicó navegación lateral
 en escritorio, navegación superior en móvil, paleta verde, tarjetas, formularios,
 ilustración local y distinción visual entre registros vigentes y anulados.
 CoreUI/Bootstrap continúa sirviéndose desde los archivos estáticos del proyecto.
@@ -376,3 +376,37 @@ nuevamente, pero sigue faltando su ejecutable. Los datos de navegador se retirar
 El commit `ad800f5` de la primera iteración se conserva y esta segunda iteración
 se cierra con otro commit, sin push. El recorrido manual de ambas está en
 [07-iteraciones-entregas.md](07-iteraciones-entregas.md#recorrido-manual-para-ambas-iteraciones).
+
+
+## Navegación y tablas — S14 (RF-01, RF-03, RF-04, RF-05, RF-08 y RF-09)
+
+Presentación actual: negro, blanco y dorado, conservando CoreUI/Bootstrap local.
+La raíz `/` muestra Inicio con paneles a Proyectos y Catálogo. El sidebar tiene
+un botón debajo de las opciones para contraerlo a iconos; conserva la preferencia
+en el navegador y permite usar teclado. En móvil comienza contraído. Se retiraron
+banner, etiquetas decorativas sobre títulos, subtítulo del header, nota del sidebar
+y footer según lo solicitado.
+
+El proyecto abre en Entregas: una fila por entrega vigente, con elemento,
+trabajador, cantidad, fecha, estado y enlaces a historial, corrección y anulación.
+El filtro permite consultar vigentes, anuladas, sustituidas o todas. Las acciones
+que cambian registros solo aparecen para vigentes; las validaciones del servidor
+continúan aplicándose. La pestaña Inventario conserva apertura, entrada, entrega
+y consulta de saldos. La descripción del proyecto continúa guardándose y se ve
+en la lista de proyectos; ya no ocupa el detalle.
+
+Catálogo usa una tabla de nombre, tipo, descripción y acceso al detalle. Ambas
+tablas buscan, ordenan y paginan en el servidor, con 10, 25 o 50 filas por página.
+La búsqueda de entregas consulta elemento, trabajador y observación; la del
+catálogo consulta nombre, tipo visible y descripción. Se conservan filtros al
+cambiar de página. En móvil las tablas se desplazan horizontalmente dentro de
+su contenedor, sin ensanchar la página. No se agregaron paquetes ni migraciones.
+
+Verificación: 114 pruebas aprobadas en PostgreSQL, incluidas las 109 anteriores
+adaptadas a la nueva navegación y cinco nuevas sobre las tablas. Se comprobaron
+separación entre proyectos, estados, enlaces de acciones, búsqueda, ordenación,
+paginación, parámetros inválidos y conservación de saldos al consultar.
+Chromium verificó inicio, catálogo, entregas, acceso a corrección y anulación,
+pestaña Inventario e historial, saldo, menú con teclado y preferencia tras recargar,
+y ausencia de desborde de página a 320, 390 y 1440 píxeles. Firefox se intentó
+iniciar, pero sigue sin estar disponible su ejecutable en el entorno.

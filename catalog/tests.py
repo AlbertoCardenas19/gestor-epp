@@ -102,3 +102,31 @@ class CatalogFlowTests(TestCase):
             response = self.client.get(reverse(f'{namespace}:list'))
             self.assertContains(response, f'aria-current="page" href="{reverse(f"{namespace}:list")}">{label}</a>')
             self.assertEqual(response.content.count(b'aria-current="page"'), 1)
+
+
+class CatalogTableTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        Item.objects.bulk_create([Item(name=f'Casco {i:02d}', item_type=Item.Type.EPP) for i in range(12)])
+        Item.objects.create(name='Salida', item_type=Item.Type.SIGNAGE, description='Evacuación')
+
+    def test_pagination_and_search_by_name_type_and_description(self):
+        response = self.client.get(reverse('catalog:list'))
+        self.assertEqual(response.context['paginator'].count, 13)
+        self.assertEqual(len(response.context['items']), 10)
+        self.assertContains(response, '<table', count=1)
+        response = self.client.get(reverse('catalog:list'), {'q': 'Casco', 'sort': '-name', 'page': 2})
+        self.assertEqual([item.name for item in response.context['items']], ['Casco 01', 'Casco 00'])
+        self.assertContains(response, 'q=Casco')
+        for query in ['Señalética', 'Evacuación', 'Salida']:
+            response = self.client.get(reverse('catalog:list'), {'q': query})
+            self.assertEqual([item.name for item in response.context['items']], ['Salida'])
+
+    def test_invalid_parameters_and_empty_search(self):
+        response = self.client.get(reverse('catalog:list'), {'sort': 'invalid', 'per_page': '99999', 'page': '-1'})
+        self.assertEqual(response.context['sort'], 'name')
+        self.assertEqual(response.context['paginator'].per_page, 10)
+        self.assertEqual(response.status_code, 200)
+        response = self.client.get(reverse('catalog:list'), {'q': 'No existe'})
+        self.assertEqual(response.context['paginator'].count, 0)
+        self.assertContains(response, 'No hay elementos para esta consulta.')

@@ -3,7 +3,7 @@
 {% block content %}
 <a class="back-link" href="{% url 'catalog:list' %}">← Volver al catálogo</a>
 <div class="mt-4 mb-4">
-  <p class="eyebrow">CATÁLOGO COMÚN</p>
+
   <h1 class="text-break">{{ item.name }}</h1>
   <span class="badge text-bg-light border">{{ item.get_item_type_display }}</span>
 </div>

@@ -3,7 +3,7 @@
 {% block content %}
 <a class="back-link" href="{% url 'inventory:history' project.pk item.pk %}">← Volver al historial</a>
 <div class="form-shell mt-4">
-  <p class="eyebrow text-break">{{ project.name }} · {{ item.name }}</p>
+
   <h1>Corregir registro</h1>
   <p>{{ original.get_operation_display }} · {{ original.quantity }} unidades · {{ original.occurred_on|date:'d/m/Y' }}</p>
   {% if original.worker_full_name %}<p class="text-break"><strong>Destinatario original:</strong> {{ original.worker_full_name }}</p>{% endif %}

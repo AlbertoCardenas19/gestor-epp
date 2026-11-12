@@ -1,34 +1,12 @@
 {% extends 'projects/base.html' %}
 {% block title %}Catálogo{% endblock %}
 {% block content %}
-<div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
-  <div><p class="eyebrow">EPP Y SEÑALÉTICAS</p><h1>Catálogo</h1><p class="text-body-secondary mb-0">Un catálogo común para todos los proyectos de la empresa.</p></div>
-  <a class="btn btn-primary" href="{% url 'catalog:create' %}"><span aria-hidden="true">＋</span> Nuevo elemento</a>
-</div>
-{% if items %}
-<div class="section-heading mb-3"><h2 class="h6 mb-0">Elementos de la empresa</h2><span class="count-label">{{ items|length }} registrado{{ items|length|pluralize:'s' }}</span></div>
-<div class="row g-3">
-  {% for item in items %}
-  <div class="col-12 col-md-6 col-xl-4">
-    <article class="card h-100">
-      <div class="card-body p-4 d-flex flex-column align-items-start">
-        <span class="badge text-bg-light border mb-3">{{ item.get_item_type_display }}</span>
-        <h2 class="h5 text-break">{{ item.name }}</h2>
-        <p class="text-body-secondary text-break">{{ item.description|truncatechars:160|default:'Sin descripción.' }}</p>
-        <a class="project-link mt-auto" href="{{ item.get_absolute_url }}">Ver elemento <span aria-hidden="true">→</span><span class="visually-hidden">: {{ item.name }}</span></a>
-      </div>
-    </article>
-  </div>
-  {% endfor %}
-</div>
-{% else %}
-<section class="card text-center">
-  <div class="card-body py-5 px-3">
-    <span class="project-icon mb-3" aria-hidden="true">▤</span>
-    <h2 class="h4">Comienza tu catálogo</h2>
-    <p class="text-body-secondary mb-4">Registra el primer EPP o señalética con su nombre y tipo.</p>
-    <a class="btn btn-primary" href="{% url 'catalog:create' %}">Crear primer elemento</a>
-  </div>
-</section>
-{% endif %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4"><h1>Catálogo</h1><a class="btn btn-primary" href="{% url 'catalog:create' %}">＋ Nuevo elemento</a></div>
+{% include 'projects/table_controls.html' with search_placeholder='Nombre, tipo o descripción' %}
+<p class="d-md-none small text-body-secondary">Desliza la tabla para ver todas las columnas.</p>
+<div class="card"><div class="table-responsive" tabindex="0" role="region" aria-label="Tabla del catálogo"><table class="table mb-0 align-middle"><caption class="visually-hidden">Catálogo común de EPP y señaléticas</caption><thead><tr><th scope="col">Nombre</th><th scope="col">Tipo</th><th scope="col">Descripción</th><th scope="col">Acciones</th></tr></thead><tbody>
+{% for item in items %}<tr><td class="text-break">{{ item.name }}</td><td>{{ item.get_item_type_display }}</td><td class="text-break">{{ item.description|truncatechars:160|default:'Sin descripción.' }}</td><td><a href="{{ item.get_absolute_url }}">Ver elemento</a></td></tr>
+{% empty %}<tr><td colspan="4" class="p-4">No hay elementos para esta consulta. <a href="{% url 'catalog:create' %}">Crear primer elemento</a></td></tr>{% endfor %}
+</tbody></table></div></div>
+{% include 'projects/pagination.html' %}
 {% endblock %}

@@ -104,13 +104,18 @@ presiona `Ctrl+C`. Las próximas veces solo necesitas iniciar PostgreSQL y ejecu
 
 1. Crea un proyecto, por ejemplo «Obra Norte».
 2. En «Catálogo», crea «Casco de seguridad» de tipo EPP.
-3. Abre el proyecto y entra en «Ver inventario».
+3. Desde Inicio, entra en Proyectos. Abre el proyecto y selecciona la pestaña «Inventario».
 4. Registra una apertura de 10 cascos y después una entrada de 5: saldo 15.
 5. Corrige la apertura a 8, indicando un motivo: saldo 13. El original queda anulado.
 6. Crea otro proyecto y comprueba que el mismo casco comienza «Sin registro inicial».
 7. En el historial del casco de Obra Norte, registra una entrega de 3 unidades
    a un trabajador, indicando su nombre completo y la fecha: saldo 10.
 8. Intenta entregar 11 unidades: debe rechazarse y conservarse el saldo 10.
+9. Vuelve al proyecto: «Entregas» muestra una fila por entrega vigente. Prueba
+   buscar por trabajador, ordenar y cambiar de página. El filtro de estado permite
+   consultar también las entregas sustituidas y anuladas.
+10. En Catálogo, prueba la tabla con búsqueda, ordenación y paginación. El botón
+    bajo las opciones del menú lateral permite reducirlo a una columna de iconos.
 
 Los datos que registres se guardan en tu PostgreSQL local. No se incluyen bases
 de datos ni registros de prueba de la nube en GitHub.
