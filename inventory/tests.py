@@ -73,8 +73,20 @@ class InventoryFlowTests(TestCase):
             self.assertContains(self.client.get(response.url), 'Saldo registrado')
         history = Client().get(self.url('history'))
         self.assertContains(history, 'data-testid="balance">15</p>')
-        self.assertContains(history, 'Registrado por: Prevencionista')
+        self.assertNotContains(history, 'Registrado por:')
         self.assertContains(history, 'Fecha de registro:')
+
+    def test_insufficient_balance_error_belongs_to_quantity_and_rolls_back(self):
+        opening = open_stock(self.project, self.item, record_data(10))
+        response = self.client.post(self.url('deliver'), record_data(11, worker_full_name='Ana Pérez'))
+        self.assertFormError(response.context['form'], 'quantity', 'La cantidad supera el saldo disponible del proyecto. No se registró la entrega.')
+        self.assertEqual(response.context['form'].non_field_errors(), [])
+        self.assertEqual(response.context['form'].fields['quantity'].widget.attrs['aria-describedby'], 'id_quantity_errors')
+        self.assertContains(response, 'class="invalid-feedback" id="id_quantity_errors"')
+        self.assertNotContains(response, 'alert-danger')
+        self.assertNotContains(response, 'Registrado por:')
+        self.assertEqual(opening.position.balance, 10)
+        self.assertEqual(StockRecord.objects.count(), 1)
 
     def test_zero_opening_and_positive_receipt(self):
         self.assertEqual(self.client.post(self.url('open'), record_data(0)).status_code, 302)

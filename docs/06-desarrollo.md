@@ -451,3 +451,39 @@ Las aclaraciones y pendientes están en [S16](05-fuentes.md#s16--revisión-del-f
 No se ha iniciado una conversión de datos ni se deben usar las solicitudes como
 si ya existieran. El rediseño requiere conservar el historial y acordar el
 tratamiento de registros anteriores antes de preparar migraciones.
+
+
+## Tablas y validación por campo — S17 (RF-01, RF-03, RF-04, RF-05, RF-08 y RF-09)
+
+Proyectos ahora tiene tabla con búsqueda automática y paginación. Proyectos,
+Catálogo y Entregas ordenan desde los encabezados, alternando ascendente y
+descendente y mostrando la dirección; se retira el selector «Ordenar por».
+Se conservan consulta, estado y tamaño de página, reiniciando la página al ordenar.
+Acciones contiene un select por fila: abre detalles, historial o los formularios
+existentes de corrección/anulación; seleccionar una acción no ejecuta escrituras.
+Las acciones de modificar solo se ofrecen para entregas vigentes. Sin JavaScript
+se conservan enlaces de ordenación, consulta y acciones equivalentes.
+
+Fecha es la primera columna de Entregas. Las franjas usan blanco y gris azulado
+`#E2E8F0`, distintos del fondo general `#F1F5F9`. El sidebar anima ancho y margen
+del contenido durante 240 ms y respeta la preferencia de movimiento reducido.
+Las opciones conservan 48 píxeles de alto, evitando que la flecha suba o baje.
+
+Se retiraron los avisos de éxito y «Registrado por: Prevencionista» de la interfaz;
+los datos históricos se conservan. Los errores aparecen bajo su campo, con texto
+rojo y asociación accesible. El servicio identifica los rechazos por saldo en
+`quantity`, también al corregir; los demás errores generales se muestran como
+texto rojo sin tarjeta de alerta. Se conserva la transacción, la validación y
+la restitución única existentes: no cambian las reglas de inventario.
+
+Verificación: 119 pruebas pasan en PostgreSQL (114 anteriores y cinco nuevas).
+Se comprueban búsqueda, páginas y ordenación de proyectos, dirección de los
+encabezados, ordenación de estados y trabajadores, descripción descendente,
+ausencia de aviso de creación y error de saldo vinculado a cantidad sin escritura
+parcial. Chromium verificó las tres tablas, encabezados en ambos sentidos,
+selectores de acciones, fecha primero, contraste de franjas, transición y altura
+estable de la flecha, movimiento reducido, errores bajo cantidad al entregar y
+corregir, éxito sin avisos ni responsable visible, ausencia de desborde de página
+a 320/390/1440 píxeles y enlaces equivalentes sin JavaScript. Firefox se intentó
+iniciar; sigue faltando su ejecutable. Los datos exclusivos de la comprobación
+se retiraron. No hay dependencias ni migraciones nuevas; S16 sigue sin implementar.

@@ -102,7 +102,8 @@ presiona `Ctrl+C`. Las próximas veces solo necesitas iniciar PostgreSQL y ejecu
 
 ### 5. Recorrido de prueba
 
-1. Crea un proyecto, por ejemplo «Obra Norte».
+1. En Proyectos, crea un proyecto, por ejemplo «Obra Norte». Las tablas tienen
+   un selector «Acciones» por fila para consultar sus registros.
 2. En «Catálogo», crea «Casco de seguridad» de tipo EPP.
 3. Desde Inicio, entra en Proyectos. Abre el proyecto y selecciona la pestaña «Inventario».
 4. Registra una apertura de 10 cascos y después una entrada de 5: saldo 15.
@@ -112,10 +113,11 @@ presiona `Ctrl+C`. Las próximas veces solo necesitas iniciar PostgreSQL y ejecu
    a un trabajador, indicando su nombre completo y la fecha: saldo 10.
 8. Intenta entregar 11 unidades: debe rechazarse y conservarse el saldo 10.
 9. Vuelve al proyecto: «Entregas» muestra una fila por entrega vigente. Prueba
-   buscar por trabajador, ordenar y cambiar de página. El filtro de estado permite
+   buscar por trabajador, ordenar pulsando los encabezados y cambiar de página. El filtro de estado permite
    consultar también las entregas sustituidas y anuladas.
 10. En Catálogo, prueba la tabla con búsqueda automática al escribir, ordenación
-    y paginación. También se aplica a la tabla de Entregas. El botón
+    y paginación. También se aplica a Proyectos y Entregas. Ya no hay selector
+    «Ordenar por»: cada encabezado de datos alterna la dirección al pulsarlo. La flecha
     bajo las opciones del menú lateral permite reducirlo a una columna de iconos.
 
 Los datos que registres se guardan en tu PostgreSQL local. No se incluyen bases

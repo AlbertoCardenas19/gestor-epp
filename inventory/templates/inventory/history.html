@@ -14,7 +14,7 @@
 {% for record in records %}
 <article class="card record-card {% if record.voided_at %}record-voided{% endif %} mb-3" id="registro-{{ record.pk }}"><div class="card-body p-4">
   <div class="d-flex flex-wrap justify-content-between gap-2 mb-2"><h3 class="h5 mb-0">{{ record.get_operation_display }} · {{ record.quantity }} unidades</h3><span class="badge {% if record.voided_at %}text-bg-secondary{% else %}text-bg-light border{% endif %}">{% if record.voided_at %}{% if record.operation == 'delivery' and record.is_replaced %}Sustituido{% else %}Anulado{% endif %}{% else %}Vigente{% endif %}</span></div>
-  <p class="small text-body-secondary">Fecha del hecho: {{ record.occurred_on|date:'d/m/Y' }} · Registrado por: {{ record.recorded_by }}<br>Fecha de registro: {{ record.created_at|date:'d/m/Y H:i:s T' }}</p>
+  <p class="small text-body-secondary">Fecha del hecho: {{ record.occurred_on|date:'d/m/Y' }}<br>Fecha de registro: {{ record.created_at|date:'d/m/Y H:i:s T' }}</p>
   {% if record.worker_full_name %}<p class="text-break"><strong>Trabajador destinatario:</strong> {{ record.worker_full_name }}</p>{% endif %}
   {% if record.observation %}<p class="text-break">{{ record.observation|linebreaksbr }}</p>{% endif %}
   {% if record.replaces_id %}<p>Reemplaza al <a href="{{ record.replaces.get_absolute_url }}">registro anterior</a>.</p>{% endif %}

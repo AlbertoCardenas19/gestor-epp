@@ -10,6 +10,7 @@ class TableViewMixin:
     search_fields = ()
     sort_options = ()
     default_sort = ''
+    table_columns = ()
 
     def table_query(self):
         return self.request.GET.get('q', '').strip()
@@ -35,7 +36,13 @@ class TableViewMixin:
         return paginator, page, page.object_list, page.has_other_pages()
 
     def get_context_data(self, **kwargs):
+        current_sort = self.table_sort()
+        columns = []
+        for label, ascending, descending in self.table_columns:
+            direction = 'ascending' if current_sort == ascending else 'descending' if current_sort == descending else 'none'
+            columns.append({'label': label, 'direction': direction,
+                            'next_sort': descending if current_sort == ascending else ascending})
         return super().get_context_data(
-            q=self.table_query(), sort=self.table_sort(), per_page=self.get_paginate_by(None),
+            columns=columns, q=self.table_query(), sort=self.table_sort(), per_page=self.get_paginate_by(None),
             sort_options=[(key, label) for key, label, _ in self.sort_options], **kwargs,
         )

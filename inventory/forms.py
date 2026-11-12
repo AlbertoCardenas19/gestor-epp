@@ -8,7 +8,20 @@ from catalog.models import Item
 from projects.models import Project
 
 
-class StockForm(forms.Form):
+class InlineErrorsMixin:
+    def add_error(self, field, error):
+        super().add_error(field, error)
+        for name in self._errors:
+            if name in self.fields and not self.fields[name].widget.is_hidden:
+                widget = self.fields[name].widget
+                classes = widget.attrs.get('class', 'form-control').split()
+                if 'is-invalid' not in classes:
+                    classes.append('is-invalid')
+                widget.attrs.update({'class': ' '.join(classes), 'aria-invalid': 'true',
+                                     'aria-describedby': f'id_{name}_errors'})
+
+
+class StockForm(InlineErrorsMixin, forms.Form):
     quantity = forms.IntegerField(label='Cantidad', min_value=0, max_value=9223372036854775807,
                                  widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '1'}))
     occurred_on = forms.DateField(label='Fecha del conteo o recepción', input_formats=['%Y-%m-%d'],
@@ -25,13 +38,7 @@ class StockForm(forms.Form):
             self.fields['quantity'].widget.attrs['min'] = 1
         if operation == StockRecord.Operation.DELIVERY:
             self.fields['occurred_on'].label = 'Fecha de entrega'
-        if self.is_bound:
-            for name in self.errors:
-                if name in self.fields and not self.fields[name].widget.is_hidden:
-                    self.fields[name].widget.attrs.update({
-                        'class': f"{self.fields[name].widget.attrs.get('class', 'form-control')} is-invalid", 'aria-invalid': 'true',
-                        'aria-describedby': f'id_{name}_errors',
-                    })
+
 
 
 class CorrectionForm(StockForm):
@@ -62,17 +69,9 @@ class DeliveryCorrectionForm(DeliveryForm):
                    'occurred_on', 'observation', 'reason', 'submission_key']
 
 
-class DeliveryCancellationForm(forms.Form):
+class DeliveryCancellationForm(InlineErrorsMixin, forms.Form):
     reason = forms.CharField(
         label='Motivo de la anulación',
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
         error_messages={'required': 'Escribe el motivo de la anulación.'},
     )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.is_bound and 'reason' in self.errors:
-            self.fields['reason'].widget.attrs.update({
-                'class': 'form-control is-invalid', 'aria-invalid': 'true',
-                'aria-describedby': 'id_reason_errors',
-            })

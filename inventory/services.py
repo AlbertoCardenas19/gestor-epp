@@ -72,7 +72,7 @@ def deliver_stock(project, item, data):
     # Validar y guardar dentro del bloqueo; un error posterior revierte la entrega.
     record = _create_record(position, StockRecord.Operation.DELIVERY, data)
     if position.balance < 0:
-        raise ValidationError('La cantidad supera el saldo disponible del proyecto. No se registró la entrega.')
+        raise ValidationError({'quantity': 'La cantidad supera el saldo disponible del proyecto. No se registró la entrega.'})
     return record
 
 
@@ -136,7 +136,7 @@ def correct_delivery(project, record_id, data):
     original.save(update_fields=['voided_at', 'void_reason'])
     replacement = _create_record(destination, StockRecord.Operation.DELIVERY, data, replaces=original)
     if source.balance < 0 or destination.balance < 0:
-        raise ValidationError('La corrección supera el saldo disponible. No se modificó ningún registro ni saldo.')
+        raise ValidationError({'quantity': 'La corrección supera el saldo disponible. No se modificó ningún registro ni saldo.'})
     return replacement
 
 
@@ -160,5 +160,5 @@ def correct_record(project, record_id, data):
     original.save(update_fields=['voided_at', 'void_reason'])
     replacement = _create_record(position, original.operation, data, replaces=original)
     if position.balance < 0:
-        raise ValidationError('La corrección dejaría un saldo negativo por las entregas registradas. No se aplicó ningún cambio.')
+        raise ValidationError({'quantity': 'La corrección dejaría un saldo negativo por las entregas registradas. No se aplicó ningún cambio.'})
     return replacement

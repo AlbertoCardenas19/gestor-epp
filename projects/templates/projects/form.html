@@ -9,8 +9,7 @@
   <div class="card"><div class="card-body p-4 p-md-5">
     <form method="post" novalidate>
       {% csrf_token %}
-      {% if form.errors %}<div class="alert alert-danger" role="alert">Revisa los campos indicados para guardar el proyecto.</div>{% endif %}
-      {{ form.non_field_errors }}
+      {% if form.non_field_errors %}<div class="text-danger small" role="alert">{{ form.non_field_errors }}</div>{% endif %}
       {% for field in form %}
       <div class="mb-4">
         <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }} {% if field.field.required %}<span class="text-body-secondary fw-normal">(obligatorio)</span>{% else %}<span class="text-body-secondary fw-normal">(opcional)</span>{% endif %}</label>

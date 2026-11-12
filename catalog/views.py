@@ -1,4 +1,3 @@
-from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Case, CharField, Value, When
 from django.views.generic import CreateView, DetailView, ListView
 
@@ -18,8 +17,11 @@ class ItemListView(TableViewMixin, ListView):
         ('-name', 'Nombre: Z–A', ('-name', '-pk')),
         ('type', 'Tipo: A–Z', ('type_label', 'name', 'pk')),
         ('-type', 'Tipo: Z–A', ('-type_label', 'name', 'pk')),
+        ('-description', 'Descripción: Z–A', ('-description', '-pk')),
         ('description', 'Descripción: A–Z', ('description', 'pk')),
     )
+
+    table_columns = (('Nombre', 'name', '-name'), ('Tipo', 'type', '-type'), ('Descripción', 'description', '-description'))
 
     def get_queryset(self):
         items = super().get_queryset().annotate(type_label=Case(
@@ -29,11 +31,10 @@ class ItemListView(TableViewMixin, ListView):
         return self.filter_table(items)
 
 
-class ItemCreateView(SuccessMessageMixin, CreateView):
+class ItemCreateView(CreateView):
     model = Item
     form_class = ItemForm
     template_name = 'catalog/form.html'
-    success_message = 'Elemento creado correctamente.'
 
 
 class ItemDetailView(DetailView):

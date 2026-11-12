@@ -120,6 +120,16 @@ class DeliveryTableTests(TestCase):
         self.assertEqual(response.context['paginator'].count, 15)
         self.assertNotContains(response, 'Otro proyecto')
 
+    def test_delivery_header_order_and_sorting_states_and_workers(self):
+        response = self.client.get(self.project.get_absolute_url(), {'state': 'all', 'sort': 'state', 'per_page': 25})
+        records = list(response.context['deliveries'])
+        self.assertEqual(records[0].pk, self.cancelled.pk)
+        self.assertEqual(records[1].pk, self.original.pk)
+        self.assertEqual(response.context['columns'][0]['label'], 'Fecha')
+        for sort, expected in [('worker', 'Original sustituido'), ('-worker', 'Reemplazo vigente')]:
+            response = self.client.get(self.project.get_absolute_url(), {'state': 'replaced' if sort == 'worker' else 'active', 'sort': sort})
+            self.assertEqual(response.context['deliveries'][0].worker_full_name, expected)
+
     def test_search_order_and_page_parameters_do_not_change_balances(self):
         balance = self.position.balance
         response = self.client.get(self.project.get_absolute_url(), {'q': 'Persona', 'sort': 'quantity', 'page': 2})
@@ -130,3 +140,29 @@ class DeliveryTableTests(TestCase):
         self.assertEqual(response.context['page_obj'].number, 1)
         self.assertEqual(response.context['paginator'].per_page, 10)
         self.assertEqual(self.position.balance, balance)
+
+
+class ProjectTableTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        Project.objects.bulk_create([Project(name=f'Obra {i:02d}', description=f'Descripción {11-i:02d}') for i in range(12)])
+
+    def test_search_pagination_and_each_column_in_both_directions(self):
+        response = self.client.get(reverse('projects:list'))
+        self.assertEqual(response.context['paginator'].count, 12)
+        self.assertEqual(len(response.context['projects']), 10)
+        self.assertContains(response, 'data-row-action')
+        self.assertNotContains(response, 'Ordenar por')
+        for sort, expected in [('name', 'Obra 00'), ('-name', 'Obra 11'), ('description', 'Obra 11'), ('-description', 'Obra 00')]:
+            response = self.client.get(reverse('projects:list'), {'sort': sort, 'q': 'Obra', 'page': 1})
+            self.assertEqual(response.context['projects'][0].name, expected)
+            self.assertContains(response, 'aria-sort="descending"' if sort.startswith('-') else 'aria-sort="ascending"')
+            self.assertContains(response, 'q=Obra')
+        response = self.client.get(reverse('projects:list'), {'q': 'Obra 01'})
+        self.assertEqual(response.context['paginator'].count, 1)
+        self.assertEqual(response.context['projects'][0].name, 'Obra 01')
+
+    def test_no_creation_notification_is_enqueued(self):
+        response = self.client.post(reverse('projects:create'), {'name': 'Proyecto nuevo'}, follow=True)
+        self.assertNotContains(response, 'Proyecto creado correctamente')
+        self.assertFalse(list(response.context['messages']))

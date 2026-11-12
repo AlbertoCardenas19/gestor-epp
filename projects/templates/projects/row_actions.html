@@ -1,0 +1,9 @@
+<select class="form-select row-actions" data-row-action aria-label="Acciones de {{ action_label }}">
+  <option value="">Selecciona una acción</option>
+  <option value="{{ detail_url }}">{{ detail_label|default:'Ver detalle' }}</option>
+  {% if record and not record.voided_at %}
+  <option value="{% url 'inventory:correct' project.pk record.position.item_id record.pk %}">Corregir</option>
+  <option value="{% url 'inventory:cancel' project.pk record.position.item_id record.pk %}">Anular</option>
+  {% endif %}
+</select>
+<noscript><a href="{{ detail_url }}">{{ detail_label|default:'Ver detalle' }}</a>{% if record and not record.voided_at %} · <a href="{% url 'inventory:correct' project.pk record.position.item_id record.pk %}">Corregir</a> · <a href="{% url 'inventory:cancel' project.pk record.position.item_id record.pk %}">Anular</a>{% endif %}</noscript>

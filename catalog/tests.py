@@ -130,3 +130,11 @@ class CatalogTableTests(TestCase):
         response = self.client.get(reverse('catalog:list'), {'q': 'No existe'})
         self.assertEqual(response.context['paginator'].count, 0)
         self.assertContains(response, 'No hay elementos para esta consulta.')
+
+
+    def test_descending_description_and_header_links(self):
+        response = self.client.get(reverse('catalog:list'), {'sort': '-description'})
+        self.assertEqual(response.context['items'][0].name, 'Salida')
+        self.assertContains(response, 'aria-sort="descending"')
+        self.assertNotContains(response, 'Ordenar por')
+        self.assertContains(response, 'data-row-action')

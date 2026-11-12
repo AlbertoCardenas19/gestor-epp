@@ -5,8 +5,8 @@
 {% include 'projects/table_controls.html' with search_placeholder='Nombre, tipo o descripción' %}
 <div id="table-results" data-table-results aria-busy="false">
 <p class="d-md-none small text-body-secondary">Desliza la tabla para ver todas las columnas.</p>
-<div class="card"><div class="table-responsive" tabindex="0" role="region" aria-label="Tabla del catálogo"><table class="table table-striped mb-0 align-middle"><caption class="visually-hidden">Catálogo común de EPP y señaléticas</caption><thead><tr><th scope="col">Nombre</th><th scope="col">Tipo</th><th scope="col">Descripción</th><th scope="col">Acciones</th></tr></thead><tbody>
-{% for item in items %}<tr><td class="text-break">{{ item.name }}</td><td>{{ item.get_item_type_display }}</td><td class="text-break">{{ item.description|truncatechars:160|default:'Sin descripción.' }}</td><td><a href="{{ item.get_absolute_url }}">Ver elemento</a></td></tr>
+<div class="card"><div class="table-responsive" tabindex="0" role="region" aria-label="Tabla del catálogo"><table class="table table-striped mb-0 align-middle"><caption class="visually-hidden">Catálogo común de EPP y señaléticas</caption><thead><tr>{% include 'projects/table_headers.html' %}</tr></thead><tbody>
+{% for item in items %}<tr><td class="text-break">{{ item.name }}</td><td>{{ item.get_item_type_display }}</td><td class="text-break">{{ item.description|truncatechars:160|default:'Sin descripción.' }}</td><td>{% include 'projects/row_actions.html' with detail_url=item.get_absolute_url detail_label='Ver elemento' action_label=item.name %}</td></tr>
 {% empty %}<tr><td colspan="4" class="p-4">No hay elementos para esta consulta. <a href="{% url 'catalog:create' %}">Crear primer elemento</a></td></tr>{% endfor %}
 </tbody></table></div></div>
 {% include 'projects/pagination.html' %}

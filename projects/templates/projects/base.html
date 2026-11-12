@@ -10,6 +10,7 @@
   <link rel="icon" type="image/svg+xml" href="{% static 'projects/favicon.svg' %}">
   <script src="{% static 'projects/sidebar.js' %}" defer></script>
   <script src="{% static 'projects/table.js' %}" defer></script>
+  <script src="{% static 'projects/actions.js' %}" defer></script>
 </head>
 <body>
   <a class="visually-hidden-focusable skip-link" href="#contenido">Ir al contenido</a>
@@ -27,7 +28,6 @@
   <div class="app-workspace">
     <header class="app-topbar"><a href="{% url 'projects:home' %}">Inicio</a>{% if request.resolver_match.view_name != 'projects:home' %}<span aria-hidden="true"> / </span>{% if request.resolver_match.app_name == 'catalog' %}Catálogo{% else %}<a href="{% url 'projects:list' %}">Proyectos</a>{% if project %}<span aria-hidden="true"> / </span><a href="{{ project.get_absolute_url }}">{{ project.name }}</a>{% endif %}{% endif %}{% endif %}</header>
     <main id="contenido" class="container-fluid workspace-content">
-      {% for message in messages %}<div class="alert alert-success" role="status">{{ message }}</div>{% endfor %}
       {% block content %}{% endblock %}
     </main>
   </div>

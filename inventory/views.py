@@ -1,4 +1,3 @@
-from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db.models import Q, Sum
 from django.shortcuts import get_object_or_404, redirect
@@ -10,6 +9,14 @@ from projects.models import Project
 from .forms import CorrectionForm, DeliveryCancellationForm, DeliveryCorrectionForm, DeliveryForm, StockForm
 from .models import StockPosition, StockRecord, stock_delta_expression
 from .services import cancel_delivery, correct_record, deliver_stock, open_stock, receive_stock
+
+
+def add_service_error(form, error):
+    if hasattr(error, 'error_dict'):
+        for field, errors in error.error_dict.items():
+            form.add_error(field if field in form.fields else None, errors)
+    else:
+        form.add_error(None, error)
 
 
 class ProjectMixin:
@@ -82,9 +89,8 @@ class RecordCreateView(ProjectItemMixin, FormView):
         try:
             record = service(self.project, self.item, form.cleaned_data)
         except ValidationError as error:
-            form.add_error(None, error.messages)
+            add_service_error(form, error)
             return self.form_invalid(form)
-        messages.success(self.request, 'Registro guardado correctamente.')
         return redirect(record.position.get_absolute_url() + f'#registro-{record.pk}')
 
 
@@ -117,9 +123,8 @@ class CorrectionView(ProjectItemMixin, FormView):
         try:
             record = correct_record(self.project, original.pk, form.cleaned_data)
         except ValidationError as error:
-            form.add_error(None, error.messages)
+            add_service_error(form, error)
             return self.form_invalid(form)
-        messages.success(self.request, 'Corrección guardada. El original se conserva sustituido en el historial.')
         return redirect(record.get_absolute_url())
 
 
@@ -140,12 +145,8 @@ class DeliveryCancellationView(ProjectItemMixin, FormView):
     def form_valid(self, form):
         original = self.get_original()
         try:
-            record, changed = cancel_delivery(self.project, original.pk, form.cleaned_data['reason'])
+            record, _ = cancel_delivery(self.project, original.pk, form.cleaned_data['reason'])
         except ValidationError as error:
-            form.add_error(None, error.messages)
+            add_service_error(form, error)
             return self.form_invalid(form)
-        if changed:
-            messages.success(self.request, 'Entrega anulada. Su cantidad se restituyó una sola vez al saldo del proyecto.')
-        else:
-            messages.info(self.request, 'La entrega ya estaba anulada. No se modificó el saldo.')
         return redirect(record.get_absolute_url())

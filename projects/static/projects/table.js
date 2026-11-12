@@ -38,6 +38,7 @@
         // Una respuesta anterior nunca debe reemplazar una búsqueda más reciente.
         if (current !== revision) return;
         results.replaceChildren(...nextResults.childNodes);
+        form.elements.namedItem('sort').value = documentResult.querySelector('[name=sort]').value;
         if (restoreForm) {
           const nextForm = documentResult.querySelector('[data-live-table]');
           for (const field of form.elements) {
@@ -78,11 +79,15 @@
     update(filterURL());
   });
   results.addEventListener('click', event => {
-    const link = event.target.closest('.pagination a');
+    const link = event.target.closest('.pagination a, [data-table-sort]');
     if (!link || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
     if (results.getAttribute('aria-busy') === 'true') return;
-    update(new URL(link.href), 'push', 0, false, true);
+    const url = new URL(link.href);
+    if (link.hasAttribute('data-table-sort')) {
+      form.elements.namedItem('sort').value = url.searchParams.get('sort');
+    }
+    update(url, 'push', 0, false, true);
   });
   window.addEventListener('popstate', () => update(new URL(location.href), 'none', 0, true));
 })();

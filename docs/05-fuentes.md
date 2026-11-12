@@ -3,7 +3,7 @@
 ## Procedencia
 Base reconstruida el 12 de noviembre de 2026 a partir del historial recuperado del proyecto de la amiga prevencionista, principalmente la conversación «Recordar proyecto amiga». No es una transcripción completa ni una revisión del repositorio. Las fechas se usan para localizar conversaciones, sin convertir marcas técnicas en horas locales.
 
-Los códigos S0–S16 son referencias internas de las fuentes, no IDs de decisiones previamente aprobadas.
+Los códigos S0–S17 son referencias internas de las fuentes, no IDs de decisiones previamente aprobadas.
 
 | Ref. | Conversación o momento | Evidencia recuperada |
 |---|---|---|
@@ -208,6 +208,20 @@ En las siguientes respuestas confirmó:
 Antes de implementar hay que concretar la transición del historial y la relación
 entre solicitudes y las correcciones/anulaciones de entregas. No se asume su
 comportamiento sobre las reservas ni se modifica el historial actual.
+
+## S17 — Tablas, errores y comportamiento del sidebar
+
+El usuario pidió retirar los avisos de éxito como «Elemento creado correctamente»
+y el texto visible «Registrado por: Prevencionista»; diferenciar las franjas de
+las tablas del fondo de página; transición suave del sidebar y corregir el salto
+vertical de su flecha; errores en rojo bajo el campo correspondiente, incluido
+saldo insuficiente; Proyectos como tabla; ordenación desde cada encabezado de
+datos, retirando «Ordenar por»; Fecha como primera columna de Entregas; y opciones
+de acciones dentro de un select por fila.
+
+Son cambios de presentación y ubicación de errores. No modifican las reglas de
+existencias, corrección ni anulación. El stock común y las solicitudes de S16
+siguen pendientes de implementación.
 
 ## Qué se excluyó
 - La idea de junio de automatizar documentos para distintos profesionales: no corresponde a este producto. Se excluyen sus requisitos de plantillas, generación PDF/Excel, IPER, AST, reportes de incidentes y charlas.
