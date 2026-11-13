@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import include, path
 
 urlpatterns = [
+    path('proyectos/<int:project_pk>/solicitudes/', include('inventory.request_urls')),
     path('proyectos/<int:project_pk>/inventario/', include('inventory.urls')),
     path('inventario/', include('inventory.common_urls')),
     path('catalogo/', include('catalog.urls')),

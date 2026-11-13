@@ -34,15 +34,14 @@ class InventoryFlowTests(TestCase):
 
     def test_postgresql_and_project_inventory_link(self):
         self.assertEqual(connection.vendor, 'postgresql')
-        self.assertContains(self.client.get(self.project.get_absolute_url()), self.url('list'))
+        self.assertContains(self.client.get(self.project.get_absolute_url()), reverse('requests:list', args=[self.project.pk]))
 
-    def test_no_opening_is_different_from_zero(self):
-        self.assertContains(self.client.get(self.url('list')), 'Sin registro inicial')
-        opening = open_stock(self.project, self.item, record_data(0))
+    def test_project_inventory_no_longer_requires_a_project_opening(self):
         response = self.client.get(self.url('list'))
+        self.assertContains(response, 'Solicitar elemento')
         self.assertNotContains(response, 'Sin registro inicial')
-        self.assertEqual(response.context['rows'][0]['position'].total, 0)
-        self.assertEqual(opening.position.balance, 0)
+        self.assertEqual(self.client.get(reverse('stock:data')).json()['data'][0]['quantity'], '0')
+        self.assertFalse(StockRecord.objects.exists())
 
     def test_initial_and_receipt_for_two_projects_remain_independent(self):
         for project, initial, receipt, total in [(self.project, 10, 5, 15), (self.other, 4, 2, 6)]:
@@ -70,7 +69,7 @@ class InventoryFlowTests(TestCase):
         for operation, quantity in [('open', 10), ('receive', 5)]:
             response = self.client.post(self.url(operation), record_data(quantity))
             self.assertEqual(response.status_code, 302)
-            self.assertContains(self.client.get(response.url), 'Saldo registrado')
+            self.assertContains(self.client.get(response.url), 'Existencias disponibles')
         history = Client().get(self.url('history'))
         self.assertContains(history, 'data-testid="balance">15</p>')
         self.assertNotContains(history, 'Registrado por:')

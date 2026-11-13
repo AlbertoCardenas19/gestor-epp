@@ -55,7 +55,8 @@ class DirectDeliveryTests(TestCase):
         self.assertContains(history, 'Ana Pérez')
         self.assertContains(history, 'Entrega directa')
         listing = self.client.get(reverse('inventory:list', args=[self.project.pk]))
-        self.assertEqual(listing.context['rows'][0]['position'].total, 7)
+        self.assertContains(listing, 'Solicitar elemento')
+        self.assertEqual(self.client.get(reverse('stock:data')).json()['data'][0]['quantity'], '7')
 
     def test_can_deliver_exact_balance_then_rejects_more(self):
         self.deliver(10)
@@ -139,7 +140,7 @@ class DirectDeliveryTests(TestCase):
 
     def test_opening_correction_cannot_leave_less_than_already_delivered(self):
         self.deliver(8)
-        with self.assertRaisesMessage(ValidationError, 'saldo negativo'):
+        with self.assertRaisesMessage(ValidationError, 'existencias disponibles'):
             correct_record(self.project, self.opening.pk, data(7, reason='Nuevo conteo'))
         self.opening.refresh_from_db()
         self.assertIsNone(self.opening.voided_at)
@@ -153,7 +154,7 @@ class DirectDeliveryTests(TestCase):
         receipt = receive_stock(self.project, self.item, data(5))
         self.deliver(12)
         response = self.client.post(self.url('correct', receipt.pk), data(1, reason='Error en la entrada'))
-        self.assertContains(response, 'saldo negativo')
+        self.assertContains(response, 'existencias disponibles')
         receipt.refresh_from_db()
         self.assertIsNone(receipt.voided_at)
         self.assertEqual(self.opening.position.balance, 3)

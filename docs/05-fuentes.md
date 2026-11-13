@@ -3,7 +3,7 @@
 ## Procedencia
 Base reconstruida el 12 de noviembre de 2026 a partir del historial recuperado del proyecto de la amiga prevencionista, principalmente la conversación «Recordar proyecto amiga». No es una transcripción completa ni una revisión del repositorio. Las fechas se usan para localizar conversaciones, sin convertir marcas técnicas en horas locales.
 
-Los códigos S0–S21 son referencias internas de las fuentes, no IDs de decisiones previamente aprobadas.
+Los códigos S0–S22 son referencias internas de las fuentes, no IDs de decisiones previamente aprobadas.
 
 | Ref. | Conversación o momento | Evidencia recuperada |
 |---|---|---|
@@ -273,8 +273,26 @@ común sin crear ni reservar una solicitud ficticia. No deben convertirse en
 solicitudes retrospectivas.
 
 El primer incremento de consulta y entradas comunes se documenta en
-[10-inventario-comun.md](10-inventario-comun.md). La transición completa a
-solicitudes/reservas sigue pendiente de implementación.
+[10-inventario-comun.md](10-inventario-comun.md). Al registrar S21, la transición completa a solicitudes/reservas seguía pendiente.
+S22 y la guía 11 describen su implementación posterior.
+
+## S22 — Inventario único, reservas y necesidad de compra
+
+En la conversación actual el usuario pide unificar Catálogo e Inventario, llamar
+la sección «Inventario», conservar descripción fuera de la tabla, agregar × de
+búsqueda y quitar el texto de descuento por proyecto. Confirma que «Entregados»
+incluya entregas reales y reservas, junto a «Existencias» disponibles; confirmar
+entrega no debe volver a descontar. Permite reservar lo disponible de un pedido
+y guardar la diferencia como necesidad de compra. Revisa así el rechazo por falta
+de cobertura de S16. La compra se coordina con el jefe o la prevencionista realiza
+el pedido; no se acuerda un nuevo flujo de aprobación dentro del sistema.
+
+En la última respuesta confirma conservar las reservas al reducir un pedido y
+reducir primero la necesidad de compra: 5 pedidos, 2 reservados y 3 por comprar,
+reducidos a 3, dejan 2 reservados y 1 por comprar. La implementación, separación
+entre reserva y entrega real y las comprobaciones están en la
+[guía 11](11-inventario-y-solicitudes.md). La asignación de entradas se ofrece
+manualmente; no hay prioridad automática entre proyectos definida.
 
 ## Qué se excluyó
 - La idea de junio de automatizar documentos para distintos profesionales: no corresponde a este producto. Se excluyen sus requisitos de plantillas, generación PDF/Excel, IPER, AST, reportes de incidentes y charlas.

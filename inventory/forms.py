@@ -75,3 +75,15 @@ class DeliveryCancellationForm(InlineErrorsMixin, forms.Form):
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
         error_messages={'required': 'Escribe el motivo de la anulación.'},
     )
+
+
+class RequestDeliveryCorrectionForm(DeliveryForm):
+    destination_request = forms.ModelChoiceField(label='Solicitud de destino', queryset=None,
+        widget=forms.Select(attrs={'class': 'form-select'}))
+    reason = forms.CharField(label='Motivo de la corrección', widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
+    field_order = ['destination_request', 'worker_full_name', 'quantity', 'occurred_on', 'observation', 'reason', 'submission_key']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from .models import StockRequest
+        self.fields['destination_request'].queryset = StockRequest.objects.select_related('project', 'item').all()

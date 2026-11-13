@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from django.db.models import Case, CharField, Exists, OuterRef, Value, When
+from django.db.models import Case, CharField, Exists, OuterRef, Value, When, Q
 from django.shortcuts import get_object_or_404
 from django.views.generic import CreateView, ListView, TemplateView
 from django.template.loader import render_to_string
@@ -50,8 +50,8 @@ class DeliveryQuerysetMixin:
         return state if state in ['active', 'all', 'cancelled', 'replaced'] else 'active'
 
     def get_queryset(self):
-        records = StockRecord.objects.filter(position__project=self.project, operation=StockRecord.Operation.DELIVERY).select_related(
-            'position__item', 'position__project',
+        records = StockRecord.objects.filter(Q(position__project=self.project) | Q(stock_request__project=self.project), operation=StockRecord.Operation.DELIVERY).select_related(
+            'position__item', 'position__project', 'stock_request__project',
         ).annotate(has_replacement=Exists(StockRecord.objects.filter(replaces_id=OuterRef('pk'))))
         records = records.annotate(state_label=Case(
             When(voided_at__isnull=True, then=Value('Vigente')),

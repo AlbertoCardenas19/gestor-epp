@@ -17,7 +17,8 @@ from django.urls import reverse
 from playwright.sync_api import expect, sync_playwright
 
 from catalog.models import Item
-from inventory.models import StockRecord
+from inventory.common import receive_common_stock
+from inventory.models import StockRecord, StockPosition, StockRequest
 from inventory.services import cancel_delivery, correct_record, deliver_stock, open_stock
 from .models import Project
 
@@ -50,6 +51,8 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.assertEqual(self.errors, [])
 
     def capture(self, name):
+        # Sidebar narrows via CoreUI after each navigation; wait for its CSS transition.
+        self.page.wait_for_timeout(300)
         if os.environ.get('UI_ARTIFACT_DIR'):
             directory = Path(os.environ['UI_ARTIFACT_DIR'])
             directory.mkdir(parents=True, exist_ok=True)
@@ -177,7 +180,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
             reason='Cantidad equivocada', destination_project=project, destination_item=item))
         open_stock(other, item, data(50))
         deliver_stock(other, item, data(1, worker_full_name='Otro proyecto'))
-        balance = opening.position.balance
+        balance = StockPosition.common_balance(item.pk)
         return project, item, replacement, balance, len(records)
 
     @staticmethod
@@ -246,6 +249,96 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
             self.capture(f'common-stock-{width}')
             self.page.keyboard.press('Escape')
 
+    @staticmethod
+    def seed_request_flow():
+        north = Project.objects.create(name='Norte')
+        item = Item.objects.create(name='Casco', item_type=Item.Type.EPP)
+        receive_common_stock(item, data(2))
+        return north, item
+
+    def inventory_counts(self, available, delivered):
+        self.visit_table(reverse('stock:list'))
+        self.search('Casco')
+        expect(self.rows().first.locator('td').nth(2)).to_have_text(str(available))
+        expect(self.rows().first.locator('td').nth(3)).to_have_text(str(delivered))
+
+    def test_unified_inventory_reserve_confirm_purchase_reduce_and_clear_search(self):
+        north, item = self.db(self.seed_request_flow)
+        self.page.goto(self.live_server_url + reverse('requests:list', args=[north.pk]))
+        self.page.get_by_role('link', name='Solicitar elemento', exact=True).click()
+        self.page.get_by_label('Elemento', exact=False).select_option(str(item.pk))
+        self.page.get_by_label('Cantidad solicitada', exact=False).fill('5')
+        self.page.get_by_role('button', name='Guardar solicitud', exact=True).click()
+        request = self.db(lambda: StockRequest.objects.get())
+        expect(self.page.get_by_test_id('request-assigned')).to_have_text('2')
+        expect(self.page.get_by_test_id('request-purchase')).to_have_text('3')
+        self.page.get_by_role('link', name='Confirmar entrega', exact=True).click()
+        self.page.get_by_label('Nombre completo del trabajador', exact=False).fill('Ana Pérez')
+        self.page.get_by_role('button', name='Confirmar entrega', exact=True).click()
+        self.page.goto(self.live_server_url + reverse('requests:deliver', args=[north.pk, request.pk]))
+        self.page.get_by_label('Nombre completo del trabajador', exact=False).fill('Intento sin reserva')
+        self.page.get_by_label('Cantidad', exact=False).fill('1')
+        self.page.get_by_role('button', name='Confirmar entrega', exact=True).click()
+        expect(self.page.locator('#id_quantity_errors')).to_contain_text('unidades reservadas')
+        expect(self.page.locator('#id_quantity')).to_have_attribute('aria-invalid', 'true')
+        self.inventory_counts(0, 2)
+        expect(self.page.locator('nav[aria-label="Principal"]').get_by_role('link', name='Catálogo', exact=True)).to_have_count(0)
+        expect(self.page.locator('.dt-scroll-head th[data-column="description"]')).to_have_count(0)
+        self.table_action(lambda: self.page.get_by_role('button', name='Limpiar búsqueda', exact=True).click())
+        expect(self.page.locator('.dt-search input')).to_have_value('')
+        expect(self.page.locator('.dt-search input')).to_be_focused()
+        # Clear before DataTables' delayed search executes: the old term must not return.
+        self.page.locator('.dt-search input').fill('No existe')
+        self.page.get_by_role('button', name='Limpiar búsqueda', exact=True).click()
+        self.page.wait_for_timeout(500)
+        expect(self.rows()).to_have_count(1)
+        expect(self.page.locator('.dt-search input')).to_have_value('')
+        self.rows().first.get_by_role('button', name=re.compile('^Acciones de')).click()
+        self.page.locator('.dropdown-menu.show').get_by_role('link', name='Registrar entrada', exact=True).click()
+        self.page.get_by_label('Cantidad', exact=False).fill('3')
+        self.page.get_by_label('Fecha del conteo o recepción', exact=False).fill('2026-11-12')
+        self.page.get_by_role('button', name='Guardar entrada', exact=True).click()
+        self.inventory_counts(3, 2)
+        self.page.goto(self.live_server_url + request.get_absolute_url())
+        self.page.get_by_role('link', name='Reservar disponibles', exact=True).click()
+        self.page.get_by_role('button', name='Reservar disponibles', exact=True).click()
+        expect(self.page.get_by_test_id('request-assigned')).to_have_text('5')
+        expect(self.page.get_by_test_id('request-purchase')).to_have_text('0')
+        self.page.get_by_role('link', name='Confirmar entrega', exact=True).click()
+        self.page.get_by_label('Nombre completo del trabajador', exact=False).fill('Luis Soto')
+        self.page.get_by_label('Cantidad', exact=False).fill('1')
+        self.page.get_by_role('button', name='Confirmar entrega', exact=True).click()
+        record = self.db(lambda: StockRecord.objects.select_related('position').get(worker_full_name='Luis Soto'))
+        self.page.goto(self.live_server_url + record.get_absolute_url())
+        self.page.get_by_role('link', name='Corregir entrega', exact=True).click()
+        self.page.get_by_label('Cantidad', exact=False).fill('2')
+        self.page.get_by_label('Motivo de la corrección', exact=False).fill('Cantidad correcta')
+        self.page.get_by_role('button', name='Guardar corrección', exact=True).click()
+        self.inventory_counts(0, 5)
+        original = self.db(lambda: StockRecord.objects.select_related('position').get(worker_full_name='Ana Pérez'))
+        self.page.goto(self.live_server_url + original.get_absolute_url())
+        self.page.get_by_role('link', name='Anular entrega', exact=True).click()
+        self.page.get_by_label('Motivo de la anulación', exact=False).fill('Entrega equivocada')
+        self.page.get_by_role('button', name='Confirmar anulación', exact=True).click()
+        self.inventory_counts(0, 5)
+        self.page.goto(self.live_server_url + request.get_absolute_url())
+        self.page.get_by_role('link', name='Reducir o cancelar pendiente', exact=True).click()
+        self.page.get_by_label('Cantidad pendiente que conservar', exact=False).fill('0')
+        self.page.get_by_label('Motivo de la reducción o cancelación', exact=False).fill('Ya no se necesita el resto')
+        self.page.get_by_role('button', name='Guardar cambio', exact=True).click()
+        self.inventory_counts(3, 2)
+        for width in [320, 390, 1440]:
+            self.page.set_viewport_size({'width': width, 'height': 900})
+            self.visit_table(reverse('requests:list', args=[north.pk]))
+            if self.page.locator('.sidebar-toggle').get_attribute('aria-expanded') == 'true':
+                self.page.locator('.sidebar-toggle').click()
+                self.page.wait_for_timeout(300)
+            self.rows().first.get_by_role('button', name=re.compile('^Acciones de')).click()
+            expect(self.page.locator('.dropdown-menu.show')).to_be_visible()
+            self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+            self.capture(f'project-requests-{width}')
+            self.page.keyboard.press('Escape')
+
     def test_mobile_menu_clipping_sidebar_and_project_cards(self):
         projects = self.db(lambda: [Project.objects.create(name=f'Obra {i:02d}') for i in range(14)])
         self.db(lambda: Item.objects.bulk_create([Item(name=f'Elemento {i:02d}', item_type=Item.Type.EPP) for i in range(14)]))
@@ -288,6 +381,10 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
             expect(self.page.locator('[data-datatable]')).to_have_count(0)
             self.page.get_by_role('link', name='Siguiente', exact=True).click()
             expect(self.page.locator('.project-card')).to_have_count(4)
+            self.page.get_by_label('Buscar', exact=True).fill('Obra 13')
+            expect(self.page.locator('.project-card')).to_have_count(1)
+            self.page.get_by_role('button', name='Limpiar búsqueda', exact=True).click()
+            expect(self.page.locator('.project-card')).to_have_count(10)
             self.page.get_by_label('Buscar', exact=True).fill('Obra 13')
             expect(self.page.locator('.project-card')).to_have_count(1)
             self.page.get_by_role('link', name=re.compile('^Ver proyecto')).click()

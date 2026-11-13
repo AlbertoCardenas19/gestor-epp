@@ -18,7 +18,7 @@
     <p class="text-break"><strong>Motivo de anulación:</strong> {{ original.void_reason }}</p>
     <p>Anulado el {{ original.voided_at|date:'d/m/Y H:i:s T' }}.</p>
   {% else %}
-    <p class="text-body-secondary">Usa esta acción únicamente para un registro equivocado. Se conservarán sus datos y se restituirán {{ original.quantity }} unidades al saldo de {{ project.name }} · {{ item.name }}. No se creará un reemplazo.</p>
+    <p class="text-body-secondary">Usa esta acción únicamente para un registro equivocado. Se conservarán sus datos. {% if original.stock_request_id %}Las {{ original.quantity }} unidades volverán a quedar pendientes y reservadas para la misma solicitud.{% else %}Se restituirán {{ original.quantity }} unidades al inventario, sin crear reservas ficticias.{% endif %} No se creará un reemplazo.</p>
     <p class="text-body-secondary">Esto no registra una devolución física. Si solo necesitas rectificar datos de la entrega, usa la corrección.</p>
     <div class="card"><div class="card-body p-4"><form method="post" novalidate>
       {% include 'inventory/fields.html' %}

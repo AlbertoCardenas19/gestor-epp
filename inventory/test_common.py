@@ -183,7 +183,7 @@ class CommonStockConcurrencyTests(TransactionTestCase):
 class CommonStockMigrationTests(TransactionTestCase):
     def test_schema_transition_preserves_previous_ledger_and_totals(self):
         previous = [('inventory', '0002_remove_stockrecord_inventory_valid_operation_quantity_and_more')]
-        current = [('inventory', '0003_alter_stockposition_project_and_more')]
+        current = [('inventory', '0004_stockrequestevent_stockrequest_and_more')]
         executor = MigrationExecutor(connection)
         executor.migrate(previous)
         try:
@@ -201,7 +201,8 @@ class CommonStockMigrationTests(TransactionTestCase):
             before = list(Record.objects.order_by('pk').values())
             executor = MigrationExecutor(connection)
             executor.migrate(current)
-            self.assertEqual(list(StockRecord.objects.order_by('pk').values()), before)
+            self.assertEqual(list(StockRecord.objects.order_by('pk').values(*before[0].keys())), before)
+            self.assertFalse(StockRecord.objects.filter(stock_request__isnull=False).exists())
             self.assertEqual(StockPosition.common_balance(item.pk), 17)
             self.assertEqual(StockPosition.objects.count(), 2)
         finally:

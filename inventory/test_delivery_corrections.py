@@ -103,14 +103,16 @@ class DeliveryCorrectionTests(TestCase):
         correct_delivery(self.north, self.original.pk, {**self.correction(), 'destination_project': self.north})
         self.assertEqual((self.source.balance, target.balance), (20, 1))
 
-    def test_target_without_opening_is_rejected_without_creating_position(self):
-        with self.assertRaisesMessage(ValidationError, 'no tiene apertura'):
-            correct_delivery(self.north, self.original.pk, {**self.correction(), 'destination_item': self.helmet})
-        self.assert_unchanged()
-        self.assertEqual(StockPosition.objects.count(), 2)
+    def test_historical_correction_uses_common_stock_without_inventing_openings(self):
+        replacement = correct_delivery(self.north, self.original.pk, {**self.correction(), 'destination_item': self.helmet})
+        self.original.refresh_from_db()
+        self.assertIsNotNone(self.original.voided_at)
+        self.assertFalse(replacement.position.records.filter(operation='opening').exists())
+        self.assertEqual(StockPosition.common_balance(self.helmet.pk), 17)
+        self.assertEqual(StockPosition.objects.count(), 3)
 
     def test_insufficient_target_balance_rolls_back_every_change(self):
-        with self.assertRaisesMessage(ValidationError, 'saldo disponible'):
+        with self.assertRaisesMessage(ValidationError, 'existencias disponibles'):
             correct_delivery(self.north, self.original.pk, {**self.correction(), 'quantity': 9})
         self.assert_unchanged()
 
@@ -153,7 +155,7 @@ class DeliveryCorrectionTests(TestCase):
 
     def test_service_rejection_keeps_form_inputs(self):
         response = self.client.post(self.url, self.payload(quantity=9, observation='Conservar'))
-        self.assertContains(response, 'saldo disponible')
+        self.assertContains(response, 'existencias disponibles')
         self.assertContains(response, 'Conservar')
         self.assertContains(response, 'Luis Soto')
         self.assert_unchanged()
@@ -271,9 +273,9 @@ class DeliveryCorrectionConcurrencyTests(TransactionTestCase):
 
     def test_correction_and_normal_delivery_cannot_overspend_target(self):
         results = self.concurrent([
-            lambda: correct_delivery(self.north, self.original.pk, self.correction(quantity=6)),
+            lambda: correct_delivery(self.north, self.original.pk, self.correction(quantity=26)),
             lambda: deliver_stock(self.south, self.item, data(6, worker_full_name='Otra persona')),
         ])
         self.assertEqual(results.count('rejected'), 1)
-        self.assertEqual(self.target.balance, 2)
-        self.assertIn(self.source.balance, [15, 20])
+        self.assertIn(StockPosition.common_balance(self.item.pk), [2, 17])
+        self.assertGreaterEqual(StockPosition.common_balance(self.item.pk), 0)

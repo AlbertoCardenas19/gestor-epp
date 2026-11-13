@@ -1,9 +1,15 @@
 from django import forms
+from django.utils import timezone
 
 from .models import Item
 
 
 class ItemForm(forms.ModelForm):
+    initial_quantity = forms.IntegerField(label='Existencias iniciales', min_value=0, max_value=9223372036854775807,
+        required=False, initial=0, widget=forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'step': 1}))
+    initial_date = forms.DateField(label='Fecha de las existencias iniciales', required=False, initial=timezone.localdate,
+        widget=forms.DateInput(format='%Y-%m-%d', attrs={'class': 'form-control', 'type': 'date'}))
+
     class Meta:
         model = Item
         fields = ['name', 'item_type', 'description']

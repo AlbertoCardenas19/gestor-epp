@@ -223,3 +223,16 @@ Limitaciones comprobadas: Firefox se intentó iniciar, pero falta su ejecutable
 `/home/agent/.cache/ms-playwright/firefox-1538/firefox/firefox`. La revisión móvil
 usa emulación de viewport en Chromium; no se ejecutó en un dispositivo físico.
 Las instrucciones Windows/macOS no se han ejecutado en esos sistemas.
+
+## Uso en Inventario y solicitudes — S22
+
+La tabla única de Inventario y las solicitudes por proyecto reutilizan el mismo
+adaptador y `data-datatable`, con endpoints propios para SQL y `data-actions` en
+Acciones. El historial común incluye el proyecto de la solicitud para entregas
+nuevas y el proyecto de origen para las históricas. Proyectos sigue en tarjetas.
+
+La configuración compartida agrega una × accesible al control de búsqueda nativo,
+para limpiar/enfocar sin duplicar su inicialización. Las tarjetas incluyen el
+mismo complemento en `cards_controls.html` y `cards.js`; no usan DataTables.
+No cambian versiones ni dependencias. Flujo y comprobaciones actuales en
+[11-inventario-y-solicitudes.md](11-inventario-y-solicitudes.md).

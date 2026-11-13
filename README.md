@@ -2,24 +2,16 @@
 
 Aplicación web en español con Django, PostgreSQL y CoreUI basado en Bootstrap.
 
-Actualmente puedes:
+Actualmente puedes crear/consultar proyectos en tarjetas y elementos en un único
+Inventario; registrar entradas, solicitar elementos por proyecto, reservar lo
+disponible y guardar lo faltante como necesidad de compra. Las reservas y entregas
+reales se reúnen en «Entregados», manteniendo su distinción y trazabilidad interna.
 
-- Crear, listar y consultar proyectos.
-- Crear y consultar un catálogo común de EPP y señaléticas.
-- Consultar existencias e historial común de empresa y registrar/corregir entradas.
-- Conservar las existencias iniciales y entradas anteriores por proyecto durante la transición.
-- Consultar saldos e historial y corregir registros conservando sus originales.
-- Registrar entregas directas a trabajadores por nombre completo, descontando
-  unidades del inventario del proyecto sin permitir superar el saldo disponible.
-
-Las entregas directas se descuentan; intermediarios, devoluciones y reposiciones
-siguen pendientes. Se pueden corregir aperturas, entradas y entregas mediante
-reemplazos vinculados. En entregas se pueden rectificar los seis campos, incluido
-proyecto o elemento, conservando el original y validando ambos saldos.
-También se puede anular una entrega vigente registrada por error, con motivo e
-historial conservados y restitución de existencias una sola vez. Esto no registra
-una devolución física. Esta versión está
-preparada para pruebas locales; cuentas, permisos y despliegue público siguen pendientes.
+Se confirman entregas parciales a trabajadores por nombre completo, con fecha y
+observación opcional. Se pueden corregir/anular con motivo e historial y reducir
+pendientes, priorizando lo que falta comprar. No hay compras, aprobación,
+intermediarios, devoluciones físicas ni finanzas implementadas. Cuentas, permisos
+y despliegue público siguen pendientes. [Reglas actuales y pruebas](docs/11-inventario-y-solicitudes.md).
 
 ## Probar en tu PC
 
@@ -103,31 +95,21 @@ presiona `Ctrl+C`. Las próximas veces solo necesitas iniciar PostgreSQL y ejecu
 
 ### 5. Recorrido de prueba
 
-1. En Proyectos, crea un proyecto, por ejemplo «Obra Norte». Las tablas de Catálogo y Entregas usan DataTables y tienen
-   un botón «Acciones» por fila que abre un menú para consultar sus registros.
-   Proyectos se muestra con tarjetas y enlaces «Ver proyecto».
-2. En «Catálogo», crea «Casco de seguridad» de tipo EPP.
-3. Desde Inicio, entra en Proyectos. Abre el proyecto y selecciona la pestaña «Inventario».
-4. Registra una apertura de 10 cascos y después una entrada de 5: saldo 15.
-5. Corrige la apertura a 8, indicando un motivo: saldo 13. El original queda anulado.
-6. Crea otro proyecto y comprueba que el mismo casco comienza «Sin registro inicial».
-7. En el historial del casco de Obra Norte, registra una entrega de 3 unidades
-   a un trabajador, indicando su nombre completo y la fecha: saldo 10.
-8. Intenta entregar 11 unidades: debe rechazarse y conservarse el saldo 10.
-9. Vuelve al proyecto: «Entregas» muestra una fila por entrega vigente. Prueba
-   buscar por trabajador, ordenar pulsando los encabezados y cambiar de página. El filtro de estado permite
-   consultar también las entregas sustituidas y anuladas.
-10. En Catálogo, prueba la tabla con búsqueda automática al escribir, ordenación
-    y paginación. También se aplica a Proyectos y Entregas. Ya no hay selector
-    «Ordenar por»: cada encabezado de datos alterna la dirección al pulsarlo. La flecha
-    bajo las opciones del menú lateral permite reducirlo a una columna de iconos.
+1. En Inventario, crea un casco de tipo EPP con cantidad inicial 2 (vacía = 0).
+2. En Proyectos, crea/abre una tarjeta y entra en su pestaña Inventario.
+3. Solicita 5 cascos: se reservan 2 y quedan 3 como necesidad de compra.
+   Inventario general muestra Existencias 0 / Entregados 2.
+4. Confirma entrega de 1 a un trabajador. Las columnas siguen 0/2; el historial
+   del proyecto muestra la entrega real. No puedes entregar más de lo reservado.
+5. Registra una entrada en Inventario; después usa «Reservar disponibles» en
+   la solicitud. No hay asignación automática entre proyectos.
+6. Prueba reducción/cancelación pendiente con motivo y corrección/anulación de
+   entregas. El [recorrido detallado](docs/11-inventario-y-solicitudes.md#probar-en-ubuntu)
+   explica las cantidades esperadas y las diferencias entre estas operaciones.
+7. Prueba búsqueda con ×, ordenación, páginas y menús Acciones. Proyectos conserva
+   tarjetas. Entregas conserva su filtro de estado.
 
-Los datos que registres se guardan en tu PostgreSQL local. No se incluyen bases
-de datos ni registros de prueba de la nube en GitHub.
-
-Para probar el nuevo inventario: abre «Inventario común», consulta un elemento y
-usa «Registrar entrada». Indica cantidad, fecha y observación opcional; desde el
-registro puedes corregirlo con motivo y consultar ambas versiones.
+Los datos se guardan en tu PostgreSQL local. GitHub no incluye la base de la nube.
 
 ## Comprobaciones
 
@@ -153,12 +135,25 @@ no se necesita npm ni conexión a un CDN para ejecutar la app.
 ## Documentación
 
 - [DataTables, componentes CoreUI y pruebas](docs/09-componentes-y-datatables.md).
-- [Inventario común y migración 0003](docs/10-inventario-comun.md).
+- [Inventario único, solicitudes y migración 0004](docs/11-inventario-y-solicitudes.md).
+- [Primer incremento común y migración 0003](docs/10-inventario-comun.md).
 - [Requisitos, acuerdos y pendientes](docs/README.md).
 - [Desarrollo en el entorno de nube y detalles de implementación](docs/06-desarrollo.md).
 - [Prueba manual de corrección y anulación de entregas](docs/07-iteraciones-entregas.md#recorrido-manual-para-ambas-iteraciones).
 
 
-La consulta y las entradas del stock común están implementadas (requieren migración
-0003). Las solicitudes con reserva y sus entregas todavía no sustituyen el flujo
-anterior por proyecto. Consulta [las decisiones y pendientes](docs/05-fuentes.md#s16--revisión-del-flujo-stock-común-y-solicitudes-por-proyecto).
+Las migraciones 0003/0004 conservan los datos anteriores; ejecuta `migrate` antes
+de usar el flujo nuevo. No se fabrican solicitudes para entregas históricas.
+
+Para tu copia Ubuntu existente (cuando estos cambios estén publicados):
+
+```bash
+cd ~/Proyectos/gestor-epp
+git status
+git pull --ff-only origin main
+.venv/bin/python manage.py migrate
+.venv/bin/python manage.py check
+.venv/bin/python manage.py runserver
+```
+
+Conserva tu `.env` y cualquier trabajo local antes de actualizar.

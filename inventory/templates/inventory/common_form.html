@@ -1,11 +1,11 @@
 {% extends 'projects/base.html' %}
-{% block title %}{% if is_correction %}Corregir entrada{% else %}Registrar entrada{% endif %} · Inventario común{% endblock %}
+{% block title %}{% if is_correction %}Corregir entrada{% else %}Registrar entrada{% endif %} · Inventario{% endblock %}
 {% block content %}
-<a class="back-link" href="{% url 'stock:history' item.pk %}">← Volver al historial común</a>
+<a class="back-link" href="{% url 'stock:history' item.pk %}">← Volver al historial de inventario</a>
 <div class="form-shell mt-4">
 <h1>{% if is_correction %}Corregir entrada{% else %}Registrar entrada{% endif %}</h1>
 <p class="text-break fw-semibold">{{ item.name }}</p>
-<p class="text-body-secondary">Existencias comunes actuales: {{ balance }}</p>
+<p class="text-body-secondary">Existencias actuales: {{ balance }}</p>
 {% if is_correction and record.voided_at %}
 <p class="text-danger">Este registro ya fue corregido. Abre el reemplazo vigente.</p>
 {% if record.is_replaced %}<a href="{{ record.replacement.get_absolute_url }}">Ver reemplazo</a>{% endif %}

@@ -1,13 +1,13 @@
 {% extends 'projects/base.html' %}
 {% block title %}{{ item.name }}{% endblock %}
 {% block content %}
-<a class="back-link" href="{% url 'catalog:list' %}">← Volver al catálogo</a>
+<a class="back-link" href="{% url 'catalog:list' %}">← Volver al inventario</a>
 <div class="mt-4 mb-4">
 
   <h1 class="text-break">{{ item.name }}</h1>
 
 </div>
-<a class="btn btn-primary mb-4" href="{% url 'stock:history' item.pk %}">Ver inventario común</a>
+<a class="btn btn-primary mb-4" href="{% url 'stock:history' item.pk %}">Ver inventario</a>
 <section class="card"><div class="card-body p-4 p-md-5">
   <dl class="mb-4"><dt>Tipo</dt><dd>{{ item.get_item_type_display }}</dd></dl>
   <h2 class="h5 mb-3">Descripción</h2>

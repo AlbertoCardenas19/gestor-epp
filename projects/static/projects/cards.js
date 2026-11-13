@@ -5,6 +5,10 @@
   if (!form || !results || !feedback || !window.fetch || !window.AbortController) return;
 
   const query = form.elements.namedItem('q');
+  const clear = form.querySelector('[data-cards-clear]');
+  function syncClear() { if (clear) clear.hidden = !query.value; }
+  if (clear) clear.addEventListener('click', () => { query.value = ''; syncClear(); update(filterURL()); query.focus(); });
+  query.addEventListener('input', syncClear); syncClear();
   let timer;
   let controller;
   let revision = 0;
@@ -47,6 +51,7 @@
         }
         if (mode === 'push') history.pushState(null, '', url);
         if (mode === 'replace') history.replaceState(null, '', url);
+        syncClear();
         feedback.textContent = '';
         if (focusCards) results.querySelector('[data-results-focus]').focus({ preventScroll: true });
       } catch (error) {

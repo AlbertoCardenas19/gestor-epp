@@ -58,3 +58,12 @@ La separación de responsabilidades es conocida; el cargo que se hará cargo de 
 Los actores son participantes del proceso. Esta tabla no establece roles de autenticación ni cuentas obligatorias para todos.
 
 Referencias: [fuentes](05-fuentes.md).
+
+## Evolución vigente — S22
+
+Los flujos por proyecto de S9/S10 describen el primer incremento. Hoy Inventario
+reúne catálogo y stock común; los proyectos solicitan, reservan lo disponible y
+registran necesidad de compra por lo faltante. La entrega real al trabajador se
+confirma después sin descuento doble. Reducir pendiente conserva reservas y reduce
+primero necesidad de compra. Ver [guía 11](11-inventario-y-solicitudes.md).
+No se implementan compras, aprobación ni responsabilidad financiera adicional.

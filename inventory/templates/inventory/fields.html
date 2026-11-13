@@ -6,6 +6,7 @@
 <div class="mb-4">
   <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }} <span class="text-body-secondary fw-normal">{% if field.field.required %}(obligatorio){% else %}(opcional){% endif %}</span></label>
   {{ field }}
+  {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
   {% if field.errors %}<div class="invalid-feedback" id="{{ field.id_for_label }}_errors">{% for error in field.errors %}{{ error }}{% endfor %}</div>{% endif %}
 </div>
 {% endfor %}

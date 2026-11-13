@@ -48,6 +48,7 @@ class StockRecord(models.Model):
         DELIVERY = 'delivery', 'Entrega directa'
 
     position = models.ForeignKey(StockPosition, on_delete=models.PROTECT, related_name='records')
+    stock_request = models.ForeignKey('StockRequest', on_delete=models.PROTECT, null=True, blank=True, related_name='deliveries')
     operation = models.CharField(max_length=16, choices=Operation.choices)
     quantity = models.BigIntegerField('cantidad')
     occurred_on = models.DateField('fecha del hecho')
@@ -63,6 +64,7 @@ class StockRecord(models.Model):
     class Meta:
         ordering = ['created_at', 'pk']
         constraints = [
+            models.CheckConstraint(condition=Q(stock_request__isnull=True) | Q(operation='delivery'), name='inventory_request_only_delivery'),
             models.CheckConstraint(
                 condition=(Q(operation='opening', quantity__gte=0) |
                            Q(operation__in=['receipt', 'delivery'], quantity__gt=0)),
@@ -99,3 +101,71 @@ class StockRecord(models.Model):
     def is_cancelled(self):
         return (self.operation == self.Operation.DELIVERY and self.voided_at is not None
                 and not self.is_replaced)
+
+
+class StockRequest(models.Model):
+    project = models.ForeignKey('projects.Project', on_delete=models.PROTECT, related_name='stock_requests')
+    item = models.ForeignKey('catalog.Item', on_delete=models.PROTECT, related_name='stock_requests')
+    quantity = models.BigIntegerField('cantidad solicitada')
+    allocated_quantity = models.BigIntegerField(default=0)
+    cancelled_quantity = models.BigIntegerField(default=0)
+    occurred_on = models.DateField('fecha de solicitud')
+    observation = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    submission_key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+
+    class Meta:
+        ordering = ['-created_at', '-pk']
+        constraints = [models.CheckConstraint(
+            condition=Q(quantity__gt=0, allocated_quantity__gte=0, cancelled_quantity__gte=0)
+                      & Q(allocated_quantity__lte=F('quantity') - F('cancelled_quantity')),
+            name='inventory_valid_request_quantities',
+        )]
+
+    @property
+    def delivered_quantity(self):
+        if hasattr(self, 'fulfilled_total'):
+            return self.fulfilled_total
+        return self.deliveries.filter(voided_at__isnull=True).aggregate(total=Sum('quantity'))['total'] or 0
+
+    @property
+    def reserved_quantity(self):
+        return self.allocated_quantity - self.delivered_quantity
+
+    @property
+    def purchase_quantity(self):
+        return self.quantity - self.cancelled_quantity - self.allocated_quantity
+
+    @property
+    def pending_quantity(self):
+        return self.quantity - self.cancelled_quantity - self.delivered_quantity
+
+    @property
+    def state_label(self):
+        if self.reserved_quantity:
+            return 'Reservado'
+        if self.purchase_quantity:
+            return 'Pendiente de compra' if not self.delivered_quantity else 'Entregado parcialmente'
+        if self.cancelled_quantity and not self.delivered_quantity:
+            return 'Cancelado'
+        return 'Entregado'
+
+    def __str__(self):
+        return f'{self.project.name} · {self.item.name} · solicitud {self.pk}'
+
+    def get_absolute_url(self):
+        return reverse('requests:detail', args=[self.project_id, self.pk])
+
+
+class StockRequestEvent(models.Model):
+    request = models.ForeignKey(StockRequest, on_delete=models.PROTECT, related_name='events')
+    action = models.CharField(max_length=16, choices=[('created', 'Solicitud registrada'), ('reserved', 'Reserva ampliada'), ('reduced', 'Pendiente reducido')])
+    before = models.JSONField(default=dict)
+    after = models.JSONField(default=dict)
+    payload = models.JSONField(default=dict)
+    reason = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    submission_key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+
+    class Meta:
+        ordering = ['created_at', 'pk']

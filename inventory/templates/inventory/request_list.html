@@ -1,0 +1,16 @@
+{% extends 'projects/base.html' %}
+{% block title %}Inventario · {{ project.name }}{% endblock %}
+{% block extra_styles %}{% include 'projects/datatables_styles.html' %}{% endblock %}
+{% block extra_scripts %}{% include 'projects/datatables_scripts.html' %}{% endblock %}
+{% block content %}
+<h1 class="text-break mb-4">{{ project.name }}</h1>
+{% include 'projects/project_tabs.html' with active_tab='inventory' %}
+<div class="d-flex flex-column flex-sm-row justify-content-between gap-3 mb-4"><h2 class="h4">Inventario del proyecto</h2><a class="btn btn-primary" href="{% url 'requests:create' project.pk %}">Solicitar elemento</a></div>
+<section data-datatable-panel>
+<p class="small text-danger" role="alert" data-datatable-error hidden></p>
+<div class="card datatable-shell"><div class="card-body">
+<table class="table table-striped mb-0 align-middle" style="width:100%" data-datatable data-source="{% url 'requests:data' project.pk %}" data-order='[[0,"desc"]]'>
+<caption class="visually-hidden">Solicitudes de {{ project.name }}</caption>
+<thead><tr><th data-column="date" data-format="date" scope="col">Fecha</th><th data-column="item" scope="col">Elemento</th><th data-column="quantity" scope="col">Solicitados</th><th data-column="assigned" scope="col">Entregados</th><th data-column="purchase" scope="col">Necesidad de compra</th><th data-column="state" scope="col">Estado</th><th data-column="actions" data-actions scope="col">Acciones</th></tr></thead><tbody></tbody>
+</table></div></div></section>
+{% endblock %}

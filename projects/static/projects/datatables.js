@@ -40,6 +40,20 @@
           element.closest('.dt-container')?.querySelector('.dt-paging nav')?.setAttribute('aria-label', 'Páginas de la tabla');
         },
       });
+      const searchInput = element.closest('.dt-container').querySelector('.dt-search input');
+      if (searchInput && !searchInput.parentElement.querySelector('[data-search-clear]')) {
+        const clear = document.createElement('button');
+        clear.type = 'button'; clear.className = 'search-clear'; clear.dataset.searchClear = '';
+        clear.setAttribute('aria-label', 'Limpiar búsqueda'); clear.title = 'Limpiar búsqueda';
+        clear.textContent = '×';
+        searchInput.parentElement.classList.add('search-with-clear');
+        searchInput.parentElement.append(clear);
+        const sync = () => { clear.hidden = !searchInput.value; };
+        searchInput.addEventListener('input', sync);
+        table.on('search', sync);
+        clear.addEventListener('click', () => { searchInput.value = ''; table.search('').draw(); sync(); searchInput.focus(); });
+        sync();
+      }
       table.on('dt-error', () => {
         if (error) { error.hidden = false; error.textContent = 'No se pudo cargar la tabla. Recarga la página para reintentar.'; }
       });

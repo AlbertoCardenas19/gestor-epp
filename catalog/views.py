@@ -1,5 +1,8 @@
 from django.db.models import Case, CharField, Value, When
-from django.views.generic import CreateView, DetailView, ListView
+from django.views.generic import CreateView, DetailView, RedirectView
+from django.db import transaction
+from django.utils import timezone
+import uuid
 
 from .forms import ItemForm
 from .models import Item
@@ -15,11 +18,9 @@ class ItemQuerysetMixin:
         )).order_by('name', 'pk')
 
 
-class ItemListView(ItemQuerysetMixin, ListView):
-    model = Item
-    template_name = 'catalog/list.html'
-    context_object_name = 'items'
-    paginate_by = 10
+class ItemListView(RedirectView):
+    pattern_name = 'stock:list'
+    query_string = True
 
 
 class ItemDataView(ItemQuerysetMixin, DataTableView):
@@ -41,6 +42,20 @@ class ItemCreateView(CreateView):
     model = Item
     form_class = ItemForm
     template_name = 'catalog/form.html'
+
+    @transaction.atomic
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        quantity = form.cleaned_data.get('initial_quantity') or 0
+        if quantity:
+            from inventory.models import StockPosition, StockRecord
+            from inventory.services import _create_record
+            position = StockPosition.objects.create(project=None, item=self.object)
+            _create_record(position, StockRecord.Operation.OPENING, {
+                'quantity': quantity, 'occurred_on': form.cleaned_data.get('initial_date') or timezone.localdate(),
+                'observation': '', 'submission_key': uuid.uuid4(),
+            })
+        return response
 
 
 class ItemDetailView(DetailView):

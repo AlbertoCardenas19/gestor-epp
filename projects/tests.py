@@ -12,9 +12,9 @@ class ProjectFlowTests(TestCase):
     def test_home_offers_projects_and_catalog(self):
         response = self.client.get('/')
         self.assertContains(response, 'Ir a proyectos')
-        self.assertContains(response, 'Ir al catálogo')
+        self.assertContains(response, 'Ir al inventario')
         self.assertContains(response, reverse('projects:list'))
-        self.assertContains(response, reverse('catalog:list'))
+        self.assertContains(response, reverse('stock:list'))
 
     def test_empty_list_offers_first_project(self):
         self.assertContains(self.client.get(reverse('projects:list')), 'Crear primer proyecto')

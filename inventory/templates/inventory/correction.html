@@ -12,7 +12,7 @@
     <div class="alert alert-info">{% if original.is_cancelled %}Esta entrega está anulada y no se puede corregir.{% else %}Este registro ya fue corregido. Abre el registro vigente para corregirlo.{% endif %}</div>
   {% else %}
     <p class="text-body-secondary">Al guardar se conservará el original como sustituido y se creará un reemplazo vinculado. El saldo contará solo el registro correcto.</p>
-    {% if original.operation == 'delivery' %}<p class="text-body-secondary">Si cambias proyecto o elemento, se rectificará el descuento en ambas posiciones. El destino necesita apertura y saldo suficiente. Esto no registra una transferencia física.</p>{% endif %}
+    {% if original.stock_request_id %}<p>Selecciona una solicitud de destino con cantidad reservada pendiente suficiente. No se crearán solicitudes automáticamente.</p>{% elif original.operation == 'delivery' %}<p>La corrección rectifica las existencias del inventario. No se crearán solicitudes para esta entrega anterior.</p>{% endif %}
     <div class="card"><div class="card-body p-4"><form method="post" novalidate>
       {% include 'inventory/fields.html' %}
       <div class="d-flex flex-column flex-sm-row gap-2">

@@ -1,13 +1,14 @@
 from django.core.exceptions import ValidationError
-from django.db.models import Q, Sum
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import FormView, TemplateView
 
 from catalog.models import Item
 from projects.models import Project
 
-from .forms import CorrectionForm, DeliveryCancellationForm, DeliveryCorrectionForm, DeliveryForm, StockForm
-from .models import StockPosition, StockRecord, stock_delta_expression
+from .forms import CorrectionForm, DeliveryCancellationForm, DeliveryCorrectionForm, DeliveryForm, StockForm, RequestDeliveryCorrectionForm
+from .availability import available_quantity
+from .models import StockPosition, StockRecord
 from .services import cancel_delivery, correct_record, deliver_stock, open_stock, receive_stock
 
 
@@ -37,27 +38,13 @@ class ProjectItemMixin(ProjectMixin):
         return super().get_context_data(item=self.item, **kwargs)
 
 
-class InventoryListView(ProjectMixin, TemplateView):
-    template_name = 'inventory/list.html'
-
-    def get_context_data(self, **kwargs):
-        positions = {
-            position.item_id: position
-            for position in StockPosition.objects.filter(project=self.project).annotate(
-                total=Sum(stock_delta_expression('records__'), filter=Q(records__voided_at__isnull=True)),
-            )
-        }
-        rows = [{'item': item, 'position': positions.get(item.pk)} for item in Item.objects.all()]
-        return super().get_context_data(rows=rows, **kwargs)
-
-
 class HistoryView(ProjectItemMixin, TemplateView):
     template_name = 'inventory/history.html'
 
     def get_context_data(self, **kwargs):
         position = StockPosition.objects.filter(project=self.project, item=self.item).first()
         records = list(position.records.select_related('position', 'replaces__position', 'replacement__position')) if position else []
-        balance = sum(record.delta for record in records if record.voided_at is None)
+        balance = available_quantity(self.item.pk)
         return super().get_context_data(position=position, records=records, balance=balance, **kwargs)
 
 
@@ -99,10 +86,12 @@ class CorrectionView(ProjectItemMixin, FormView):
     form_class = CorrectionForm
 
     def get_original(self):
-        return get_object_or_404(StockRecord, pk=self.kwargs['record_pk'],
-                                 position__project=self.project, position__item=self.item)
+        return get_object_or_404(StockRecord.objects.filter(Q(position__project=self.project) | Q(stock_request__project=self.project)),
+                                 pk=self.kwargs['record_pk'], position__item=self.item)
 
     def get_form_class(self):
+        if self.get_original().stock_request_id:
+            return RequestDeliveryCorrectionForm
         return DeliveryCorrectionForm if self.get_original().operation == StockRecord.Operation.DELIVERY else CorrectionForm
 
     def get_form_kwargs(self):
@@ -110,7 +99,9 @@ class CorrectionView(ProjectItemMixin, FormView):
         kwargs = super().get_form_kwargs()
         kwargs['operation'] = original.operation
         kwargs['initial'].update({key: getattr(original, key) for key in ['quantity', 'occurred_on', 'observation']})
-        if original.operation == StockRecord.Operation.DELIVERY:
+        if original.stock_request_id:
+            kwargs['initial'].update(destination_request=original.stock_request_id, worker_full_name=original.worker_full_name)
+        elif original.operation == StockRecord.Operation.DELIVERY:
             kwargs['initial'].update(destination_project=self.project.pk, destination_item=self.item.pk,
                                      worker_full_name=original.worker_full_name)
         return kwargs
@@ -134,9 +125,8 @@ class DeliveryCancellationView(ProjectItemMixin, FormView):
 
     def get_original(self):
         return get_object_or_404(
-            StockRecord.objects.select_related('replacement__position'),
-            pk=self.kwargs['record_pk'], operation=StockRecord.Operation.DELIVERY,
-            position__project=self.project, position__item=self.item,
+            StockRecord.objects.select_related('replacement__position').filter(Q(position__project=self.project) | Q(stock_request__project=self.project)),
+            pk=self.kwargs['record_pk'], operation=StockRecord.Operation.DELIVERY, position__item=self.item,
         )
 
     def get_context_data(self, **kwargs):

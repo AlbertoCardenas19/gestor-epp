@@ -1,9 +1,9 @@
 # Inventario común: consulta, entradas y trazabilidad
 
-Primer incremento de S16/S19/S21, correspondiente a RF-04 y RF-05. Se implementan
-consulta del stock común, entradas y su corrección. **Solicitudes, reservas y
-entregas vinculadas a solicitudes todavía no están implementadas.** Las entregas
-anteriores y sus pantallas se mantienen durante esta transición.
+Documento del primer incremento S16/S19/S21, migración 0003. Su verificación
+corresponde a esa entrega. **El flujo vigente está en la [guía 11](11-inventario-y-solicitudes.md)**:
+unificación con catálogo, solicitudes/reservas, necesidad de compra y migración 0004.
+Las menciones de pendientes y recorridos anteriores de este documento son históricos.
 
 ## Qué cambia
 

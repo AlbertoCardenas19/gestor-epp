@@ -1,0 +1,8 @@
+<div class="dropdown">
+<button id="request-actions-{{ request_record.pk }}" class="action-trigger dropdown-toggle" type="button" data-coreui-toggle="dropdown" aria-expanded="false" aria-label="Acciones de {{ request_record.item.name }}">Acciones</button>
+<ul class="dropdown-menu dropdown-menu-end action-menu" aria-labelledby="request-actions-{{ request_record.pk }}">
+<li><a class="dropdown-item" href="{{ request_record.get_absolute_url }}">Ver solicitud</a></li>
+{% if request_record.reserved_quantity %}<li><a class="dropdown-item" href="{% url 'requests:deliver' request_record.project_id request_record.pk %}">Confirmar entrega</a></li>{% endif %}
+{% if request_record.purchase_quantity %}<li><a class="dropdown-item" href="{% url 'requests:reserve' request_record.project_id request_record.pk %}">Reservar disponibles</a></li>{% endif %}
+{% if request_record.pending_quantity %}<li><a class="dropdown-item" href="{% url 'requests:reduce' request_record.project_id request_record.pk %}">Reducir o cancelar pendiente</a></li>{% endif %}
+</ul></div>

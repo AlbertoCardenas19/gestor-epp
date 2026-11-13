@@ -2,20 +2,14 @@
 
 ## Alcance implementado
 
-Crear, listar y consultar proyectos con nombre obligatorio y descripción opcional.
-También crear, listar y consultar elementos del catálogo común, con nombre y
-tipo obligatorios (EPP o señalética), y descripción opcional. Este catálogo no
-está asociado a un proyecto y no guarda cantidades ni movimientos de inventario.
-El inventario por proyecto permite registrar una apertura por elemento, nuevas
-entradas y correcciones con anulación y reemplazo vinculado. La consulta distingue
-«Sin registro inicial» de una apertura en cero y muestra el historial completo.
-También permite entregas directas a trabajadores identificados por nombre completo,
-que descuentan unidades del proyecto sin permitir cantidades superiores al saldo.
-Avance de RF-01, RF-03, RF-04, RF-05 y del flujo directo de RF-08/RF-09;
-no constituye el MVP completo. Los campos usan texto
-sin una restricción de longitud o unicidad de negocio aún no acordada.
-La interfaz está en español y usa CoreUI 5.4.3, basado en Bootstrap 5, servido
-localmente para no depender de una CDN al abrir las pantallas.
+Crear/listar/consultar proyectos en tarjetas, Inventario único (elementos y
+cantidades comunes), entradas/correcciones, solicitudes por proyecto con reserva
+parcial y necesidad de compra, entregas directas parciales, corrección/anulación y
+reducción/cancelación de pendientes. La [guía 11](11-inventario-y-solicitudes.md)
+describe las reglas actuales S22 y el recorrido de prueba. Los apartados posteriores
+con fechas/cifras anteriores conservan la evolución histórica, no reglas vigentes
+que obliguen a abrir stock por proyecto. RF-01/RF-03/RF-04/RF-05/RF-08/RF-09;
+no constituye el MVP completo.
 
 Estos flujos son de desarrollo local. Todavía no se han definido cuentas,
 permisos ni despliegue público (P-03 y P-12). El servidor se inicia en loopback.
@@ -112,7 +106,7 @@ entre proyectos, elemento inexistente y navegación de la sección activa.
 
 Prueba manual: abrir la lista, crear un proyecto, consultar el detalle, volver a
 la lista y recargar. Repetir en tamaño móvil; probar también guardar sin nombre.
-Para el catálogo, abrir «Catálogo» desde la navegación principal, crear un EPP y
+Para el catálogo, abrir «Inventario» desde la navegación principal, crear un EPP y
 una señalética, consultar sus detalles y recargar. Comprobar nombre y tipo
 obligatorios, descripción opcional y conservación de datos al corregir errores.
 
@@ -559,3 +553,17 @@ CSRF, formularios, correcciones, reintentos y concurrencia de entradas comunes.
 Chromium comprobó el flujo 14 → 19 → 17 → 20 y menús/tablas a 320/390/1440 píxeles.
 No hay bibliotecas nuevas. Solicitudes/reservas y sus entregas siguen pendientes.
 Guía de implementación y pasos Ubuntu: [10-inventario-comun.md](10-inventario-comun.md).
+
+## Inventario único y solicitudes — S22
+
+Implementado con migración 0004 (FK nullable y nuevas solicitudes/eventos), sin
+borrar ni duplicar registros históricos ni incorporar bibliotecas nuevas. Se
+conservan los componentes de S20, tarjetas, filtros y las rutas históricas. Las
+escrituras bloquean primero los elementos para proteger el stock entre proyectos.
+
+Verificación: 161 pruebas PostgreSQL y 5 pruebas Chromium aprobadas; flujo completo
+con reserva parcial, compra pendiente, entrega, corrección, anulación, reducción
+y cancelación; reintentos, simultaneidad y rollback. Escritorio/móvil a
+320/390/1440 píxeles, × de búsqueda, tarjetas, menús y consola sin errores. Firefox
+se intentó iniciar y sigue faltando su ejecutable. Detalle y comandos Ubuntu en
+[11-inventario-y-solicitudes.md](11-inventario-y-solicitudes.md).

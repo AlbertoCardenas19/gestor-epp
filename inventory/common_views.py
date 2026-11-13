@@ -9,8 +9,9 @@ from django.views.generic import FormView, TemplateView
 from catalog.models import Item
 from projects.datatables import DataTableView
 from .common import common_items, common_records, receive_common_stock
+from .availability import available_quantity
 from .forms import CorrectionForm, StockForm
-from .models import StockPosition, StockRecord
+from .models import StockRecord
 from .services import correct_record
 from .views import add_service_error
 
@@ -21,7 +22,7 @@ class CommonItemMixin:
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        return super().get_context_data(item=self.item, balance=StockPosition.common_balance(self.item.pk), **kwargs)
+        return super().get_context_data(item=self.item, balance=available_quantity(self.item.pk), **kwargs)
 
 
 class CommonInventoryView(TemplateView):
@@ -29,18 +30,18 @@ class CommonInventoryView(TemplateView):
 
 
 class CommonInventoryDataView(DataTableView):
-    order_columns = ('name', 'type_label', 'total', None)
-    search_fields = ('name', 'type_label')
+    order_columns = ('name', 'type_label', 'total', 'committed_total', None)
+    search_fields = ('name', 'type_label', 'description')
     default_order = ('name', 'pk')
 
     def get_queryset(self):
         return common_items()
 
     def serialize_record(self, item):
-        return {'name': item.name, 'type': item.type_label, 'quantity': str(item.total),
+        return {'name': item.name, 'type': item.type_label, 'quantity': str(item.total), 'delivered': str(item.committed_total),
                 'actions': render_to_string('inventory/common_actions.html', {
                     'action_id': item.pk, 'action_label': item.name,
-                    'detail_url': reverse('stock:history', args=[item.pk]),
+                    'detail_url': reverse('stock:history', args=[item.pk]), 'item_url': item.get_absolute_url(),
                     'receipt_url': reverse('stock:receive', args=[item.pk]),
                 })}
 

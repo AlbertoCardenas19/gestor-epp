@@ -20,25 +20,18 @@ Esta lista explicita huecos de la evidencia recuperada para evitar que Codex los
 | P-12 | Tecnologías | Django, PostgreSQL y CoreUI con Bootstrap confirmados en S7. Estructura detallada y alojamiento siguen pendientes. |
 | P-13 | Comercialización y práctica | Condiciones formales de práctica y acuerdos comerciales concretos. La intención no equivale a un contrato. |
 
-## Revisión posterior del inventario y las entregas — S16
+## Estado vigente de inventario y entregas — S16/S19/S21/S22
 
-El usuario quiere stock común de empresa y solicitudes por proyecto con reserva,
-limitadas a existencias disponibles, y descuento al entregar. Mantiene las entregas
-realizadas como pantalla inicial del proyecto. Esta decisión revisa P-05/P-08 y
-el modelo S9; la implementación existente aún usa stock por proyecto.
+P-05/P-08 se revisaron: stock común, solicitudes por proyecto con reserva parcial,
+necesidad de compra por lo faltante, entregas parciales y reducción/cancelación del
+pendiente con motivo e historial están implementados. Las correcciones/anulaciones
+vinculadas restituyen reservas; las históricas sin solicitud solo afectan stock
+común. S22 prioriza reducir necesidad de compra antes de liberar reservas.
+[Guía actual](11-inventario-y-solicitudes.md). Los enunciados S9 de la tabla describen
+la primera versión histórica, no la necesidad de abrir stock por proyecto hoy.
 
-S16 también confirma cantidad inicial vacía como cero, entradas posteriores,
-entregas parciales y reducción/cancelación de lo pendiente con motivo e historial,
-liberando la reserva sin alterar entregas anteriores. Los datos actuales del PC
-son de prueba; no se ha solicitado borrarlos.
-
-S19 confirma trasladar los saldos anteriores al stock común, conservar historial
-y devolver unidades a la reserva pendiente de la misma solicitud al reducir o
-anular una entrega. Las correcciones entre proyectos/elementos requieren una
-solicitud existente de destino con pendiente suficiente. Se implementaron consulta y entradas comunes conservando los saldos anteriores
-([guía 10](10-inventario-comun.md)); resta incorporar solicitudes, reservas y su
-flujo de entregas conforme al [diseño](08-stock-comun-y-solicitudes.md).
-No se convierte una corrección/anulación de entrega en devolución física.
+S22 no define datos de compra/proveedor/aprobación, prioridad automática entre
+proyectos ni devoluciones/reposiciones. No se borran los datos de prueba del PC.
 
 ## Recomendaciones anteriores que no son decisiones cerradas
 Se recuperó una recomendación del asistente de usar Django, PostgreSQL y Render. No se recuperó aceptación explícita del usuario de esa combinación. [S6]

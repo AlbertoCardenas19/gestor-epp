@@ -1,14 +1,14 @@
 """Common stock: read the existing ledger without duplicating historical quantities.
 
-This increment adds consultation and receipts. Requests/reservations follow later;
-legacy project flows remain available until their transition is implemented.
+The visible columns combine actual deliveries and pending reservations.
+Historical records remain in the same ledger, without fictitious requests.
 """
 from django.db import transaction
-from django.db.models import BigIntegerField, Case, CharField, Exists, OuterRef, Subquery, Sum, Value, When
+from django.db.models import BigIntegerField, Case, CharField, Exists, F, OuterRef, Subquery, Sum, Value, When
 from django.db.models.functions import Coalesce
 
 from catalog.models import Item
-from .models import StockPosition, StockRecord, stock_delta_expression
+from .models import StockPosition, StockRecord, StockRequest, stock_delta_expression
 from .services import _create_record, _repeated_submission
 
 
@@ -16,16 +16,26 @@ def common_items():
     totals = StockRecord.objects.filter(position__item_id=OuterRef('pk'), voided_at__isnull=True).order_by().values(
         'position__item_id',
     ).annotate(total=Sum(stock_delta_expression())).values('total')
+    delivered = StockRecord.objects.filter(position__item_id=OuterRef('pk'), voided_at__isnull=True,
+                                            operation=StockRecord.Operation.DELIVERY).order_by().values('position__item_id').annotate(total=Sum('quantity')).values('total')
+    requested_deliveries = StockRecord.objects.filter(stock_request__item_id=OuterRef('pk'), voided_at__isnull=True).order_by().values('stock_request__item_id').annotate(total=Sum('quantity')).values('total')
+    allocated = StockRequest.objects.filter(item_id=OuterRef('pk')).order_by().values('item_id').annotate(total=Sum('allocated_quantity')).values('total')
+    def amount(query):
+        return Coalesce(Subquery(query, output_field=BigIntegerField()), Value(0), output_field=BigIntegerField())
     return Item.objects.annotate(
-        total=Coalesce(Subquery(totals, output_field=BigIntegerField()), Value(0), output_field=BigIntegerField()),
+        physical_total=amount(totals), delivered_total=amount(delivered), allocated_total=amount(allocated),
+        fulfilled_total=amount(requested_deliveries),
         type_label=Case(When(item_type=Item.Type.EPP, then=Value('EPP')),
                         default=Value('Señalética'), output_field=CharField()),
+    ).annotate(reserved_total=F('allocated_total') - F('fulfilled_total')).annotate(
+        total=F('physical_total') - F('reserved_total'), committed_total=F('delivered_total') + F('reserved_total'),
     ).order_by('name', 'pk')
+
 
 
 def common_records(item):
     return StockRecord.objects.filter(position__item=item).select_related(
-        'position__item', 'position__project', 'replaces__position', 'replacement__position',
+        'position__item', 'position__project', 'stock_request__project', 'replaces__position', 'replacement__position',
     ).annotate(
         delta_quantity=stock_delta_expression(),
         has_replacement=Exists(StockRecord.objects.filter(replaces_id=OuterRef('pk'))),
@@ -34,7 +44,7 @@ def common_records(item):
         state_label=Case(When(voided_at__isnull=True, then=Value('Vigente')),
                          When(replacement__isnull=False, then=Value('Sustituido')),
                          default=Value('Anulado'), output_field=CharField()),
-        origin_label=Coalesce('position__project__name', Value('Empresa'), output_field=CharField()),
+        origin_label=Coalesce('stock_request__project__name', 'position__project__name', Value('Empresa'), output_field=CharField()),
     ).order_by('-occurred_on', '-pk')
 
 

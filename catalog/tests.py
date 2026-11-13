@@ -12,7 +12,7 @@ class CatalogFlowTests(TestCase):
         self.assertEqual(connection.vendor, 'postgresql')
 
     def test_empty_catalog_offers_first_item(self):
-        self.assertContains(self.client.get(reverse('catalog:list')), 'Crear primer elemento')
+        self.assertContains(self.client.get(reverse('catalog:list'), follow=True), 'Nuevo elemento')
 
     def test_create_list_and_consult_each_type(self):
         for item_type, name, label in [
@@ -26,7 +26,7 @@ class CatalogFlowTests(TestCase):
                 item = Item.objects.get(name=name)
                 self.assertRedirects(response, item.get_absolute_url())
                 client = Client()
-                self.assertContains(client.get(reverse('catalog:list')), name)
+                self.assertIn(name, [row['name'] for row in client.get(reverse('stock:data')).json()['data']])
                 detail = client.get(item.get_absolute_url())
                 self.assertContains(detail, name)
                 self.assertContains(detail, label)
@@ -74,7 +74,7 @@ class CatalogFlowTests(TestCase):
         for name in ['Proyecto norte', 'Proyecto sur']:
             project = Project.objects.create(name=name)
             self.assertEqual(self.client.get(project.get_absolute_url()).status_code, 200)
-            self.assertContains(self.client.get(reverse('catalog:list')), item.name)
+            self.assertIn(item.name, [row['name'] for row in self.client.get(reverse('stock:data')).json()['data']])
         self.assertEqual(Item.objects.count(), 1)
         self.assertEqual(Project.objects.count(), 2)
 
@@ -84,8 +84,8 @@ class CatalogFlowTests(TestCase):
     def test_user_text_is_escaped(self):
         item = Item.objects.create(name='<script>alert(1)</script>', item_type=Item.Type.EPP,
                                    description='<img src=x onerror=alert(1)>')
-        for url in [reverse('catalog:list'), item.get_absolute_url()]:
-            response = self.client.get(url)
+        for url in [item.get_absolute_url()]:
+            response = self.client.get(url, follow=True)
             self.assertNotContains(response, '<script>alert(1)</script>')
             self.assertContains(response, '&lt;script&gt;')
             self.assertNotContains(response, '<img src=x')
@@ -98,10 +98,11 @@ class CatalogFlowTests(TestCase):
         self.assertFalse(Item.objects.exists())
 
     def test_navigation_marks_current_section(self):
-        for namespace, label in [('catalog', 'Catálogo'), ('projects', 'Proyectos')]:
+        for namespace, label in [('stock', 'Inventario'), ('projects', 'Proyectos')]:
             response = self.client.get(reverse(f'{namespace}:list'))
             self.assertContains(response, f'aria-current="page" href="{reverse(f"{namespace}:list")}">{label}</a>')
             self.assertEqual(response.content.count(b'aria-current="page"'), 1)
+        self.assertRedirects(self.client.get(reverse('catalog:list')), reverse('stock:list'))
 
 
 class CatalogTableTests(TestCase):
@@ -144,7 +145,7 @@ class CatalogTableTests(TestCase):
         result = self.data(**{'order[0][column]': 2, 'order[0][dir]': 'desc'})
         self.assertEqual(result['data'][0]['name'], 'Salida')
         self.assertIn('data-coreui-toggle="dropdown"', result['data'][0]['actions'])
-        response = self.client.get(reverse('catalog:list'))
+        response = self.client.get(reverse('catalog:list'), follow=True)
         for asset in ['dataTables.min.js', 'dataTables.bootstrap5.min.js', 'dataTables.bootstrap5.min.css',
                       'jquery.min.js', 'coreui.bundle.min.js']:
             self.assertContains(response, asset, count=1)
@@ -172,3 +173,27 @@ class CatalogTableTests(TestCase):
         self.assertEqual(len(result['data']), 1)
         self.assertEqual(self.client.post(reverse('catalog:data'), {}).status_code, 405)
         self.assertEqual(Item.objects.count(), 1)
+
+
+class InventoryElementCreationTests(TestCase):
+    def test_initial_quantity_is_optional_or_recorded_once_with_its_date(self):
+        from inventory.models import StockPosition, StockRecord
+        response = self.client.post(reverse('stock:create'), {'name': 'Sin existencias', 'item_type': 'epp'})
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(StockPosition.common_balance(Item.objects.get().pk), 0)
+        self.assertFalse(StockRecord.objects.exists())
+        response = self.client.post(reverse('stock:create'), {
+            'name': 'Con existencias', 'item_type': 'epp', 'initial_quantity': 4, 'initial_date': '2026-11-12',
+        })
+        item = Item.objects.get(name='Con existencias')
+        self.assertRedirects(response, item.get_absolute_url())
+        record = StockRecord.objects.get()
+        self.assertEqual(record.operation, 'opening')
+        self.assertEqual(record.quantity, 4)
+        self.assertIsNone(record.position.project_id)
+        self.assertEqual(StockPosition.common_balance(item.pk), 4)
+
+    def test_invalid_initial_quantity_does_not_save_the_element(self):
+        response = self.client.post(reverse('stock:create'), {'name': 'Inválido', 'item_type': 'epp', 'initial_quantity': -1})
+        self.assertIn('initial_quantity', response.context['form'].errors)
+        self.assertFalse(Item.objects.exists())
