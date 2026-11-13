@@ -23,6 +23,10 @@ class ProjectListView(CardsViewMixin, ListView):
     context_object_name = 'projects'
     search_fields = ('name', 'description')
     default_sort = 'name'
+
+    def get_paginate_by(self, queryset):
+        return 6
+
     sort_options = (
         ('name', 'Nombre: A–Z', ('name', 'pk')),
         ('-name', 'Nombre: Z–A', ('-name', '-pk')),

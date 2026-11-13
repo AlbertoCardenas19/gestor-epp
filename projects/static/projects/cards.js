@@ -4,6 +4,7 @@
   const feedback = document.querySelector('[data-cards-feedback]');
   if (!form || !results || !feedback || !window.fetch || !window.AbortController) return;
 
+  const loading = window.EppLoading.create(results.parentElement, {content: results, status: feedback});
   const query = form.elements.namedItem('q');
   const clear = form.querySelector('[data-cards-clear]');
   function syncClear() { if (clear) clear.hidden = !query.value; }
@@ -29,8 +30,7 @@
 
   function update(url, mode = 'replace', delay = 0, restoreForm = false, focusCards = false) {
     const current = cancelPending();
-    results.setAttribute('aria-busy', 'true');
-    feedback.textContent = 'Buscando…';
+    loading.begin();
     timer = setTimeout(async () => {
       controller = new AbortController();
       try {
@@ -52,11 +52,11 @@
         if (mode === 'push') history.pushState(null, '', url);
         if (mode === 'replace') history.replaceState(null, '', url);
         syncClear();
-        feedback.textContent = '';
+        loading.finish();
         if (focusCards) results.querySelector('[data-results-focus]').focus({ preventScroll: true });
       } catch (error) {
         if (current !== revision || error.name === 'AbortError') return;
-        feedback.textContent = 'No se pudo actualizar el listado. Se mantienen los resultados anteriores. Pulsa Aplicar para reintentar.';
+        loading.finish('No se pudo actualizar el listado. Se mantienen los resultados anteriores. Pulsa Aplicar para reintentar.');
       } finally {
         if (current === revision) results.setAttribute('aria-busy', 'false');
       }
@@ -67,7 +67,7 @@
     composing = true;
     cancelPending();
     results.setAttribute('aria-busy', 'false');
-    feedback.textContent = '';
+    loading.finish();
   });
   query.addEventListener('compositionend', () => {
     composing = false;

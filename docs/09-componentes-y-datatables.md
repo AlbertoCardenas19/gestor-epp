@@ -236,3 +236,30 @@ para limpiar/enfocar sin duplicar su inicialización. Las tarjetas incluyen el
 mismo complemento en `cards_controls.html` y `cards.js`; no usan DataTables.
 No cambian versiones ni dependencias. Flujo y comprobaciones actuales en
 [11-inventario-y-solicitudes.md](11-inventario-y-solicitudes.md).
+
+## Listados compartidos y selector — S23
+
+`loading.js` se carga una vez en base antes de las mejoras de listas. Expone
+`EppLoading.create(container, {content, shape, status})`, con `begin(initial)` y
+`finish(errorMessage)`: skeleton CoreUI en la primera carga asíncrona, spinner
+discreto en actualizaciones, contenido conservado, `aria-busy`, región accesible
+y error distinto de vacío. Tarjetas renderizadas inicialmente no simulan otra carga.
+
+`datatables.js` conserva el transporte del protocolo `serverSide` y añade cancelación
+de búsquedas obsoletas, manejo compartido de errores y recuperación. Se usan los
+controles DataTables; no hay paginadores o búsquedas de tabla paralelos.
+`data-datatable-filter="project"` envía el filtro del panel a su endpoint sin afectar
+otras tablas de la misma ficha. `data-link="item_url"` hace clicable el nombre con
+texto escapado y URL generada por Django. `data-format="pending-state"` añade el
+indicador accesible de pendiente junto al estado, sin aceptar HTML del usuario.
+Acciones sigue sin búsqueda/ordenación; las cantidades se ordenan por su cálculo SQL.
+
+`item-picker.js` es un selector de tarjetas específico del formulario, no una
+segunda tabla/catálogo. No existe un componente CoreUI que cubra selección paginada
+de datos de esta app: se usan tarjetas y botones CoreUI con búsqueda GET del servidor
+y estado de selección fuera de los resultados. Reutiliza carga y stock calculado
+existentes. La confirmación siempre revalida el stock con los servicios bloqueados.
+
+Proyectos fija seis tarjetas por página; su buscador conserva el alcance SQL completo.
+La ficha del elemento tiene dos DataTables independientes: cantidades por proyecto
+y movimientos filtrables. No se añaden bibliotecas ni versiones.

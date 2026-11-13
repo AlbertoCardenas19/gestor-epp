@@ -193,9 +193,12 @@ class ProjectCardsTests(TestCase):
     def test_cards_preserve_search_pagination_and_order_parameters(self):
         response = self.client.get(reverse('projects:list'))
         self.assertEqual(response.context['paginator'].count, 12)
-        self.assertEqual(len(response.context['projects']), 10)
-        self.assertContains(response, 'project-card', count=10)
+        self.assertEqual(len(response.context['projects']), 6)
+        self.assertContains(response, 'project-card', count=6)
         self.assertNotContains(response, '<table')
+        next_page = self.client.get(reverse('projects:list'), {'page': 2, 'per_page': 50})
+        self.assertEqual(len(next_page.context['projects']), 6)
+        self.assertEqual(next_page.context['projects'][0].name, 'Obra 06')
         self.assertNotContains(response, 'Ordenar por')
         for sort, expected in [('name', 'Obra 00'), ('-name', 'Obra 11'), ('description', 'Obra 11'), ('-description', 'Obra 00')]:
             response = self.client.get(reverse('projects:list'), {'sort': sort, 'q': 'Obra', 'page': 1})

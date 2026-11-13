@@ -1,0 +1,13 @@
+<section data-datatable-panel>
+<div class="mb-3 business-filters"><label class="form-label" for="movement-project">Proyecto</label>
+<select id="movement-project" class="form-select" data-datatable-filter="project">
+<option value="">Todos los proyectos y empresa</option><option value="company"{% if movement_project == 'company' %} selected{% endif %}>Empresa (sin proyecto)</option>
+{% for option in project_options %}<option value="{{ option.pk }}"{% if movement_project == option.pk|stringformat:'s' %} selected{% endif %}>{{ option.name }}</option>{% endfor %}
+</select></div>
+<p class="small text-danger" role="alert" data-datatable-error hidden></p>
+<div class="card datatable-shell"><div class="card-body">
+<table class="table table-striped mb-0 align-middle" style="width:100%" data-datatable data-source="{% url 'stock:history-data' item.pk %}" data-order='[[0,"desc"]]'>
+<caption class="visually-hidden">Movimientos de {{ item.name }}</caption>
+<thead><tr><th data-column="date" data-format="date" scope="col">Fecha</th><th data-column="operation" scope="col">Movimiento</th><th data-column="origin" scope="col">Origen</th><th data-column="quantity" scope="col">Cantidad</th><th data-column="state" scope="col">Estado</th><th data-column="actions" data-actions scope="col">Acciones</th></tr></thead><tbody></tbody>
+</table></div></div>
+</section>

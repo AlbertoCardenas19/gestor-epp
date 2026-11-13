@@ -3,7 +3,7 @@
 ## Procedencia
 Base reconstruida el 12 de noviembre de 2026 a partir del historial recuperado del proyecto de la amiga prevencionista, principalmente la conversación «Recordar proyecto amiga». No es una transcripción completa ni una revisión del repositorio. Las fechas se usan para localizar conversaciones, sin convertir marcas técnicas en horas locales.
 
-Los códigos S0–S22 son referencias internas de las fuentes, no IDs de decisiones previamente aprobadas.
+Los códigos S0–S23 son referencias internas de las fuentes, no IDs de decisiones previamente aprobadas.
 
 | Ref. | Conversación o momento | Evidencia recuperada |
 |---|---|---|
@@ -293,6 +293,30 @@ reducidos a 3, dejan 2 reservados y 1 por comprar. La implementación, separaci�
 entre reserva y entrega real y las comprobaciones están en la
 [guía 11](11-inventario-y-solicitudes.md). La asignación de entradas se ofrece
 manualmente; no hay prioridad automática entre proyectos definida.
+
+## S23 — Solicitudes y entregas separadas, selector y consulta del elemento
+
+13 de noviembre de 2026, instrucciones actuales del usuario en «Texto pegado.txt»:
+seis proyectos por página manteniendo tarjetas/filtros; selector de elementos con
+tarjetas, stock disponible, búsqueda global y páginas, selección persistente;
+skeletons iniciales e indicador compartido de actualización, vacío y error;
+detalle del elemento enlazado desde Inventario, movimientos con filtro por proyecto
+y cantidades solicitadas y realmente entregadas por proyecto.
+
+Solicita corregir el cálculo: solicitud compromete Stock y aparece en Solicitado,
+pero Entregado solo cambia al confirmar mediante el botón existente, sin doble
+descuento. Estado «En proceso», exclamación accesible «Pendiente de entrega», sin
+columna Reservado. Sustituir etiqueta Existencias por Stock. Conservar capacidades
+parciales/correcciones/anulaciones existentes, fechas históricas y entregas anteriores.
+Quitar fecha del formulario de solicitud y establecerla en el servidor con su
+momento de registro y zona configurada. No cambiar fechas de otros movimientos.
+
+Ante la contradicción entre «rechazo por stock insuficiente» y S22, el usuario
+aclaró expresamente: **«Conservar necesidad de compra; limitar solo la entrega»**.
+No se elimina ni se reclasifica información histórica. S23 reemplaza la columna
+Entregados combinada de S22, no las reservas internas ni necesidades de compra.
+Pide implementación verificada, documentación existente actualizada y ningún commit
+ni push. Guía vigente: [11-inventario-y-solicitudes.md](11-inventario-y-solicitudes.md).
 
 ## Qué se excluyó
 - La idea de junio de automatizar documentos para distintos profesionales: no corresponde a este producto. Se excluyen sus requisitos de plantillas, generación PDF/Excel, IPER, AST, reportes de incidentes y charlas.

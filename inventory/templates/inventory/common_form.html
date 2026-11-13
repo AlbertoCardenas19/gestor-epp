@@ -5,7 +5,7 @@
 <div class="form-shell mt-4">
 <h1>{% if is_correction %}Corregir entrada{% else %}Registrar entrada{% endif %}</h1>
 <p class="text-break fw-semibold">{{ item.name }}</p>
-<p class="text-body-secondary">Existencias actuales: {{ balance }}</p>
+<p class="text-body-secondary">Stock actual: {{ balance }}</p>
 {% if is_correction and record.voided_at %}
 <p class="text-danger">Este registro ya fue corregido. Abre el reemplazo vigente.</p>
 {% if record.is_replaced %}<a href="{{ record.replacement.get_absolute_url }}">Ver reemplazo</a>{% endif %}

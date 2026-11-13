@@ -43,7 +43,7 @@ class RequestFlowTests(TestCase):
         self.assertEqual((request.allocated_quantity, request.purchase_quantity, request.reserved_quantity), (2, 3, 2))
         self.assertEqual(StockPosition.common_balance(self.item.pk), 2)
         self.assertEqual(available_quantity(self.item.pk), 0)
-        self.assertEqual(self.counts(), ('0', '2'))
+        self.assertEqual(self.counts(), ('0', '0'))
         other = self.request(4, project=self.south)
         self.assertEqual((other.allocated_quantity, other.purchase_quantity), (0, 4))
         self.assertEqual(StockRequest.objects.count(), 2)
@@ -52,7 +52,7 @@ class RequestFlowTests(TestCase):
     def test_no_stock_creates_only_a_purchase_need_and_never_negative_stock(self):
         request = self.request(item=self.other_item)
         self.assertEqual((request.allocated_quantity, request.purchase_quantity), (0, 5))
-        self.assertEqual(request.state_label, 'Pendiente de compra')
+        self.assertEqual(request.state_label, 'En proceso')
         self.assertEqual(available_quantity(self.other_item.pk), 0)
 
     def test_confirmation_moves_reserved_to_real_delivery_without_double_deduction(self):
@@ -63,7 +63,7 @@ class RequestFlowTests(TestCase):
         request.refresh_from_db()
         self.assertEqual((request.delivered_quantity, request.reserved_quantity, request.purchase_quantity), (1, 1, 3))
         self.assertEqual(StockPosition.common_balance(self.item.pk), 1)
-        self.assertEqual(self.counts(), ('0', '2'))
+        self.assertEqual(self.counts(), ('0', '1'))
         self.assertEqual(record.stock_request_id, request.pk)
         self.assertEqual(StockRecord.objects.filter(operation='delivery').count(), 1)
         with self.assertRaises(ValidationError):
@@ -80,7 +80,7 @@ class RequestFlowTests(TestCase):
         reserve_more(request, payload)
         request.refresh_from_db()
         self.assertEqual((request.allocated_quantity, request.purchase_quantity), (5, 0))
-        self.assertEqual(self.counts(), ('1', '5'))
+        self.assertEqual(self.counts(), ('1', '0'))
         self.assertEqual(request.events.filter(action='reserved').count(), 1)
 
     def test_reduce_purchase_need_before_releasing_reservations_and_cancel_with_reason(self):
@@ -90,11 +90,11 @@ class RequestFlowTests(TestCase):
         reduce_request(request, payload)
         request.refresh_from_db()
         self.assertEqual((request.quantity, request.cancelled_quantity, request.allocated_quantity, request.purchase_quantity), (5, 2, 2, 1))
-        self.assertEqual(self.counts(), ('0', '2'))
+        self.assertEqual(self.counts(), ('0', '0'))
         reduce_request(request, data(pending_quantity=1, reason='Reducir otra vez'))
         request.refresh_from_db()
         self.assertEqual((request.allocated_quantity, request.purchase_quantity), (1, 0))
-        self.assertEqual(self.counts(), ('1', '1'))
+        self.assertEqual(self.counts(), ('1', '0'))
         reduce_request(request, data(pending_quantity=0, reason='Cancelar pendiente'))
         request.refresh_from_db()
         self.assertEqual(request.state_label, 'Cancelado')
@@ -127,7 +127,7 @@ class RequestFlowTests(TestCase):
         self.assertEqual((record.quantity, record.worker_full_name, record.occurred_on), original_data)
         self.assertEqual(request.reserved_quantity, 2)
         self.assertEqual(StockPosition.common_balance(self.item.pk), 2)
-        self.assertEqual(self.counts(), ('0', '2'))
+        self.assertEqual(self.counts(), ('0', '0'))
 
     def test_correction_reinstates_difference_and_preserves_original(self):
         request = self.request()
@@ -136,7 +136,7 @@ class RequestFlowTests(TestCase):
         replacement = correct_record(self.north, record.pk, payload)
         self.assertEqual(correct_record(self.north, record.pk, payload).pk, replacement.pk)
         self.assertEqual((request.delivered_quantity, request.reserved_quantity), (1, 1))
-        self.assertEqual(self.counts(), ('0', '2'))
+        self.assertEqual(self.counts(), ('0', '1'))
         record.refresh_from_db()
         self.assertEqual(record.worker_full_name, 'Ana Pérez')
         self.assertEqual(record.quantity, 2)
@@ -212,7 +212,7 @@ class RequestFlowTests(TestCase):
             with self.assertRaises(RuntimeError):
                 deliver_request(request, data(2, worker_full_name='Ana Pérez'))
         self.assertEqual(request.delivered_quantity, 0)
-        self.assertEqual(self.counts(), ('0', '2'))
+        self.assertEqual(self.counts(), ('0', '0'))
         original = deliver_request(request, data(2, worker_full_name='Ana Pérez'))
         with patch('inventory.request_services.ensure_available', side_effect=RuntimeError('fallo simulado')):
             with self.assertRaises(RuntimeError):
@@ -319,3 +319,11 @@ class RequestConcurrencyTests(TransactionTestCase):
         self.assertEqual(request.pending_quantity, 0)
         self.assertEqual(request.allocated_quantity, request.delivered_quantity)
         self.assertEqual(available_quantity(self.item.pk), 5 - request.delivered_quantity)
+
+    def test_parallel_distinct_confirmations_cannot_deliver_the_same_pending_twice(self):
+        request = create_request(self.north, self.item, data(5))
+        results = self.concurrent([lambda: deliver_request(request, data(5, worker_full_name='Ana Pérez'))] * 2)
+        self.assertEqual(results.count('rejected'), 1)
+        self.assertEqual(request.delivered_quantity, 5)
+        self.assertEqual(available_quantity(self.item.pk), 0)
+        self.assertEqual(StockRecord.objects.filter(stock_request=request).count(), 1)

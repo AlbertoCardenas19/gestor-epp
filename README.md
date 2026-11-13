@@ -4,8 +4,9 @@ Aplicación web en español con Django, PostgreSQL y CoreUI basado en Bootstrap.
 
 Actualmente puedes crear/consultar proyectos en tarjetas y elementos en un único
 Inventario; registrar entradas, solicitar elementos por proyecto, reservar lo
-disponible y guardar lo faltante como necesidad de compra. Las reservas y entregas
-reales se reúnen en «Entregados», manteniendo su distinción y trazabilidad interna.
+disponible y guardar lo faltante como necesidad de compra. «Solicitado» y «Entregados» se muestran separados: solo la confirmación cuenta
+como entrega real; no descuenta el stock dos veces. Proyectos muestra seis tarjetas
+por página y las solicitudes seleccionan elementos mediante tarjetas buscables.
 
 Se confirman entregas parciales a trabajadores por nombre completo, con fecha y
 observación opcional. Se pueden corregir/anular con motivo e historial y reducir
@@ -98,8 +99,8 @@ presiona `Ctrl+C`. Las próximas veces solo necesitas iniciar PostgreSQL y ejecu
 1. En Inventario, crea un casco de tipo EPP con cantidad inicial 2 (vacía = 0).
 2. En Proyectos, crea/abre una tarjeta y entra en su pestaña Inventario.
 3. Solicita 5 cascos: se reservan 2 y quedan 3 como necesidad de compra.
-   Inventario general muestra Existencias 0 / Entregados 2.
-4. Confirma entrega de 1 a un trabajador. Las columnas siguen 0/2; el historial
+   Inventario general muestra Stock 0 / Entregados 0.
+4. Confirma entrega de 1 a un trabajador. Las columnas pasan a Stock 0 / Entregados 1; el historial
    del proyecto muestra la entrega real. No puedes entregar más de lo reservado.
 5. Registra una entrada en Inventario; después usa «Reservar disponibles» en
    la solicitud. No hay asignación automática entre proyectos.

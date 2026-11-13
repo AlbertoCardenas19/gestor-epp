@@ -8,7 +8,7 @@ from django.views.generic import FormView, TemplateView
 
 from catalog.models import Item
 from projects.datatables import DataTableView
-from .common import common_items, common_records, receive_common_stock
+from .common import common_items, common_records, receive_common_stock, item_projects, filter_movement_project
 from .availability import available_quantity
 from .forms import CorrectionForm, StockForm
 from .models import StockRecord
@@ -30,7 +30,7 @@ class CommonInventoryView(TemplateView):
 
 
 class CommonInventoryDataView(DataTableView):
-    order_columns = ('name', 'type_label', 'total', 'committed_total', None)
+    order_columns = ('name', 'type_label', 'total', 'delivered_total', None)
     search_fields = ('name', 'type_label', 'description')
     default_order = ('name', 'pk')
 
@@ -38,7 +38,7 @@ class CommonInventoryDataView(DataTableView):
         return common_items()
 
     def serialize_record(self, item):
-        return {'name': item.name, 'type': item.type_label, 'quantity': str(item.total), 'delivered': str(item.committed_total),
+        return {'name': item.name, 'type': item.type_label, 'quantity': str(item.total), 'delivered': str(item.delivered_total), 'item_url': item.get_absolute_url(),
                 'actions': render_to_string('inventory/common_actions.html', {
                     'action_id': item.pk, 'action_label': item.name,
                     'detail_url': reverse('stock:history', args=[item.pk]), 'item_url': item.get_absolute_url(),
@@ -48,6 +48,10 @@ class CommonInventoryDataView(DataTableView):
 
 class CommonHistoryView(CommonItemMixin, TemplateView):
     template_name = 'inventory/common_history.html'
+
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(project_options=item_projects(self.item),
+                                       movement_project=self.request.GET.get('project', ''), **kwargs)
 
 
 class CommonHistoryDataView(CommonItemMixin, DataTableView):
@@ -62,7 +66,7 @@ class CommonHistoryDataView(CommonItemMixin, DataTableView):
             return query
 
     def get_queryset(self):
-        return common_records(self.item)
+        return filter_movement_project(common_records(self.item), self.request.GET.get('project', ''))
 
     def serialize_record(self, record):
         return {'date': record.occurred_on.isoformat(), 'operation': record.operation_label,
@@ -127,3 +131,19 @@ class CommonCorrectionView(CommonRecordMixin, FormView):
             add_service_error(form, error)
             return self.form_invalid(form)
         return redirect(record.get_absolute_url())
+
+
+class ItemProjectsDataView(CommonItemMixin, DataTableView):
+    order_columns = ('name', 'requested_quantity', 'delivered_quantity', None)
+    search_fields = ('name',)
+    default_order = ('name', 'pk')
+
+    def get_queryset(self):
+        return item_projects(self.item)
+
+    def serialize_record(self, project):
+        return {'name': project.name, 'requested': str(project.requested_quantity),
+                'delivered': str(project.delivered_quantity),
+                'actions': render_to_string('projects/row_actions.html', {
+                    'action_id': project.pk, 'action_label': project.name,
+                    'detail_url': project.get_absolute_url(), 'detail_label': 'Ver proyecto'})}

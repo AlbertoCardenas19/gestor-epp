@@ -69,7 +69,7 @@ class InventoryFlowTests(TestCase):
         for operation, quantity in [('open', 10), ('receive', 5)]:
             response = self.client.post(self.url(operation), record_data(quantity))
             self.assertEqual(response.status_code, 302)
-            self.assertContains(self.client.get(response.url), 'Existencias disponibles')
+            self.assertContains(self.client.get(response.url), 'Stock disponible')
         history = Client().get(self.url('history'))
         self.assertContains(history, 'data-testid="balance">15</p>')
         self.assertNotContains(history, 'Registrado por:')

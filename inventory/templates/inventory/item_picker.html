@@ -1,0 +1,10 @@
+<fieldset class="mb-4" data-item-picker data-source="{% url 'requests:items' project.pk %}">
+<legend class="h6">Elemento (obligatorio)</legend>
+<label class="form-label" for="item-query">Buscar elemento</label>
+<div class="search-with-clear mb-3"><input id="item-query" class="form-control" type="search" placeholder="Nombre o tipo" data-picker-search autocomplete="off"><button type="button" class="search-clear" data-picker-clear aria-label="Limpiar búsqueda de elementos" hidden>×</button></div>
+<p class="small" data-picker-selected role="status" aria-live="polite">{% if selected_item %}Seleccionado: {{ selected_item.name }}{% else %}Selecciona un elemento.{% endif %}</p>
+{{ form.item }}
+{% if form.item.errors %}<div class="text-danger small mb-3" id="id_item_errors">{{ form.item.errors }}</div>{% endif %}
+<div data-picker-results>{% include 'inventory/item_choices.html' %}</div>
+<noscript><p>Activa JavaScript para buscar y seleccionar un elemento.</p></noscript>
+</fieldset>

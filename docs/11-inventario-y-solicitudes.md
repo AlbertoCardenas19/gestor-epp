@@ -1,46 +1,74 @@
 # Inventario único y solicitudes por proyecto
 
-Estado actual: implementado según S16/S19/S21 y las revisiones S22 del usuario.
-RF-04/RF-05 y entregas directas RF-08/RF-09; necesidades parciales de RF-06.
+Estado actual: S23 revisa la presentación de S22 y mantiene el stock común,
+las necesidades de compra y las entregas directas RF-04/RF-05/RF-08/RF-09.
 No implementa cotizaciones, pedidos a proveedores, aprobación ni compras.
 
-## Decisiones confirmadas — S22
+## Decisiones vigentes — S23
 
-- Catálogo e Inventario se reúnen en «Inventario». Nombre y tipo se mantienen;
-  la descripción opcional se conserva en formulario/ficha, fuera de la tabla.
-- Dos columnas de cantidades en el inventario: **Existencias** disponibles para
-  nuevas reservas y **Entregados**, que reúne entregas reales vigentes y reservas
-  pendientes. Confirmar una entrega no vuelve a descontar lo reservado.
-- Pedir más de lo disponible ya no se rechaza: se reserva lo disponible y el
-  resto queda como necesidad de compra. Esto reemplaza el límite anterior de S16.
-- Se confirma la entrega real, total o parcial, con nombre completo del trabajador,
-  cantidad, fecha y observación opcional. Una reserva no acredita recepción física.
-- Reducir/cancelar pendiente exige motivo e historial. Primero disminuye lo que
-  falta comprar, conservando reservas mientras alcance la cantidad restante.
-  Las entregas reales anteriores no cambian.
+- Inventario reúne elementos y cantidades, con columnas **Stock** disponible para
+  nuevas solicitudes y **Entregados**, que cuenta **solo entregas reales vigentes**.
+  Las solicitudes ya no aparecen como entregas. Sustituye la presentación de S22.
+- En el inventario del proyecto, **Solicitado** muestra la cantidad original de la
+  solicitud; el detalle/historial conserva sus reducciones. **Entregados** muestra
+  solo lo efectivamente entregado. «En proceso» y una exclamación accesible
+  «Pendiente de entrega» indican que todavía queda pendiente, incluso de compra.
+  No se agrega una columna Reservado ni tres clases de stock en la interfaz.
+- Se mantiene la regla de compra confirmada expresamente al aclarar S23: pedir
+  más del stock no rechaza la solicitud. Se compromete lo disponible y se guarda
+  el resto como necesidad de compra. Solo se rechazan entregas que superen lo
+  comprometido pendiente. No se reservan unidades inexistentes.
+- Se mantiene el botón **Confirmar entrega** existente y sus entregas parciales,
+  con nombre completo del trabajador, cantidad, fecha y observación opcional.
+  Confirmar no descuenta otra vez lo comprometido al solicitar.
+- La solicitud no pide fecha. El servidor establece `occurred_on` con
+  `timezone.localdate()` y `created_at` conserva el momento automático de registro.
+  Se muestra la fecha y el momento en el detalle usando la zona configurada
+  (actualmente UTC). No se cambia la zona, fechas antiguas ni fechas de movimientos.
+  Correcciones, reducciones y reintentos no modifican esas fechas de solicitud.
+- Se mantienen reducciones/cancelaciones con motivo e historial: primero se reduce
+  lo que falta comprar y después se liberan reservas, sin cambiar entregas reales.
+- Las entradas no se asignan automáticamente entre proyectos. «Reservar disponibles»
+  continúa completando manualmente una solicitud con compra pendiente.
 
-Implementación técnica: las entradas no asignan automáticamente unidades a las
-solicitudes. «Reservar disponibles» permite completar una reserva manualmente,
-mostrando antes lo disponible. Esta elección evita adjudicar prioridades entre
-proyectos que no se han definido. No constituye una regla de prioridad automática
-aprobada por el usuario.
+## Ejemplo obligatorio
 
-## Ejemplo y significado de las cantidades
+| Paso | Stock | Solicitado del proyecto | Entregado real |
+|---|---:|---:|---:|
+| Crear elemento con 20 unidades | 20 | 0 | 0 |
+| Solicitar 5 | 15 | 5 | 0 |
+| Confirmar entrega de las 5 | 15 | 5 | 5 |
 
-Se crean 5 cascos. Norte pide 4: quedan Existencias 1, Entregados 4. Sur pide 3:
-se reserva 1 y faltan comprar 2; Inventario muestra Existencias 0, Entregados 5.
-Norte confirma 2 entregas reales: las columnas siguen 0 y 5, pues esas unidades
-ya estaban comprometidas. Su solicitud conserva otras 2 reservadas.
+Mientras hay pendiente se muestra «En proceso» y la exclamación. La confirmación
+repetida no duplica entregas ni descuenta stock otra vez. Anular por error devuelve
+las unidades a la misma solicitud pendiente; no se trata de una devolución física.
 
-Caso de reducción confirmado: pedir 5, reservar 2 y necesitar comprar 3; reducir
-el pendiente a 3 conserva las 2 reservadas y deja solo 1 por comprar. Reducirlo a
-1 libera una reserva y elimina toda necesidad de compra. Cancelar el pendiente
-libera las reservas restantes, sin borrar ni modificar entregas reales.
+Ejemplo de compra que se conserva: pedir 5 con stock 2 compromete 2 y deja 3 como
+necesidad de compra. Reducir su pendiente a 3 conserva las 2 y deja solo 1 por comprar.
+Confirmar más de las 2 comprometidas se rechaza. Tras una entrada, «Reservar disponibles» puede completar la solicitud.
 
-«Entregados» no es un límite sobre las existencias disponibles actuales: puede
-superarlas porque incluye unidades que ya salieron. La regla es que una nueva
-reserva nunca supere lo disponible y una entrega real nunca supere su reserva.
-No se presentan reservas como entregas efectivas en el historial de trabajadores.
+## Navegación y consulta
+
+Proyectos conserva tarjetas, búsqueda y filtros con **seis por página**. El
+selector de solicitudes usa tarjetas pequeñas de nombre y stock disponible,
+búsqueda sobre todos los elementos y seis por página. Incluye elementos en cero,
+pues pueden generar necesidad de compra. La selección se guarda en el formulario,
+fuera de los resultados, y se conserva al buscar, paginar y corregir errores.
+El servidor vuelve a comprobar el stock dentro de la transacción al guardar.
+
+Desde el nombre del elemento en Inventario se abre su ficha. Conserva nombre,
+tipo y descripción; añade movimientos de todos los proyectos con filtro por
+proyecto/empresa y proyectos relacionados con **Solicitado vigente** (menos lo
+cancelado) y **Entregado al trabajador** (solo real vigente). Una entrega histórica
+sin solicitud puede mostrar solicitado cero y entregado mayor que cero: no se
+fabrica una solicitud para cuadrar esas columnas. Son cálculos de los datos actuales,
+no nuevos campos de negocio. Las tablas reutilizan DataTables `serverSide`.
+
+Las listas comparten skeletons CoreUI para una carga inicial asíncrona y un
+indicador discreto en las actualizaciones, conservando contenido. Un fallo termina
+la carga y muestra cómo reintentar; no se presenta como un resultado vacío. Las
+tarjetas/selector inicialmente renderizados por Django ya tienen contenido y no
+hacen una segunda consulta inicial solo para mostrar una animación.
 
 ## Modelo y consistencia
 
@@ -62,8 +90,9 @@ Fórmulas internas por solicitud:
 - Necesidad de compra = solicitado original − cancelado − asignado.
 - Pendiente = reservado pendiente + necesidad de compra.
 
-En Inventario: Existencias = físico − reservas pendientes; Entregados = entregas
-reales vigentes + reservas pendientes. Se calculan con subconsultas SQL para evitar
+En Inventario: Stock = físico − reservas pendientes; Entregados = entregas
+reales vigentes. La columna Solicitado del proyecto muestra el original; el resumen
+de proyectos de una ficha muestra solicitado vigente, descontando lo cancelado. Se calculan con subconsultas SQL para evitar
 multiplicar cantidades al unir movimientos y solicitudes.
 
 Las escrituras bloquean primero los elementos comunes por ID, luego solicitudes
@@ -106,7 +135,32 @@ reimplementa un buscador ni un componente estándar de CoreUI. No hay nuevas
 bibliotecas: DataTables 2.3.5, adapter Bootstrap 5 2.3.5, jQuery 3.7.1 y CoreUI 5.4.3
 siguen locales y fijados. Consultar la [guía de componentes](09-componentes-y-datatables.md).
 
-## Verificación realizada
+## Verificación de esta iteración — S23
+
+- **169 pruebas Django aprobadas en PostgreSQL 17**, incluida la regresión completa
+  de inventario, correcciones, anulaciones y concurrencia. El caso 20 → solicitar 5
+  → confirmar 5 valida Stock 20/15/15 y Entregados 0/0/5. Cancelar devuelve a pendiente
+  sin liberar para otro proyecto. Dos confirmaciones independientes simultáneas
+  no entregan dos veces el mismo pendiente; los reintentos del mismo formulario
+  siguen siendo idempotentes.
+- Se comprobó reserva parcial y necesidad de compra, rechazo de entrega por encima
+  de lo comprometido, consulta/ordenación de cantidades reales, filtros de movimientos,
+  separación del historial sin solicitud, selector fuera de primera página y fecha
+  del servidor en una zona distinta de UTC. No se modifican fechas previas.
+- **8 pruebas Chromium aprobadas** con servidor y PostgreSQL temporales: seis
+  proyectos por página, búsqueda/páginas del selector, selección persistente, estado
+  y exclamación, confirmación existente y detalle con dos tablas independientes.
+  Red retenida simuló carga inicial y actualización; respuestas 503 intencionales
+  comprobaron errores, conservación y recuperación en DataTables, tarjetas y selector.
+- Revisión a 320/390/1440 píxeles, menús/teclado y tarjetas previas. La revisión
+  móvil usa emulación Chromium, no un teléfono físico. No hubo errores de JavaScript
+  ni consola inesperados; los 503 anteriores fueron provocados por las pruebas.
+- Firefox se intentó iniciar y sigue faltando su ejecutable. No se afirma su verificación.
+- `check`, `makemigrations --check --dry-run`, integridad de bibliotecas locales,
+  comprobación sintáctica JavaScript y `git diff --check` pasan. **Sin migraciones
+  ni dependencias nuevas.** Sin conversión de datos históricos, commit ni push.
+
+## Verificación anterior — S22
 
 - 161 pruebas Django aprobadas en PostgreSQL 17: flujos anteriores, reserva parcial,
   necesidad sin existencias, confirmación parcial, reducción en la prioridad acordada,
@@ -128,33 +182,35 @@ siguen locales y fijados. Consultar la [guía de componentes](09-componentes-y-d
 
 ## Probar en Ubuntu
 
-Con el código actualizado, PostgreSQL iniciado y tu `.env` habitual:
+Con PostgreSQL iniciado, el código de esta iteración en tu copia y tu `.env` habitual:
 
 ```bash
 cd ~/Proyectos/gestor-epp
-.venv/bin/python manage.py migrate
 .venv/bin/python manage.py check
 .venv/bin/python manage.py test projects catalog inventory
 .venv/bin/python manage.py runserver
 ```
 
-Abrir http://127.0.0.1:8000/ y recargar con Ctrl+Shift+R.
+Abrir http://127.0.0.1:8000/ y recargar con Ctrl+Shift+R. Esta iteración no agrega
+migraciones ni dependencias; conservar las migraciones anteriores aplicadas.
 
-1. Crear un elemento de prueba en Inventario con cantidad inicial 2 (vacía = 0).
-2. Crear/abrir un proyecto; Inventario → Solicitar elemento → pedir 5.
-   Debe asignar 2 y mostrar necesidad de compra 3; Inventario general muestra 0/2.
-3. Confirmar entrega de 1 a un trabajador: Inventario sigue 0/2; Entregas muestra
-   al trabajador y su cantidad real. Intentar confirmar otras 2 debe rechazarse
-   bajo Cantidad y conservar los datos/saldos.
-4. Reducir el pendiente de 4 a 2 con motivo: conserva la reserva de 1 y deja
-   necesidad de compra 1. La entrega real anterior permanece vigente.
-5. Registrar entrada de 3 desde Inventario: muestra 3/2 y no cambia automáticamente
-   la solicitud. «Reservar disponibles» asigna el 1 faltante: queda 2/3.
-6. Corregir la entrega de 1, o anularla con motivo: las unidades devueltas quedan
-   reservadas en su solicitud. Repetir no reintegra dos veces. Revisar historial.
-7. Cancelar todo el pendiente con motivo: libera las reservas; conserva entregas
-   reales que todavía estén vigentes. Probar con otro proyecto y el mismo elemento.
-8. Probar la ×, búsqueda, ordenación y páginas; verificar tarjetas y menú móvil.
+1. Crear más de 6 proyectos; comprobar dos páginas, filtros y búsqueda.
+2. En Inventario, crear un elemento de prueba con stock inicial 20.
+3. En un proyecto, Inventario → Solicitar elemento. Buscar el elemento, seleccionarlo,
+   buscar otro nombre/cambiar página y comprobar que se mantiene la selección.
+4. Solicitar 5 sin indicar fecha: Stock 15, Solicitado 5, Entregados 0. Debe figurar
+   «En proceso» con «Pendiente de entrega». Revisar la fecha automática en el detalle.
+5. Desde el botón de entrega existente, confirmar 5 al trabajador: Stock 15,
+   Solicitado 5, Entregados 5. Reenviar el mismo formulario no duplica unidades.
+6. Solicitar más del stock: conserva necesidad de compra; no permite entregar más
+   de lo comprometido. Se conservan entregas parciales y correcciones/anulaciones.
+7. Pulsar el nombre del elemento en Inventario. Revisar datos, cantidades por proyecto
+   e historial; filtrar otro proyecto y «Empresa (sin proyecto)». Las solicitudes
+   pendientes no aparecen como entregas a trabajadores.
+8. Probar vacío, búsqueda sin resultados y (con herramientas de red del navegador)
+   red lenta/desconexión. La carga inicial asíncrona usa skeleton; al actualizar
+   mantiene resultados. Un fallo muestra error y termina el indicador. Reintentar
+   con otra búsqueda tras restablecer la red. Revisar también en móvil y con teclado.
 
 No se incorporan compras/finanzas, intermediarios, devoluciones ni reposiciones.
-No se cambian datos de prueba por datos reales ni se borran registros anteriores.
+No se reclasifican ni borran registros históricos.

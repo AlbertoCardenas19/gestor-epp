@@ -1,7 +1,7 @@
 {% csrf_token %}
 {% if form.non_field_errors %}<div class="text-danger small mb-3" role="alert">{{ form.non_field_errors }}</div>{% endif %}
-{% for hidden in form.hidden_fields %}{% if hidden.errors %}<div class="text-danger small mb-3" role="alert">{{ hidden.errors }}</div>{% endif %}{% endfor %}
-{% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+{% for hidden in form.hidden_fields %}{% if hidden.errors %}{% if not is_request_create or hidden.name != 'item' %}<div class="text-danger small mb-3" role="alert">{{ hidden.errors }}</div>{% endif %}{% endif %}{% endfor %}
+{% for hidden in form.hidden_fields %}{% if not is_request_create or hidden.name != 'item' %}{{ hidden }}{% endif %}{% endfor %}
 {% for field in form.visible_fields %}
 <div class="mb-4">
   <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }} <span class="text-body-secondary fw-normal">{% if field.field.required %}(obligatorio){% else %}(opcional){% endif %}</span></label>

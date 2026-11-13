@@ -11,6 +11,6 @@
 <div class="card datatable-shell"><div class="card-body">
 <table class="table table-striped mb-0 align-middle" style="width:100%" data-datatable data-source="{% url 'requests:data' project.pk %}" data-order='[[0,"desc"]]'>
 <caption class="visually-hidden">Solicitudes de {{ project.name }}</caption>
-<thead><tr><th data-column="date" data-format="date" scope="col">Fecha</th><th data-column="item" scope="col">Elemento</th><th data-column="quantity" scope="col">Solicitados</th><th data-column="assigned" scope="col">Entregados</th><th data-column="purchase" scope="col">Necesidad de compra</th><th data-column="state" scope="col">Estado</th><th data-column="actions" data-actions scope="col">Acciones</th></tr></thead><tbody></tbody>
+<thead><tr><th data-column="date" data-format="date" scope="col">Fecha</th><th data-column="item" scope="col">Elemento</th><th data-column="quantity" scope="col">Solicitado</th><th data-column="delivered" scope="col">Entregados</th><th data-column="purchase" scope="col">Necesidad de compra</th><th data-column="state" data-format="pending-state" scope="col">Estado</th><th data-column="actions" data-actions scope="col">Acciones</th></tr></thead><tbody></tbody>
 </table></div></div></section>
 {% endblock %}

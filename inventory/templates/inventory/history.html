@@ -7,7 +7,7 @@
   {% if position %}<div class="d-flex flex-column flex-sm-row gap-2"><a class="btn btn-outline-secondary" href="{% url 'stock:receive' item.pk %}">Registrar entrada</a><a class="btn btn-primary" href="{% url 'requests:create' project.pk %}?item={{ item.pk }}">Solicitar elemento</a></div>{% else %}<a class="btn btn-primary" href="{% url 'inventory:open' project.pk item.pk %}">Registrar apertura</a>{% endif %}
 </div>
 <div class="card balance-card mb-4"><div class="card-body p-4">
-  {% if position %}<p class="text-body-secondary mb-1">Existencias disponibles</p><p class="fs-1 fw-semibold mb-1" data-testid="balance">{{ balance }}</p>{% else %}<p class="fw-semibold mb-1">Sin registro inicial</p>{% endif %}
+  {% if position %}<p class="text-body-secondary mb-1">Stock disponible</p><p class="fs-1 fw-semibold mb-1" data-testid="balance">{{ balance }}</p>{% else %}<p class="fw-semibold mb-1">Sin registro inicial</p>{% endif %}
 </div></div>
 <h2 class="h4 mb-3">Historial</h2>
 {% for record in records %}

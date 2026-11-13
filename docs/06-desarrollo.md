@@ -6,7 +6,7 @@ Crear/listar/consultar proyectos en tarjetas, Inventario único (elementos y
 cantidades comunes), entradas/correcciones, solicitudes por proyecto con reserva
 parcial y necesidad de compra, entregas directas parciales, corrección/anulación y
 reducción/cancelación de pendientes. La [guía 11](11-inventario-y-solicitudes.md)
-describe las reglas actuales S22 y el recorrido de prueba. Los apartados posteriores
+describe las reglas actuales S23 y el recorrido de prueba. Los apartados posteriores
 con fechas/cifras anteriores conservan la evolución histórica, no reglas vigentes
 que obliguen a abrir stock por proyecto. RF-01/RF-03/RF-04/RF-05/RF-08/RF-09;
 no constituye el MVP completo.
@@ -567,3 +567,24 @@ y cancelación; reintentos, simultaneidad y rollback. Escritorio/móvil a
 320/390/1440 píxeles, × de búsqueda, tarjetas, menús y consola sin errores. Firefox
 se intentó iniciar y sigue faltando su ejecutable. Detalle y comandos Ubuntu en
 [11-inventario-y-solicitudes.md](11-inventario-y-solicitudes.md).
+
+## Selector, solicitado/entregado y detalle del elemento — S23
+
+Proyectos fija seis tarjetas por página. Solicitudes selecciona elementos mediante
+tarjetas buscables/paginadas con stock disponible calculado por el mismo origen
+común; selección conservada y revalidación en la transacción. La fecha sale del
+formulario y se establece en el servidor sin actualizar las fechas anteriores.
+
+Solicitado y Entregados se separan: solo una confirmación real cuenta como entrega,
+sin otro descuento. Estado «En proceso» con indicador accesible. Se conserva la
+necesidad de compra según la aclaración expresa del usuario. Las fichas de elementos
+reúnen información, proyectos/cantidades y movimientos filtrables; tablas DataTables
+compartidas y estados de carga centralizados con placeholders/spinner CoreUI.
+
+Verificación ejecutada: 169 pruebas PostgreSQL y 8 pruebas Chromium aprobadas,
+incluyendo 20/15/15, entregado 0/0/5, concurrencia, regresión de correcciones/anulaciones,
+selección persistente, vacío, fallos 503 intencionales y recuperación. Escritorio/móvil
+emulado a 320/390/1440 píxeles; sin errores JS/consola inesperados. Firefox se intentó
+iniciar y no tiene ejecutable disponible. Sin migraciones ni dependencias nuevas.
+Detalles y recorrido Ubuntu en la [guía 11](11-inventario-y-solicitudes.md).
+No se hizo commit ni push de esta iteración.

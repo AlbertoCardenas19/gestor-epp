@@ -62,3 +62,9 @@ class ItemDetailView(DetailView):
     model = Item
     template_name = 'catalog/detail.html'
     context_object_name = 'item'
+
+    def get_context_data(self, **kwargs):
+        from inventory.availability import available_quantity
+        from inventory.common import item_projects
+        return super().get_context_data(balance=available_quantity(self.object.pk),
+            project_options=item_projects(self.object), movement_project=self.request.GET.get('project', ''), **kwargs)

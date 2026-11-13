@@ -28,7 +28,7 @@ def common_items():
         type_label=Case(When(item_type=Item.Type.EPP, then=Value('EPP')),
                         default=Value('Señalética'), output_field=CharField()),
     ).annotate(reserved_total=F('allocated_total') - F('fulfilled_total')).annotate(
-        total=F('physical_total') - F('reserved_total'), committed_total=F('delivered_total') + F('reserved_total'),
+        total=F('physical_total') - F('reserved_total'),
     ).order_by('name', 'pk')
 
 
@@ -56,3 +56,36 @@ def receive_common_stock(item, data):
     position = StockPosition.objects.select_for_update().get(pk=position.pk)
     repeated = _repeated_submission(position, StockRecord.Operation.RECEIPT, data)
     return repeated or _create_record(position, StockRecord.Operation.RECEIPT, data)
+
+
+def item_projects(item):
+    """Requested and actually delivered are separate aggregates, including legacy history."""
+    from projects.models import Project
+    from django.db.models import Q
+    requests = StockRequest.objects.filter(item=item, project_id=OuterRef('pk')).order_by()
+    deliveries = StockRecord.objects.filter(position__item=item, operation='delivery', voided_at__isnull=True).filter(
+        Q(stock_request__project_id=OuterRef('pk')) |
+        Q(stock_request__isnull=True, position__project_id=OuterRef('pk'))).order_by()
+    history = StockRecord.objects.filter(position__item=item).filter(
+        Q(stock_request__project_id=OuterRef('pk')) | Q(position__project_id=OuterRef('pk')))
+    return Project.objects.annotate(
+        has_requests=Exists(requests), has_history=Exists(history),
+        requested_quantity=Coalesce(Subquery(requests.values('project_id').annotate(
+            total=Sum(F('quantity') - F('cancelled_quantity'))).values('total'), output_field=BigIntegerField()),
+            Value(0), output_field=BigIntegerField()),
+        delivered_quantity=Coalesce(Subquery(deliveries.annotate(
+            project_key=Coalesce('stock_request__project_id', 'position__project_id')).values('project_key').annotate(
+            total=Sum('quantity')).values('total'), output_field=BigIntegerField()), Value(0), output_field=BigIntegerField()),
+    ).filter(Q(has_requests=True) | Q(has_history=True)).order_by('name', 'pk')
+
+
+def filter_movement_project(records, project_id):
+    from django.db.models import Q
+    if not project_id:
+        return records
+    if project_id == 'company':
+        return records.filter(stock_request__isnull=True, position__project__isnull=True)
+    if str(project_id).isdigit() and len(str(project_id)) <= 19 and int(project_id) <= 9223372036854775807:
+        return records.filter(Q(stock_request__project_id=project_id) |
+                              Q(stock_request__isnull=True, position__project_id=project_id))
+    return records.none()

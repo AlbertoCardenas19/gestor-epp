@@ -25,11 +25,11 @@ def create_request(project, item, data):
     lock_items(item.pk)
     existing = StockRequest.objects.filter(submission_key=data['submission_key']).first()
     if existing:
-        if (existing.project_id, existing.item_id, existing.quantity, existing.occurred_on, existing.observation) != (
-                project.pk, item.pk, data['quantity'], data['occurred_on'], data['observation']):
+        if (existing.project_id, existing.item_id, existing.quantity, existing.observation) != (
+                project.pk, item.pk, data['quantity'], data['observation']):
             raise ValidationError('Este formulario ya se utilizó con otros datos. Vuelve a abrirlo.')
         return existing
-    request = StockRequest(project=project, item=item, quantity=data['quantity'], occurred_on=data['occurred_on'],
+    request = StockRequest(project=project, item=item, quantity=data['quantity'], occurred_on=timezone.localdate(),
                            observation=data['observation'], submission_key=data['submission_key'])
     request.allocated_quantity = min(request.quantity, max(0, available_quantity(item.pk)))
     request.full_clean()

@@ -1,7 +1,7 @@
 # Stock común y solicitudes por proyecto
 
 Estado actual: implementado. La [guía 11](11-inventario-y-solicitudes.md) describe
-la interfaz, modelos, verificación y recorrido vigente conforme a S22. RF-04/RF-05,
+la interfaz, modelos, verificación y recorrido vigente conforme a S23. RF-04/RF-05,
 RF-08/RF-09. La guía 10 conserva el primer incremento y migración 0003.
 
 ## Evolución de las decisiones
@@ -31,3 +31,7 @@ el stock común. Los cambios se validan con bloqueos y transacciones atómicas.
 
 Las necesidades de compra no son compras ni reservas de unidades inexistentes.
 Cotizaciones, aprobación, devoluciones y reposiciones siguen pendientes.
+
+S23 sustituye la presentación combinada de S22: Entregados solo cuenta entregas
+reales vigentes. La solicitud compromete stock, pero no acredita recepción. Se
+conservan las necesidades de compra por aclaración explícita del usuario.

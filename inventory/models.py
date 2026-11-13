@@ -142,10 +142,8 @@ class StockRequest(models.Model):
 
     @property
     def state_label(self):
-        if self.reserved_quantity:
-            return 'Reservado'
-        if self.purchase_quantity:
-            return 'Pendiente de compra' if not self.delivered_quantity else 'Entregado parcialmente'
+        if self.pending_quantity:
+            return 'En proceso'
         if self.cancelled_quantity and not self.delivered_quantity:
             return 'Cancelado'
         return 'Entregado'

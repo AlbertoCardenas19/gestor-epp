@@ -20,13 +20,15 @@ Esta lista explicita huecos de la evidencia recuperada para evitar que Codex los
 | P-12 | Tecnologías | Django, PostgreSQL y CoreUI con Bootstrap confirmados en S7. Estructura detallada y alojamiento siguen pendientes. |
 | P-13 | Comercialización y práctica | Condiciones formales de práctica y acuerdos comerciales concretos. La intención no equivale a un contrato. |
 
-## Estado vigente de inventario y entregas — S16/S19/S21/S22
+## Estado vigente de inventario y entregas — S16/S19/S21/S22/S23
 
 P-05/P-08 se revisaron: stock común, solicitudes por proyecto con reserva parcial,
 necesidad de compra por lo faltante, entregas parciales y reducción/cancelación del
 pendiente con motivo e historial están implementados. Las correcciones/anulaciones
 vinculadas restituyen reservas; las históricas sin solicitud solo afectan stock
-común. S22 prioriza reducir necesidad de compra antes de liberar reservas.
+común. S22 prioriza reducir necesidad de compra antes de liberar reservas. S23 separa
+solicitado de entregado real y confirma conservar las necesidades de compra; limita
+las entregas a lo comprometido pendiente.
 [Guía actual](11-inventario-y-solicitudes.md). Los enunciados S9 de la tabla describen
 la primera versión histórica, no la necesidad de abrir stock por proyecto hoy.
 

@@ -185,3 +185,22 @@ h2,h3 { letter-spacing: -.02em; }
 .search-with-clear input::-webkit-search-cancel-button { -webkit-appearance: none; }
 .search-clear { position: absolute; right: .4rem; bottom: .35rem; border: 0; background: transparent; color: #334155; font-size: 1.4rem; line-height: 1; padding: .4rem; }
 .search-clear[hidden] { display: none; }
+
+/* Shared list feedback keeps room for updates; CoreUI placeholders respect motion settings. */
+.list-feedback { min-height: 1.5rem; margin: .5rem 0; }
+.list-feedback.text-danger { color: #b42332 !important; }
+.list-skeleton { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; min-height: 22rem; }
+.list-skeleton[hidden] { display: none; }
+.skeleton-block { border: 1px solid var(--app-border); border-radius: .75rem; background: white; padding: 1.25rem; display: grid; gap: 1rem; align-content: center; color: #CBD5E1; }
+.skeleton-table { grid-template-columns: 1fr; gap: .25rem; }
+.skeleton-table .skeleton-block { grid-template-columns: 2fr 1fr; border-radius: .25rem; padding: 1rem; }
+.has-load-error .dt-empty { visibility: hidden; }
+.item-choice { border: 2px solid var(--app-border); gap: .4rem; color: var(--app-text); }
+.item-choice:hover { border-color: var(--app-secondary); }
+.item-choice.selected { border-color: var(--app-primary); background: #E2E8F0; }
+.choice-check { visibility: hidden; }
+.item-choice.selected .choice-check { visibility: visible; }
+.pending-delivery { display: inline-grid; place-items: center; border: 1px solid currentColor; border-radius: 50%; width: 1.25rem; height: 1.25rem; font-weight: 700; }
+@media(max-width: 767px) { .list-skeleton { grid-template-columns: 1fr; } }
+@media(prefers-reduced-motion: reduce) { .placeholder-glow .placeholder, .list-feedback .spinner-border { animation: none; } }
+.datatable-shell[hidden] { display: none; }

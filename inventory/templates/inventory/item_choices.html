@@ -1,0 +1,9 @@
+<div class="row g-2" data-picker-grid>
+{% for item_choice in selector_page %}<div class="col-12 col-md-6 col-xl-4"><button type="button" class="card item-choice w-100 h-100 text-start p-3{% if selected_item.pk == item_choice.pk %} selected{% endif %}" data-item-choice="{{ item_choice.pk }}" data-item-name="{{ item_choice.name }}" aria-pressed="{% if selected_item.pk == item_choice.pk %}true{% else %}false{% endif %}"><span class="fw-semibold text-break">{{ item_choice.name }}</span><span class="small text-body-secondary">Stock disponible: {{ item_choice.total }}</span><span class="small choice-check" aria-hidden="true">✓ Seleccionado</span></button></div>
+{% empty %}<p class="text-body-secondary">No hay elementos para esta búsqueda.</p>{% endfor %}
+</div>
+{% if selector_page.has_other_pages %}<nav class="mt-3" aria-label="Páginas de elementos"><ul class="pagination flex-wrap">
+{% if selector_page.has_previous %}<li class="page-item"><button class="page-link" type="button" data-picker-page="{{ selector_page.previous_page_number }}">Anterior</button></li>{% endif %}
+<li class="page-item active"><span class="page-link" aria-current="page">{{ selector_page.number }} / {{ selector_page.paginator.num_pages }}</span></li>
+{% if selector_page.has_next %}<li class="page-item"><button class="page-link" type="button" data-picker-page="{{ selector_page.next_page_number }}">Siguiente</button></li>{% endif %}
+</ul></nav>{% endif %}

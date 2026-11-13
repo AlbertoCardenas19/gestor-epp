@@ -11,7 +11,7 @@ Este repositorio corresponde a la app web de gestión para la amiga prevencionis
 5. [Pendientes](docs/04-pendientes.md).
 6. [Fuentes y límites](docs/05-fuentes.md).
 7. [Guía de desarrollo](docs/06-desarrollo.md).
-8. [Inventario y solicitudes vigentes](docs/11-inventario-y-solicitudes.md): S22 revisa el límite de solicitudes de S16 y las aperturas por proyecto del primer incremento.
+8. [Inventario y solicitudes vigentes](docs/11-inventario-y-solicitudes.md): S23 distingue solicitado de entregado real; mantiene necesidades de compra y el stock común de S22.
 
 ## Instrucciones de esta entrega
 Las siguientes pautas sirven para trabajar con esta documentación; no son nuevos requisitos del producto.

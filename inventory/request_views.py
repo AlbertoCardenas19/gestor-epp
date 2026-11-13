@@ -22,9 +22,7 @@ def request_rows(project):
         fulfilled_total=Coalesce(Subquery(delivered, output_field=BigIntegerField()), Value(0), output_field=BigIntegerField()),
     ).annotate(reserved_total=F('allocated_quantity') - F('fulfilled_total'),
                purchase_total=F('quantity') - F('cancelled_quantity') - F('allocated_quantity')).annotate(
-        request_label=Case(When(reserved_total__gt=0, then=Value('Reservado')),
-            When(purchase_total__gt=0, fulfilled_total__gt=0, then=Value('Entregado parcialmente')),
-            When(purchase_total__gt=0, then=Value('Pendiente de compra')),
+        request_label=Case(When(quantity__gt=F('cancelled_quantity') + F('fulfilled_total'), then=Value('En proceso')),
             When(cancelled_quantity__gt=0, fulfilled_total=0, then=Value('Cancelado')),
             default=Value('Entregado'), output_field=CharField()),
     ).order_by('-created_at', '-pk')
@@ -35,7 +33,7 @@ class RequestListView(ProjectMixin, TemplateView):
 
 
 class RequestDataView(ProjectMixin, DataTableView):
-    order_columns = ('occurred_on', 'item__name', 'quantity', 'allocated_quantity', 'purchase_total', 'request_label', None)
+    order_columns = ('occurred_on', 'item__name', 'quantity', 'fulfilled_total', 'purchase_total', 'request_label', None)
     search_fields = ('item__name', 'observation', 'request_label')
     default_order = ('-occurred_on', '-pk')
 
@@ -44,8 +42,8 @@ class RequestDataView(ProjectMixin, DataTableView):
 
     def serialize_record(self, request):
         return {'date': request.occurred_on.isoformat(), 'item': request.item.name, 'quantity': str(request.quantity),
-                'assigned': str(request.allocated_quantity), 'purchase': str(request.purchase_quantity),
-                'state': request.state_label,
+                'delivered': str(request.delivered_quantity), 'purchase': str(request.purchase_quantity),
+                'state': request.state_label, 'pending': request.pending_quantity > 0,
                 'actions': render_to_string('inventory/request_actions.html', {'request_record': request})}
 
 
@@ -55,6 +53,14 @@ class RequestCreateView(ProjectMixin, FormView):
 
     def get_initial(self):
         return {**super().get_initial(), 'item': self.request.GET.get('item')}
+
+    def get_context_data(self, **kwargs):
+        from .selector import selector_context
+        context = super().get_context_data(**kwargs)
+        form = context['form']
+        context.update(selector_context(self.request.GET, form['item'].value()))
+        context['is_request_create'] = True
+        return context
 
     def form_valid(self, form):
         try:

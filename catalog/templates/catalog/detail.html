@@ -1,4 +1,6 @@
 {% extends 'projects/base.html' %}
+{% block extra_styles %}{% include 'projects/datatables_styles.html' %}{% endblock %}
+{% block extra_scripts %}{% include 'projects/datatables_scripts.html' %}{% endblock %}
 {% block title %}{{ item.name }}{% endblock %}
 {% block content %}
 <a class="back-link" href="{% url 'catalog:list' %}">← Volver al inventario</a>
@@ -7,10 +9,20 @@
   <h1 class="text-break">{{ item.name }}</h1>
 
 </div>
-<a class="btn btn-primary mb-4" href="{% url 'stock:history' item.pk %}">Ver inventario</a>
+<p class="fw-semibold">Stock: {{ balance }}</p><a class="btn btn-primary mb-4" href="{% url 'stock:receive' item.pk %}">Registrar entrada</a>
 <section class="card"><div class="card-body p-4 p-md-5">
   <dl class="mb-4"><dt>Tipo</dt><dd>{{ item.get_item_type_display }}</dd></dl>
   <h2 class="h5 mb-3">Descripción</h2>
   {% if item.description %}<div class="project-description text-break">{{ item.description|linebreaksbr }}</div>{% else %}<p class="text-body-secondary mb-0">Este elemento aún no tiene descripción.</p>{% endif %}
 </div></section>
+<h2 class="h4 mt-4 mb-3">Proyectos con este elemento</h2>
+<section data-datatable-panel>
+<p class="small text-danger" role="alert" data-datatable-error hidden></p>
+<div class="card datatable-shell"><div class="card-body"><table class="table table-striped mb-0 align-middle" style="width:100%" data-datatable data-source="{% url 'stock:item-projects-data' item.pk %}">
+<caption class="visually-hidden">Cantidades por proyecto de {{ item.name }}</caption>
+<thead><tr><th scope="col" data-column="name">Proyecto</th><th scope="col" data-column="requested">Solicitado vigente</th><th scope="col" data-column="delivered">Entregado al trabajador</th><th scope="col" data-column="actions" data-actions>Acciones</th></tr></thead><tbody></tbody>
+</table></div></div></section>
+<p class="small text-body-secondary mt-2">Solicitado vigente excluye lo cancelado. Entregado al trabajador cuenta solo entregas reales vigentes, incluidas las históricas sin solicitud.</p>
+<h2 class="h4 mt-4 mb-3">Historial de movimientos</h2>
+{% include 'inventory/movements_table.html' %}
 {% endblock %}

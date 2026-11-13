@@ -20,7 +20,7 @@ Documentación del proyecto de gestión para la amiga prevencionista. Se reconst
 | [09-componentes-y-datatables.md](09-componentes-y-datatables.md) | Convenciones vigentes, dependencias, configuración compartida y pruebas de DataTables/CoreUI |
 | [10-inventario-comun.md](10-inventario-comun.md) | Consulta común, entradas, migración 0003, conservación del historial y verificación |
 
-| [11-inventario-y-solicitudes.md](11-inventario-y-solicitudes.md) | Flujo vigente S22: inventario único, reservas parciales, necesidad de compra y confirmación de entregas |
+| [11-inventario-y-solicitudes.md](11-inventario-y-solicitudes.md) | Flujo vigente S23: inventario único, solicitado/entregado, selector, necesidad de compra y confirmación de entregas |
 
 ## Cómo usarlo
 Coloca `AGENTS.md` en la raíz del repositorio y esta carpeta `docs/` también en la raíz. Si ya existen archivos con esos nombres, integra su contenido. Si copiaste el paquete anterior equivocado, reemplaza sus documentos por los de este paquete; no conserves aquel backlog como alcance de este producto.
