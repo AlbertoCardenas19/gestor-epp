@@ -25,14 +25,15 @@
   function cancelPending() {
     clearTimeout(timer);
     controller?.abort();
+    loading.cancel();
     return ++revision;
   }
 
   function update(url, mode = 'replace', delay = 0, restoreForm = false, focusCards = false) {
     const current = cancelPending();
-    loading.begin();
     timer = setTimeout(async () => {
       controller = new AbortController();
+      loading.begin();
       try {
         const response = await fetch(url, { signal: controller.signal });
         if (!response.ok) throw new Error('No se pudo consultar el listado.');

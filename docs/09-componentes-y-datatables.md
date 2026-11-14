@@ -138,6 +138,11 @@ Los dropdowns reciben `popperConfig.strategy = 'fixed'` y límite de viewport/bo
 para superar el recorte del contenedor desplazable de la tabla. CoreUI/Popper
 conservan el posicionamiento y teclado; no hay un menú propio paralelo.
 
+Las pestañas interactivas usan `coreui.Tab`. `components.js` escucha el evento oficial
+`shown.coreui.tab` y ajusta las columnas de las DataTables visibles; una pantalla no
+debe copiar esta integración. Los enlaces de secciones que navegan entre rutas, como
+las pestañas del proyecto, comparten la misma presentación sin fingir un panel local.
+
 El sidebar usa `coreui.Sidebar` y `data-coreui-toggle="narrow"`. La app únicamente
 sincroniza su nombre accesible y guarda la preferencia en `localStorage`. El CSS
 mantiene el rail de iconos en móvil: anula el modo off-canvas automático mediante
@@ -241,17 +246,18 @@ No cambian versiones ni dependencias. Flujo y comprobaciones actuales en
 
 `loading.js` se carga una vez en base antes de las mejoras de listas. Expone
 `EppLoading.create(container, {content, shape, status})`, con `begin(initial)` y
-`finish(errorMessage)`: skeleton CoreUI en la primera carga asíncrona, spinner
-discreto en actualizaciones, contenido conservado, `aria-busy`, región accesible
-y error distinto de vacío. Tarjetas renderizadas inicialmente no simulan otra carga.
+`finish(errorMessage)`: espera 180 ms antes de mostrar un skeleton CoreUI o spinner,
+sin retrasar la petición. Si la respuesta termina antes, el indicador no se presenta.
+Las actualizaciones conservan el contenido, `aria-busy`, región accesible y error
+distinto de vacío. Tarjetas renderizadas inicialmente no simulan otra carga.
 
 `datatables.js` conserva el transporte del protocolo `serverSide` y añade cancelación
 de búsquedas obsoletas, manejo compartido de errores y recuperación. Se usan los
 controles DataTables; no hay paginadores o búsquedas de tabla paralelos.
 `data-datatable-filter="project"` envía el filtro del panel a su endpoint sin afectar
 otras tablas de la misma ficha. `data-link="item_url"` hace clicable el nombre con
-texto escapado y URL generada por Django. `data-format="pending-state"` añade el
-indicador accesible de pendiente junto al estado, sin aceptar HTML del usuario.
+texto escapado y URL generada por Django. `data-format="pending-delivery"` añade el
+indicador rojo y accesible antes de la cantidad entregada, sin aceptar HTML del usuario.
 Acciones sigue sin búsqueda/ordenación; las cantidades se ordenan por su cálculo SQL.
 
 `item-picker.js` es un selector de tarjetas específico del formulario, no una
@@ -261,5 +267,20 @@ y estado de selección fuera de los resultados. Reutiliza carga y stock calculad
 existentes. La confirmación siempre revalida el stock con los servicios bloqueados.
 
 Proyectos fija seis tarjetas por página; su buscador conserva el alcance SQL completo.
-La ficha del elemento tiene dos DataTables independientes: cantidades por proyecto
-y movimientos filtrables. No se añaden bibliotecas ni versiones.
+La ficha del elemento usa pestañas CoreUI para Información, Historial de movimientos
+y Proyectos; conserva dos DataTables independientes y ajusta sus columnas al mostrarlas.
+No se añaden bibliotecas ni versiones.
+
+## Presentación compartida permanente
+
+- DataTables, tarjetas de proyectos y selector conservan sus motores de paginación,
+  pero usan los mismos tokens de tamaño, color, borde, espaciado, foco, estados y móvil
+  definidos en `app.css`. No se copia CSS de paginación por pantalla.
+- `datatables.js` asigna `table-actions` a toda columna `data-actions`: ancho según su
+  contenido, objetivo táctil conservado, sin búsqueda ni ordenación. Popper fijo sigue
+  evitando el recorte de menús.
+- Pestañas, carga, búsqueda, filtros, vacíos y errores se centralizan solo cuando su
+  comportamiento es equivalente. Las diferencias funcionales justificadas conservan
+  su componente, por ejemplo tarjetas frente a DataTables.
+- Una nueva instancia equivalente debe adoptar el componente compartido. Cualquier
+  excepción técnica se justifica antes de crear JavaScript, plantilla o CSS paralelo.

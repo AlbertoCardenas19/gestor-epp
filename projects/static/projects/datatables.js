@@ -11,6 +11,44 @@
       orderableRemove: ': activar para quitar la ordenación', paginate: { first: 'Primera página', last: 'Última página', next: 'Página siguiente', previous: 'Página anterior' } },
   };
   DataTable.ext.errMode = 'none';
+  function alignScrollTables(element) {
+    const container = element.closest('.dt-container');
+    const tables = [...(container?.querySelectorAll('.dt-scroll-head table, .dt-scroll-body table') || [])];
+    if (tables.length !== 2 || tables.some(table => !table.getBoundingClientRect().width)) return;
+    const headers = [...container.querySelectorAll('.dt-scroll-head th[data-dt-column]')];
+    if (!headers.length) return;
+    const actionIndexes = new Set(headers.filter(header => header.hasAttribute('data-actions'))
+      .flatMap(header => header.getAttribute('data-dt-column').split(',')));
+    const widths = headers.map(header => header.getBoundingClientRect().width);
+    const viewportWidth = container.clientWidth;
+    const naturalWidth = widths.reduce((total, width) => total + width, 0);
+    const width = Math.max(viewportWidth, naturalWidth);
+    const flexibleWidth = widths.reduce((total, value, index) => total + (actionIndexes.has(String(index)) ? 0 : value), 0);
+    const extra = Math.max(0, width - naturalWidth);
+    widths.forEach((value, index) => {
+      const finalWidth = actionIndexes.has(String(index)) || !flexibleWidth
+        ? value : value + extra * value / flexibleWidth;
+      container.querySelectorAll(`col[data-dt-column="${index}"]`).forEach(column => {
+        column.style.setProperty('width', `${finalWidth}px`, 'important');
+        column.style.setProperty('min-width', `${finalWidth}px`, 'important');
+        column.dataset.eppAligned = '';
+      });
+    });
+    tables.forEach(table => {
+      table.style.setProperty('width', `${width}px`, 'important');
+      table.dataset.eppAligned = '';
+    });
+  }
+  function adjust(root = document) {
+    root.querySelectorAll('table[data-epp-aligned]').forEach(table => {
+      table.style.removeProperty('width'); delete table.dataset.eppAligned;
+    });
+    root.querySelectorAll('col[data-epp-aligned]').forEach(column => {
+      column.style.removeProperty('width'); column.style.removeProperty('min-width'); delete column.dataset.eppAligned;
+    });
+    DataTable.tables({visible: true, api: true}).columns.adjust();
+    requestAnimationFrame(() => root.querySelectorAll('[data-datatable]').forEach(alignScrollTables));
+  }
   function init(root = document) {
     root.querySelectorAll('[data-datatable]').forEach(element => {
       if (DataTable.isDataTable(element)) return;
@@ -29,8 +67,10 @@
         const actions = header.hasAttribute('data-actions');
         return {
           data: header.dataset.column, orderable: !actions, searchable: !actions,
-          render: actions ? undefined : header.dataset.format === 'pending-state'
-            ? (value, type, row) => type === 'display' ? text.display(value) + (row.pending ? ' <span class="pending-delivery" role="img" aria-label="Pendiente de entrega" title="Pendiente de entrega">!</span>' : '') : value
+          className: actions ? 'table-actions' : '',
+          width: actions ? '1%' : undefined,
+          render: actions ? undefined : header.dataset.format === 'pending-delivery'
+            ? (value, type, row) => type === 'display' ? (row.pending ? '<span class="pending-delivery" role="img" aria-label="Pendiente de entrega" title="Pendiente de entrega">!</span> ' : '') + text.display(value) : value
             : header.dataset.link ? (value, type, row) => {
               if (type !== 'display') return value;
               const link = document.createElement('a'); link.textContent = value; link.href = row[header.dataset.link];
@@ -42,7 +82,7 @@
         };
       });
       const table = new DataTable(element, {
-        serverSide: true, processing: false, scrollX: true, searchDelay: 300,
+        serverSide: true, processing: false, scrollX: true, autoWidth: false, searchDelay: 300,
         pageLength: 10, lengthMenu: [10, 25, 50], language,
         search: { search: new URL(location.href).searchParams.get('q') || '' },
         order: JSON.parse(element.dataset.order || '[[0,"asc"]]'), columns,
@@ -62,7 +102,7 @@
             const json = await response.json();
             if (!Array.isArray(json.data)) throw new Error('response');
             if (current !== revision) return;
-            loaded = true; loading.finish(); callback(json); table.columns.adjust();
+            loaded = true; loading.finish(); callback(json); adjust(panel || document);
           } catch (failure) {
             if (current !== revision || failure.name === 'AbortError') return;
             if (!loaded) callback({draw: params.draw, recordsTotal: 0, recordsFiltered: 0, data: []});
@@ -74,6 +114,7 @@
         preDrawCallback() { window.EppComponents.dispose(element); },
         drawCallback() {
           window.EppComponents.init(element);
+          requestAnimationFrame(() => alignScrollTables(element));
           element.closest('.dt-container')?.querySelector('.dt-paging nav')?.setAttribute('aria-label', 'Páginas de la tabla');
         },
       });
@@ -100,6 +141,6 @@
       });
     });
   }
-  window.EppTables = { init };
+  window.EppTables = { init, adjust };
   init();
 })();

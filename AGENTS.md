@@ -53,3 +53,16 @@ Estas convenciones se establecen en la solicitud actual, no en acuerdos históri
   alternativa; no reconstruir por comodidad componentes ya cubiertos por las bibliotecas.
 - Consultar `docs/09-componentes-y-datatables.md` para versiones, carga, reutilización
   y verificación. Estas convenciones no autorizan cambiar reglas ni datos de inventario.
+- Reutilizar los componentes compartidos para pestañas, paginaciones, indicadores de
+  carga, búsquedas, filtros, estados y acciones. No crear variantes independientes por
+  pantalla cuando cumplen la misma función.
+- Toda paginación debe conservar su motor (DataTables, Django o selector) y aplicar la
+  presentación global. Proyectos permanece en tarjetas con seis resultados por página.
+- Las columnas `data-actions` deben usar la configuración y clase compacta compartidas,
+  sin búsqueda ni ordenación y sin impedir interacción táctil, teclado o menús visibles.
+- Los indicadores compartidos deben retrasar solo su presentación, nunca la petición:
+  una respuesta rápida no destella; las actualizaciones conservan contenido y los
+  errores se distinguen de resultados vacíos.
+- Las pestañas interactivas deben usar CoreUI y el ajuste compartido de DataTables al
+  mostrar contenido oculto. Los cambios comunes deben aplicarse a todas sus instancias
+  equivalentes, no copiarse en una pantalla concreta.

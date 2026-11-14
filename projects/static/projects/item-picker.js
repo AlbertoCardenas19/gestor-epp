@@ -35,6 +35,7 @@
     }
     query.addEventListener('input', event => {
       clear.hidden = !query.value; clearTimeout(timer); controller?.abort(); ++revision;
+      loading.cancel();
       if (!event.isComposing) timer = setTimeout(() => load(), 300);
     });
     query.addEventListener('compositionend', () => { clearTimeout(timer); timer = setTimeout(() => load(), 300); });

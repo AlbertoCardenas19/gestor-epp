@@ -205,6 +205,9 @@ class RequestFlowTests(TestCase):
         result = self.client.get(reverse('requests:data', args=[self.north.pk])).json()
         self.assertEqual(result['data'][0]['purchase'], '3')
         self.assertIn('Confirmar entrega', result['data'][0]['actions'])
+        list_response = self.client.get(reverse('requests:list', args=[self.north.pk]))
+        self.assertContains(list_response, 'data-column="delivered" data-format="pending-delivery"')
+        self.assertNotContains(list_response, 'data-format="pending-state"')
         other = self.client.get(reverse('requests:data', args=[self.south.pk])).json()
         self.assertEqual(other['recordsTotal'], 0)
 

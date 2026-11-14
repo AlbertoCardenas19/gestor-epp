@@ -103,6 +103,14 @@ class IterationRequestAndDetailTests(TestCase):
         response = self.client.get(self.item.get_absolute_url())
         self.assertContains(response, 'Descripción existente')
         self.assertContains(response, 'data-datatable-filter="project"')
+        for tab_id, label, selected in [
+            ('item-info-tab', 'Información', 'true'),
+            ('item-history-tab', 'Historial de movimientos', 'false'),
+            ('item-projects-tab', 'Proyectos', 'false'),
+        ]:
+            self.assertContains(response, f'id="{tab_id}"')
+            self.assertContains(response, f'aria-selected="{selected}">{label}</button>')
+        self.assertContains(response, 'data-coreui-toggle="tab"', count=3)
         rows = self.client.get(reverse('stock:item-projects-data', args=[self.item.pk])).json()['data']
         self.assertEqual([(r['name'], r['requested'], r['delivered']) for r in rows], [('Norte', '5', '2'), ('Sur', '0', '1')])
         url = reverse('stock:history-data', args=[self.item.pk])

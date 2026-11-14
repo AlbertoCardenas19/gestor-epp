@@ -11,8 +11,9 @@ No implementa cotizaciones, pedidos a proveedores, aprobación ni compras.
   Las solicitudes ya no aparecen como entregas. Sustituye la presentación de S22.
 - En el inventario del proyecto, **Solicitado** muestra la cantidad original de la
   solicitud; el detalle/historial conserva sus reducciones. **Entregados** muestra
-  solo lo efectivamente entregado. «En proceso» y una exclamación accesible
-  «Pendiente de entrega» indican que todavía queda pendiente, incluso de compra.
+  solo lo efectivamente entregado. Una exclamación roja y accesible «Pendiente de
+  entrega», situada antes de esa cantidad, indica que todavía queda pendiente,
+  incluso de compra; desaparece al completar la entrega. «En proceso» conserva el estado.
   No se agrega una columna Reservado ni tres clases de stock en la interfaz.
 - Se mantiene la regla de compra confirmada expresamente al aclarar S23: pedir
   más del stock no rechaza la solicitud. Se compromete lo disponible y se guarda
@@ -62,10 +63,14 @@ proyecto/empresa y proyectos relacionados con **Solicitado vigente** (menos lo
 cancelado) y **Entregado al trabajador** (solo real vigente). Una entrega histórica
 sin solicitud puede mostrar solicitado cero y entregado mayor que cero: no se
 fabrica una solicitud para cuadrar esas columnas. Son cálculos de los datos actuales,
-no nuevos campos de negocio. Las tablas reutilizan DataTables `serverSide`.
+no nuevos campos de negocio. Información, Historial de movimientos y Proyectos se
+presentan como pestañas CoreUI. Las tablas reutilizan DataTables `serverSide` y
+ajustan sus columnas mediante la integración compartida al hacerse visibles.
 
-Las listas comparten skeletons CoreUI para una carga inicial asíncrona y un
-indicador discreto en las actualizaciones, conservando contenido. Un fallo termina
+Las listas esperan 180 ms antes de mostrar skeletons CoreUI en una carga inicial
+asíncrona o un indicador discreto en actualizaciones, conservando contenido. Las
+respuestas rápidas no producen destellos y la espera visual no retrasa la petición.
+Un fallo termina
 la carga y muestra cómo reintentar; no se presenta como un resultado vacío. Las
 tarjetas/selector inicialmente renderizados por Django ya tienen contenido y no
 hacen una segunda consulta inicial solo para mostrar una animación.

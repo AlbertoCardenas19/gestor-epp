@@ -20,6 +20,12 @@
   window.EppComponents = { init, dispose };
   init();
 
+  // CoreUI owns tab state; the app only realigns DataTables revealed by a tab.
+  document.addEventListener('shown.coreui.tab', () => {
+    if (window.EppTables) window.EppTables.adjust();
+    else if (window.DataTable) DataTable.tables({visible: true, api: true}).columns.adjust();
+  });
+
   const sidebar = document.querySelector('#sidebar');
   if (!sidebar) return;
   const button = sidebar.querySelector('.sidebar-toggle');
