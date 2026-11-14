@@ -5,9 +5,11 @@ from threading import Barrier
 from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, close_old_connections, transaction
+from django.db import IntegrityError, close_old_connections, connection, transaction
 from django.test import TestCase, TransactionTestCase, Client
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
+from django.utils import timezone
 
 from catalog.models import Item
 from projects.models import Project
@@ -205,6 +207,35 @@ class RequestFlowTests(TestCase):
         self.assertIn('Confirmar entrega', result['data'][0]['actions'])
         other = self.client.get(reverse('requests:data', args=[self.south.pk])).json()
         self.assertEqual(other['recordsTotal'], 0)
+
+    def test_request_detail_queries_do_not_grow_with_replaced_deliveries(self):
+        receive_common_stock(self.item, data(18))
+        request = self.request(20)
+
+        def add_replaced_delivery(index):
+            original = StockRecord.objects.create(
+                position=self.opening.position, stock_request=request,
+                operation=StockRecord.Operation.DELIVERY, quantity=1,
+                occurred_on=date.today(), worker_full_name=f'Original {index}',
+                voided_at=timezone.now(), void_reason='Corrección de prueba',
+            )
+            StockRecord.objects.create(
+                position=self.opening.position, stock_request=request,
+                operation=StockRecord.Operation.DELIVERY, quantity=1,
+                occurred_on=date.today(), worker_full_name=f'Reemplazo {index}', replaces=original,
+            )
+
+        add_replaced_delivery(0)
+        with CaptureQueriesContext(connection) as one_pair_queries:
+            self.client.get(request.get_absolute_url())
+        for index in range(1, 10):
+            add_replaced_delivery(index)
+        with CaptureQueriesContext(connection) as ten_pair_queries:
+            response = self.client.get(request.get_absolute_url())
+
+        self.assertEqual(len(ten_pair_queries), len(one_pair_queries))
+        self.assertContains(response, 'Sustituido', count=10)
+        self.assertContains(response, 'Vigente', count=10)
 
     def test_failure_after_delivery_or_replacement_write_rolls_back_every_change(self):
         request = self.request(2)

@@ -12,6 +12,14 @@ from .models import StockPosition, StockRecord, StockRequest, stock_delta_expres
 from .services import _create_record, _repeated_submission
 
 
+def common_item_basics():
+    """Return searchable/sortable catalog fields without calculating stock totals."""
+    return Item.objects.annotate(
+        type_label=Case(When(item_type=Item.Type.EPP, then=Value('EPP')),
+                        default=Value('Señalética'), output_field=CharField()),
+    ).order_by('name', 'pk')
+
+
 def common_items():
     totals = StockRecord.objects.filter(position__item_id=OuterRef('pk'), voided_at__isnull=True).order_by().values(
         'position__item_id',
@@ -22,14 +30,21 @@ def common_items():
     allocated = StockRequest.objects.filter(item_id=OuterRef('pk')).order_by().values('item_id').annotate(total=Sum('allocated_quantity')).values('total')
     def amount(query):
         return Coalesce(Subquery(query, output_field=BigIntegerField()), Value(0), output_field=BigIntegerField())
-    return Item.objects.annotate(
+    return common_item_basics().annotate(
         physical_total=amount(totals), delivered_total=amount(delivered), allocated_total=amount(allocated),
         fulfilled_total=amount(requested_deliveries),
-        type_label=Case(When(item_type=Item.Type.EPP, then=Value('EPP')),
-                        default=Value('Señalética'), output_field=CharField()),
     ).annotate(reserved_total=F('allocated_total') - F('fulfilled_total')).annotate(
         total=F('physical_total') - F('reserved_total'),
     ).order_by('name', 'pk')
+
+
+def common_items_for_page(items):
+    """Add stock totals after pagination while preserving the requested page order."""
+    items = list(items)
+    if not items or all(hasattr(item, 'total') for item in items):
+        return items
+    totals_by_id = {item.pk: item for item in common_items().filter(pk__in=[item.pk for item in items])}
+    return [totals_by_id[item.pk] for item in items]
 
 
 

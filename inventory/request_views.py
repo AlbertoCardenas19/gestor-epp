@@ -73,7 +73,9 @@ class RequestCreateView(ProjectMixin, FormView):
 
 class RequestMixin(ProjectMixin):
     def get_request(self):
-        return get_object_or_404(request_rows(self.project), pk=self.kwargs['request_pk'])
+        if not hasattr(self, '_stock_request'):
+            self._stock_request = get_object_or_404(request_rows(self.project), pk=self.kwargs['request_pk'])
+        return self._stock_request
 
     def get_context_data(self, **kwargs):
         request = self.get_request()
@@ -85,7 +87,11 @@ class RequestDetailView(RequestMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         request = self.get_request()
-        return super().get_context_data(events=request.events.all(), deliveries=request.deliveries.select_related('position').all(), **kwargs)
+        return super().get_context_data(
+            events=request.events.all(),
+            deliveries=request.deliveries.select_related('position', 'replacement').all(),
+            **kwargs,
+        )
 
 
 class RequestActionView(RequestMixin, FormView):

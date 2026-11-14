@@ -13,6 +13,7 @@ from catalog.models import Item
 from projects.models import Project
 from .common import receive_common_stock
 from .models import StockPosition, StockRecord
+from .selector import selector_context
 from .services import cancel_delivery, correct_record, deliver_stock, open_stock
 
 
@@ -139,6 +140,18 @@ class CommonStockTests(TestCase):
         self.assertIn(reverse('stock:receive', args=[self.other.pk]), result['data'][0]['actions'])
         self.assertIn('data-coreui-toggle="dropdown"', result['data'][0]['actions'])
         self.assertEqual(self.client.post(reverse('stock:data'), {}).status_code, 405)
+
+    def test_selector_paginates_before_calculating_page_totals(self):
+        items = Item.objects.bulk_create([
+            Item(name=f'Elemento {index:02d}', item_type=Item.Type.EPP) for index in range(30)
+        ])
+        receive_common_stock(items[20], data(9))
+        with self.assertNumQueries(3) as queries:
+            context = selector_context({'page': '4'})
+        page_items = list(context['selector_page'])
+        self.assertEqual(len(page_items), 6)
+        self.assertEqual(next(item.total for item in page_items if item.pk == items[20].pk), 9)
+        self.assertIn('"catalog_item"."id" IN (', queries.captured_queries[-1]['sql'])
 
 
 class CommonStockConcurrencyTests(TransactionTestCase):

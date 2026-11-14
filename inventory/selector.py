@@ -3,16 +3,17 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.views.generic import TemplateView
 
-from .common import common_items
+from .common import common_item_basics, common_items, common_items_for_page
 from .views import ProjectMixin
 
 
 def selector_context(params, selected_id=None):
-    items = common_items()
+    items = common_item_basics()
     query = params.get('q', '').strip()[:500]
     if query:
         items = items.filter(Q(name__icontains=query) | Q(type_label__icontains=query))
     page = Paginator(items, 6).get_page(params.get('page', 1))
+    page.object_list = common_items_for_page(page.object_list)
     # Selection is outside the results container; it survives pagination and search.
     selected = None
     if str(selected_id or '').isdigit() and len(str(selected_id)) <= 19 and int(selected_id) <= 9223372036854775807:

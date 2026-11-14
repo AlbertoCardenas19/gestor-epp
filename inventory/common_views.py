@@ -8,7 +8,8 @@ from django.views.generic import FormView, TemplateView
 
 from catalog.models import Item
 from projects.datatables import DataTableView
-from .common import common_items, common_records, receive_common_stock, item_projects, filter_movement_project
+from .common import (common_item_basics, common_items, common_items_for_page, common_records,
+                     receive_common_stock, item_projects, filter_movement_project)
 from .availability import available_quantity
 from .forms import CorrectionForm, StockForm
 from .models import StockRecord
@@ -35,7 +36,18 @@ class CommonInventoryDataView(DataTableView):
     default_order = ('name', 'pk')
 
     def get_queryset(self):
-        return common_items()
+        # Numeric ordering needs totals for every candidate to remain globally exact.
+        # Other orders can paginate the catalog first and aggregate only that page.
+        for index in range(len(self.order_columns)):
+            column = self.request.GET.get(f'order[{index}][column]')
+            if column is None:
+                break
+            if column in {'2', '3'} and self.request.GET.get(f'order[{index}][dir]') in {'asc', 'desc'}:
+                return common_items()
+        return common_item_basics()
+
+    def paginate_records(self, records, start, length):
+        return common_items_for_page(super().paginate_records(records, start, length))
 
     def serialize_record(self, item):
         return {'name': item.name, 'type': item.type_label, 'quantity': str(item.total), 'delivered': str(item.delivered_total), 'item_url': item.get_absolute_url(),

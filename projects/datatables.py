@@ -28,6 +28,9 @@ class DataTableView(View):
     def normalize_search(self, query):
         return query
 
+    def paginate_records(self, records, start, length):
+        return list(records[start:start + length])
+
     def get(self, request, *args, **kwargs):
         records = self.get_queryset()
         total = records.count()
@@ -50,6 +53,6 @@ class DataTableView(View):
         length = nonnegative_int(request.GET.get('length'), default=10)
         if length not in [10, 25, 50]:
             length = 10
-        rows = [self.serialize_record(record) for record in records[start:start + length]]
+        rows = [self.serialize_record(record) for record in self.paginate_records(records, start, length)]
         return JsonResponse({'draw': nonnegative_int(request.GET.get('draw')),
                              'recordsTotal': total, 'recordsFiltered': filtered, 'data': rows})
