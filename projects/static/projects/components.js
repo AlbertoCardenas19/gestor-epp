@@ -59,6 +59,5 @@
   mobile.addEventListener('change', event => {
     if (event.matches && !sidebar.classList.contains('sidebar-narrow')) component.narrow();
   });
-  button.hidden = false;
   sync();
 })();

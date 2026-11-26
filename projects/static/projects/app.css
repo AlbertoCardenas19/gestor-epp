@@ -53,7 +53,6 @@ a { text-underline-offset: .2em; }
   border-radius: 50%;
   background: var(--app-sidebar);
 }
-.sidebar-toggle[hidden] { display: none; }
 .sidebar-toggle:hover::before { border-color: var(--app-surface); }
 .sidebar-toggle:focus-visible { outline: none; }
 .sidebar-toggle:focus-visible::before { outline: 2px solid var(--app-sidebar); box-shadow: 0 0 0 4px var(--app-surface); }

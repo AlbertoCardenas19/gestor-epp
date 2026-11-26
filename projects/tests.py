@@ -10,9 +10,16 @@ from .models import Project
 
 
 class ProjectFlowTests(TestCase):
-    def test_stylesheet_url_uses_current_content_hash(self):
-        digest = sha256(Path(finders.find('projects/app.css')).read_bytes()).hexdigest()[:12]
-        self.assertContains(self.client.get('/'), f'/static/projects/app.css?v={digest}')
+    def test_shared_asset_urls_use_current_content_hash(self):
+        home = self.client.get('/')
+        for path in ('app.css', 'components.js'):
+            digest = sha256(Path(finders.find(f'projects/{path}')).read_bytes()).hexdigest()[:12]
+            self.assertContains(home, f'/static/projects/{path}?v={digest}')
+        digest = sha256(Path(finders.find('projects/datatables.js')).read_bytes()).hexdigest()[:12]
+        self.assertContains(self.client.get(reverse('stock:list')),
+                            f'/static/projects/datatables.js?v={digest}')
+        self.assertContains(home, 'class="sidebar-toggle"')
+        self.assertNotContains(home, 'title="Contraer menú" hidden')
 
     def test_database_is_postgresql(self):
         self.assertEqual(connection.vendor, 'postgresql')

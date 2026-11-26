@@ -29,6 +29,56 @@ def data(quantity, **extra):
 
 
 class LibraryBrowserChecks(StaticLiveServerTestCase):
+    def test_shared_table_expands_after_resize_sidebar_and_tabs(self):
+        item = self.db(lambda: Item.objects.create(name='Casco para prueba de ancho'))
+        self.page.set_viewport_size({'width': 390, 'height': 850})
+        self.visit_table(reverse('stock:list'))
+        self.assertRegex(self.page.locator('script[src*="projects/datatables.js"]').get_attribute('src'),
+                         r'/static/projects/datatables\.js\?v=[0-9a-f]{12}$')
+        self.assertRegex(self.page.locator('script[src*="projects/components.js"]').get_attribute('src'),
+                         r'/static/projects/components\.js\?v=[0-9a-f]{12}$')
+
+        def check_width():
+            self.page.wait_for_timeout(350)
+            widths = self.page.locator('.dt-container').first.evaluate('''container => {
+              const width = selector => container.querySelector(selector).getBoundingClientRect().width;
+              return {container: container.getBoundingClientRect().width,
+                header: width('.dt-scroll-head table'), body: width('.dt-scroll-body table')};
+            }''')
+            self.assertGreaterEqual(widths['header'] + 2, widths['container'], widths)
+            self.assertAlmostEqual(widths['header'], widths['body'], delta=2)
+
+        for width in (700, 1440, 700, 1440):
+            self.page.set_viewport_size({'width': width, 'height': 850})
+            if width == 1440:
+                check_width()
+        toggle = self.page.locator('.sidebar-toggle')
+        for _ in range(2):
+            self.assertTrue(toggle.is_visible())
+            button = toggle.evaluate('''element => {
+              const bounds = element.getBoundingClientRect();
+              const center = {x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2};
+              return {top: bounds.top, height: bounds.height,
+                hit: document.elementFromPoint(center.x, center.y) === element,
+                sidebarEdge: document.querySelector('.app-sidebar').getBoundingClientRect().right,
+                buttonCenter: center.x};
+            }''')
+            self.assertTrue(button['hit'], button)
+            self.assertAlmostEqual(button['buttonCenter'], button['sidebarEdge'], delta=2)
+            self.assertAlmostEqual(button['top'] + button['height'] / 2, 425, delta=2)
+            toggle.click()
+            check_width()
+        self.visit_table(item.get_absolute_url())
+        for tab_id, panel_id in (('item-history-tab', 'item-history'),
+                                 ('item-projects-tab', 'item-projects')):
+            self.page.locator(f'#{tab_id}').click()
+            self.page.wait_for_timeout(350)
+            widths = self.page.locator(f'#{panel_id} .dt-container').evaluate('''container => ({
+              available: container.getBoundingClientRect().width,
+              table: container.querySelector('.dt-scroll-head table').getBoundingClientRect().width
+            })''')
+            self.assertGreaterEqual(widths['table'] + 2, widths['available'], widths)
+
     def test_iteration_inventory_layout_and_navigation(self):
         item, project, request = self.db(lambda: self._iteration_records())
         self.visit_table(reverse('stock:list'))

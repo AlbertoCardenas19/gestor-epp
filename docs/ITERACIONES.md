@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-Iteración UI-01 publicada. UI-02 implementada y verificada: la hoja propia usa una URL ligada a su contenido para que el navegador cargue los estilos actuales tras actualizar el proyecto.
+Iteraciones UI-01 y UI-02 publicadas. UI-03 implementada y verificada localmente: el control del sidebar se muestra desde el HTML y los scripts compartidos usan URL ligada a su contenido.
 
 ## Pendientes
 
@@ -11,7 +11,21 @@ Iteración UI-01 publicada. UI-02 implementada y verificada: la hoja propia usa 
 
 ## Próximo paso
 
-Actualizar la copia Ubuntu desde `origin/main` y comprobar que el navegador solicita la URL nueva de `app.css` y muestra el sidebar expandido y contraído como en las capturas.
+Actualizar la copia Ubuntu desde `origin/main` y comprobar las nuevas URL de `components.js` y `datatables.js`, el botón en ambos estados y el ancho de las tablas tras redimensionar.
+
+## UI-03 · 26 de noviembre de 2026
+
+**Objetivo.** Mantener visible el botón circular en ambos estados del sidebar y evitar tablas estrechas después de reducir y ampliar la ventana, cambiar el sidebar o abrir pestañas.
+
+**Causa y cambios implementados.** El botón existía en el DOM, pero el HTML lo entregaba con `hidden` y dependía de que `components.js` quitase ese atributo. Al inspeccionarlo con el script actual, medía 44 × 44 px como área de clic, estaba centrado en el borde derecho y en la altura de la ventana, recibía el clic en su centro y quedaba fuera del `overflow` del sidebar, por encima de este. Se quitó `hidden` inicial para que el círculo de 30 px sea visible desde el primer render. La URL de `components.js` ahora incluye el hash de su contenido, igual que la hoja de estilos.
+
+**Diagnóstico de la tabla.** Los contenedores y elementos generados por DataTables se midieron en Chromium antes y después de redimensionar y al abrir pestañas ocultas. Con el script actual, la tabla recuperó el ancho disponible. Al servir el `datatables.js` anterior junto al HTML y CSS actuales se reprodujo exactamente el fallo: después de pasar de 600 a 1440 px, el contenedor medía 1306 px y la cabecera y tabla seguían en 506 px por el ancho en línea `width: 506px !important` que fijaba el script anterior. La URL de ese script no cambiaba entre versiones. Se versionó por hash de contenido en la plantilla compartida; el ajuste actual mediante la API de DataTables se conserva. Esto explica el fallo de una copia con script en caché, aunque no se ha inspeccionado el caché de la PC del usuario.
+
+**Verificación visual.** En Chromium se redujo y amplió la ventana, se cerró y abrió el sidebar y se cambiaron pestañas de detalle. La tabla volvió a ocupar el contenedor (1306 px tras ampliar); no hubo errores de consola ni solicitudes de datos adicionales por la secuencia. El botón quedó visible y pulsable expandido y contraído. Capturas: [botón expandido](capturas/ui03-boton-expandido.png), [botón contraído](capturas/ui03-boton-contraido.png) y [tabla tras redimensionar](capturas/ui03-tabla-tras-redimensionar.png).
+
+**Comprobaciones.** Pasaron `manage.py check`, 187 pruebas Django, 13 pruebas Chromium, `makemigrations --check --dry-run`, `node --check` de los dos scripts y `git diff --check`. La prueba de navegador cubre anchos de 390, 700 y 1440 px, el botón en ambos estados, la tabla tras redimensionar y las pestañas de detalle.
+
+**Entrega.** Verificada y autorizada para publicación en `origin/main`; el hash se informa en la respuesta final.
 
 ## UI-02 · 26 de noviembre de 2026
 
