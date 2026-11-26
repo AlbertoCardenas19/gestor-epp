@@ -1,26 +1,38 @@
+from django.contrib.postgres.aggregates import StringAgg
 from django.db import models
+from django.db.models.functions import Coalesce
 from django.urls import reverse
 
 
-class Item(models.Model):
-    class Type(models.TextChoices):
-        EPP = 'epp', 'EPP'
-        SIGNAGE = 'signage', 'Señalética'
+class Category(models.Model):
+    name = models.CharField('nombre', max_length=150, unique=True)
 
+    class Meta:
+        ordering = ['name', 'pk']
+
+    def __str__(self):
+        return self.name
+
+
+class ItemQuerySet(models.QuerySet):
+    def with_category_label(self):
+        categories = Category.objects.filter(item=models.OuterRef('pk')).order_by().values('item').annotate(
+            label=StringAgg('name', ', ', order_by='name'),
+        ).values('label')
+        return self.annotate(category_label=Coalesce(models.Subquery(categories), models.Value(''), output_field=models.TextField()))
+
+
+class Item(models.Model):
     name = models.TextField('nombre')
-    item_type = models.CharField('tipo', max_length=16, choices=Type.choices)
+    categories = models.ManyToManyField(Category, verbose_name='categorías')
     description = models.TextField('descripción', blank=True)
+
+    objects = ItemQuerySet.as_manager()
 
     class Meta:
         ordering = ['pk']
         verbose_name = 'elemento'
         verbose_name_plural = 'elementos'
-        constraints = [
-            models.CheckConstraint(
-                condition=models.Q(item_type__in=['epp', 'signage']),
-                name='catalog_item_valid_type',
-            ),
-        ]
 
     def __str__(self):
         return self.name

@@ -1,21 +1,18 @@
-from django.db.models import Case, CharField, Value, When
-from django.views.generic import CreateView, DetailView, RedirectView
+from django.views.generic import CreateView, DetailView, RedirectView, UpdateView
 from django.db import transaction
+from django.urls import reverse_lazy
 from django.utils import timezone
 import uuid
 
-from .forms import ItemForm
-from .models import Item
+from .forms import CategoryForm, ItemCatalogForm, ItemForm
+from .models import Category, Item
 from projects.datatables import DataTableView
 from django.template.loader import render_to_string
 
 
 class ItemQuerysetMixin:
     def get_queryset(self):
-        return Item.objects.annotate(type_label=Case(
-            When(item_type=Item.Type.EPP, then=Value('EPP')),
-            default=Value('Señalética'), output_field=CharField(),
-        )).order_by('name', 'pk')
+        return Item.objects.with_category_label().order_by('name', 'pk')
 
 
 class ItemListView(RedirectView):
@@ -24,13 +21,13 @@ class ItemListView(RedirectView):
 
 
 class ItemDataView(ItemQuerysetMixin, DataTableView):
-    order_columns = ('name', 'type_label', 'description', None)
-    search_fields = ('name', 'type_label', 'description')
+    order_columns = ('name', 'category_label', 'description', None)
+    search_fields = ('name', 'category_label', 'description')
     default_order = ('name', 'pk')
 
     def serialize_record(self, item):
         return {
-            'name': item.name, 'type': item.get_item_type_display(), 'description': item.description or 'Sin descripción.',
+            'name': item.name, 'type': item.category_label or 'Sin categorías', 'description': item.description or 'Sin descripción.',
             'actions': render_to_string('projects/row_actions.html', {
                 'action_id': item.pk, 'action_label': item.name,
                 'detail_url': item.get_absolute_url(), 'detail_label': 'Ver elemento',
@@ -68,3 +65,16 @@ class ItemDetailView(DetailView):
         from inventory.common import item_projects
         return super().get_context_data(balance=available_quantity(self.object.pk),
             project_options=item_projects(self.object), movement_project=self.request.GET.get('project', ''), **kwargs)
+
+
+class CategoryCreateView(CreateView):
+    model = Category
+    form_class = CategoryForm
+    template_name = 'catalog/category_form.html'
+    success_url = reverse_lazy('stock:list')
+
+
+class ItemUpdateView(UpdateView):
+    model = Item
+    form_class = ItemCatalogForm
+    template_name = 'catalog/form.html'

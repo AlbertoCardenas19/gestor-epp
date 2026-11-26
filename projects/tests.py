@@ -83,7 +83,7 @@ class DeliveryTableTests(TestCase):
         from inventory.models import StockPosition, StockRecord
         cls.project = Project.objects.create(name='Obra Norte')
         other = Project.objects.create(name='Obra Sur')
-        item = Item.objects.create(name='Casco', item_type=Item.Type.EPP)
+        item = Item.objects.create(name='Casco')
         cls.position = StockPosition.objects.create(project=cls.project, item=item)
         other_position = StockPosition.objects.create(project=other, item=item)
         StockRecord.objects.create(position=cls.position, operation='opening', quantity=100, occurred_on=date.today())

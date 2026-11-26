@@ -1,0 +1,28 @@
+<fieldset class="border rounded p-3 mb-3" data-form-row>
+  <legend class="float-none w-auto px-2 h6">Línea de factura</legend>
+  {{ row.form.non_field_errors }}
+  {% include 'purchases/picker.html' with picker=row.item_picker %}
+  <details class="mb-3"{% if row.new_item.errors or row.new_item.name.value %} open{% endif %}>
+    <summary>Crear un elemento nuevo</summary>
+    <p class="small mt-2">Deja el selector sin selección para crear un elemento en esta línea.</p>
+    {% include 'purchases/form_fields.html' with fields=row.new_item %}
+  </details>
+  <div class="row">
+    {% for field in row.form.visible_fields %}
+      {% if field.name != 'item' %}<div class="col-sm-6">
+        <label class="form-label" for="{{ field.id_for_label }}">{% if field.name == 'DELETE' %}Quitar línea{% else %}{{ field.label }}{% endif %}</label>
+        <div class="mb-2">{{ field }}{{ field.errors }}</div>
+      </div>{% endif %}
+    {% endfor %}
+  </div>
+  <details class="mb-2"{% if row.allocations.total_form_count or row.allocations.non_form_errors %} open{% endif %}>
+    <summary>Distribuir cantidades por proyecto</summary>
+    <div class="mt-2" data-form-group data-form-prefix="{{ row.allocations.prefix }}">
+      {{ row.allocations.management_form }}
+      {{ row.allocations.non_form_errors }}
+      <div data-form-rows>{% for allocation in row.allocations %}{% include 'purchases/allocation.html' %}{% endfor %}</div>
+      <template data-form-template>{% include 'purchases/allocation.html' with allocation=row.allocations.empty_form %}</template>
+      <button type="button" class="btn btn-outline-secondary btn-sm" data-form-add>Agregar proyecto</button>
+    </div>
+  </details>
+</fieldset>

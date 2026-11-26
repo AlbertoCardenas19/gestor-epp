@@ -1,0 +1,16 @@
+{% extends 'projects/base.html' %}
+{% block title %}{% if object %}Editar proveedor{% else %}Nuevo proveedor{% endif %}{% endblock %}
+{% block content %}
+<div class="form-shell">
+  <h1>{% if object %}Editar proveedor{% else %}Nuevo proveedor{% endif %}</h1>
+  <form class="card card-body" method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% include 'purchases/form_fields.html' with fields=form %}
+    <div class="d-flex flex-wrap gap-2">
+      <button class="btn btn-primary" type="submit">Guardar proveedor</button>
+      <a class="btn btn-outline-secondary" href="{% if object %}{{ object.get_absolute_url }}{% else %}{% url 'purchases:suppliers' %}{% endif %}">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

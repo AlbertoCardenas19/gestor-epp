@@ -2,7 +2,7 @@
 
 Estado actual: S23 revisa la presentación de S22 y mantiene el stock común,
 las necesidades de compra y las entregas directas RF-04/RF-05/RF-08/RF-09.
-No implementa cotizaciones, pedidos a proveedores, aprobación ni compras.
+La recepción de facturas alimenta el stock común. [Flujo de compras y recepción](06-desarrollo.md#categorías-proveedores-y-facturas-de-compra--26-de-noviembre-de-2026).
 
 ## Decisiones vigentes — S23
 
@@ -58,7 +58,7 @@ fuera de los resultados, y se conserva al buscar, paginar y corregir errores.
 El servidor vuelve a comprobar el stock dentro de la transacción al guardar.
 
 Desde el nombre del elemento en Inventario se abre su ficha. Conserva nombre,
-tipo y descripción; añade movimientos de todos los proyectos con filtro por
+categorías y descripción; añade movimientos de todos los proyectos con filtro por
 proyecto/empresa y proyectos relacionados con **Solicitado vigente** (menos lo
 cancelado) y **Entregado al trabajador** (solo real vigente). Una entrega histórica
 sin solicitud puede mostrar solicitado cero y entregado mayor que cero: no se
@@ -217,5 +217,4 @@ migraciones ni dependencias; conservar las migraciones anteriores aplicadas.
    mantiene resultados. Un fallo muestra error y termina el indicador. Reintentar
    con otra búsqueda tras restablecer la red. Revisar también en móvil y con teclado.
 
-No se incorporan compras/finanzas, intermediarios, devoluciones ni reposiciones.
-No se reclasifican ni borran registros históricos.
+La recepción de facturas se documenta en la guía de desarrollo. Las entregas históricas conservan sus destinatarios y clasificación como movimientos.

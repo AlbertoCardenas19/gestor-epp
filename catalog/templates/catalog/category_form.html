@@ -1,0 +1,15 @@
+{% extends 'projects/base.html' %}
+{% block title %}Nueva categoría{% endblock %}
+{% block content %}
+<div class="form-shell">
+  <h1>Nueva categoría</h1>
+  <form method="post" class="card card-body">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary" type="submit">Guardar categoría</button>
+      <a class="btn btn-outline-secondary" href="{% url 'stock:list' %}">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

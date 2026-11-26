@@ -5,7 +5,7 @@
 <div class="form-shell mt-4">
 
   <h1>{% if is_opening %}Registrar apertura{% elif is_delivery %}Registrar entrega{% else %}Registrar entrada{% endif %}</h1>
-  <p class="text-break fw-semibold">{{ item.name }} · {{ item.get_item_type_display }}</p>
+  <p class="text-break fw-semibold">{{ item.name }}{% with categories=item.categories.all %}{% if categories %} · {{ categories|join:", " }}{% endif %}{% endwith %}</p>
   {% if can_record %}
     <p class="text-body-secondary">{% if is_opening %}Indica cuántas unidades hay al comenzar el registro, incluido cero si no hay existencias.{% elif is_delivery %}Registra la entrega directa al trabajador. La cantidad se descontará del saldo de este proyecto.{% else %}Indica cuántas unidades nuevas recibió este proyecto.{% endif %}</p>
     {% if is_delivery %}<p class="fw-semibold">Saldo registrado actual: {{ position.balance }}</p>{% endif %}

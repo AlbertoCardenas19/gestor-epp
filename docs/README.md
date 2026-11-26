@@ -13,7 +13,7 @@ Documentación del proyecto de gestión para la amiga prevencionista. Se reconst
 | [03-flujos-y-responsabilidades.md](03-flujos-y-responsabilidades.md) | Proceso conversado y responsabilidades conocidas |
 | [04-pendientes.md](04-pendientes.md) | Aspectos que las conversaciones no dejan definidos |
 | [05-fuentes.md](05-fuentes.md) | Procedencia, exclusiones y límites de la recuperación |
-| [06-desarrollo.md](06-desarrollo.md) | Instalación, PostgreSQL y comprobaciones de proyectos, catálogo e inventario |
+| [06-desarrollo.md](06-desarrollo.md) | Instalación, PostgreSQL, compras, migraciones y comprobaciones |
 | [07-iteraciones-entregas.md](07-iteraciones-entregas.md) | Acuerdos, verificación y prueba manual de corrección y anulación de entregas |
 | [08-stock-comun-y-solicitudes.md](08-stock-comun-y-solicitudes.md) | Evolución de acuerdos y enlace al flujo actual de solicitudes |
 | [09-continuidad-ui.md](09-continuidad-ui.md) | Estado conservado, hallazgos resueltos y comandos de continuidad de la integración UI |

@@ -6,7 +6,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.views.generic import FormView, TemplateView
 
-from catalog.models import Item
+from catalog.models import Category, Item
 from projects.datatables import DataTableView
 from .common import (common_item_basics, common_items, common_items_for_page, common_records,
                      receive_common_stock, item_projects, filter_movement_project)
@@ -29,28 +29,38 @@ class CommonItemMixin:
 class CommonInventoryView(TemplateView):
     template_name = 'inventory/common_list.html'
 
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(categories=Category.objects.all(), **kwargs)
+
 
 class CommonInventoryDataView(DataTableView):
-    order_columns = ('name', 'type_label', 'total', 'delivered_total', None)
-    search_fields = ('name', 'type_label', 'description')
+    order_columns = ('name', 'category_label', 'total', 'delivered_total', None)
+    search_fields = ('name', 'category_label', 'description')
     default_order = ('name', 'pk')
 
     def get_queryset(self):
         # Numeric ordering needs totals for every candidate to remain globally exact.
         # Other orders can paginate the catalog first and aggregate only that page.
+        queryset = common_item_basics()
         for index in range(len(self.order_columns)):
             column = self.request.GET.get(f'order[{index}][column]')
             if column is None:
                 break
             if column in {'2', '3'} and self.request.GET.get(f'order[{index}][dir]') in {'asc', 'desc'}:
-                return common_items()
-        return common_item_basics()
+                queryset = common_items()
+                break
+        category = self.request.GET.get('category', '')
+        if category:
+            if not category.isascii() or not category.isdigit() or len(category) > 19 or int(category) >= 2**63:
+                return queryset.none()
+            queryset = queryset.filter(categories=category)
+        return queryset
 
     def paginate_records(self, records, start, length):
         return common_items_for_page(super().paginate_records(records, start, length))
 
     def serialize_record(self, item):
-        return {'name': item.name, 'type': item.type_label, 'quantity': str(item.total), 'delivered': str(item.delivered_total), 'item_url': item.get_absolute_url(),
+        return {'name': item.name, 'type': item.category_label, 'quantity': str(item.total), 'delivered': str(item.delivered_total), 'item_url': item.get_absolute_url(),
                 'actions': render_to_string('inventory/common_actions.html', {
                     'action_id': item.pk, 'action_label': item.name,
                     'detail_url': reverse('stock:history', args=[item.pk]), 'item_url': item.get_absolute_url(),
@@ -122,7 +132,7 @@ class CommonCorrectionView(CommonRecordMixin, FormView):
     template_name = 'inventory/common_form.html'
 
     def get_record(self):
-        return get_object_or_404(common_records(self.item), pk=self.kwargs['record_pk'], position__project__isnull=True,
+        return get_object_or_404(common_records(self.item), pk=self.kwargs['record_pk'], position__project__isnull=True, invoice__isnull=True,
                                  operation__in=[StockRecord.Operation.OPENING, StockRecord.Operation.RECEIPT])
 
     def get_form_kwargs(self):

@@ -24,8 +24,8 @@ class DeliveryCorrectionTests(TestCase):
     def setUp(self):
         self.north = Project.objects.create(name='Norte')
         self.south = Project.objects.create(name='Sur')
-        self.helmet = Item.objects.create(name='Casco', item_type='epp')
-        self.gloves = Item.objects.create(name='Guantes', item_type='epp')
+        self.helmet = Item.objects.create(name='Casco')
+        self.gloves = Item.objects.create(name='Guantes')
         self.source = open_stock(self.north, self.helmet, data(20)).position
         self.target = open_stock(self.south, self.gloves, data(8)).position
         self.original = deliver_stock(self.north, self.helmet, data(5, worker_full_name='Ana Pérez', observation='Original'))
@@ -213,7 +213,7 @@ class DeliveryCorrectionConcurrencyTests(TransactionTestCase):
     def setUp(self):
         self.north = Project.objects.create(name='Norte')
         self.south = Project.objects.create(name='Sur')
-        self.item = Item.objects.create(name='Casco', item_type='epp')
+        self.item = Item.objects.create(name='Casco')
         self.source = open_stock(self.north, self.item, data(20)).position
         self.target = open_stock(self.south, self.item, data(8)).position
         self.original = deliver_stock(self.north, self.item, data(5, worker_full_name='Ana Pérez'))

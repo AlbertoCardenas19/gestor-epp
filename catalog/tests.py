@@ -1,10 +1,11 @@
-from django.db import IntegrityError, connection, transaction
-from django.test import Client, TestCase
+from django.db import connection
+from django.db.migrations.executor import MigrationExecutor
+from django.test import Client, TestCase, TransactionTestCase
 from django.urls import reverse
 
 from projects.models import Project
 
-from .models import Item
+from .models import Category, Item
 
 
 class CatalogFlowTests(TestCase):
@@ -14,14 +15,15 @@ class CatalogFlowTests(TestCase):
     def test_empty_catalog_offers_first_item(self):
         self.assertContains(self.client.get(reverse('catalog:list'), follow=True), 'Nuevo elemento')
 
-    def test_create_list_and_consult_each_type(self):
-        for item_type, name, label in [
-            (Item.Type.EPP, 'Casco de seguridad', 'EPP'),
-            (Item.Type.SIGNAGE, 'Salida de emergencia', 'Señalética'),
+    def test_create_list_and_consult_categories(self):
+        for name, label in [
+            ('Casco de seguridad', 'EPP'),
+            ('Salida de emergencia', 'Señaléticas'),
         ]:
-            with self.subTest(item_type=item_type):
+            with self.subTest(category=label):
+                category = Category.objects.get(name=label)
                 response = self.client.post(reverse('catalog:create'), {
-                    'name': name, 'item_type': item_type, 'description': 'Primera línea.\nSegunda línea.',
+                    'name': name, 'categories': [category.pk], 'description': 'Primera línea.\nSegunda línea.',
                 })
                 item = Item.objects.get(name=name)
                 self.assertRedirects(response, item.get_absolute_url())
@@ -32,45 +34,56 @@ class CatalogFlowTests(TestCase):
                 self.assertContains(detail, label)
                 self.assertContains(detail, 'Primera línea.<br>Segunda línea.', html=True)
                 item.refresh_from_db()
-                self.assertEqual(item.item_type, item_type)
+                self.assertEqual(list(item.categories.all()), [category])
 
     def test_description_is_optional(self):
-        response = self.client.post(reverse('catalog:create'), {'name': 'Guantes', 'item_type': Item.Type.EPP})
+        response = self.client.post(reverse('catalog:create'), {'name': 'Guantes', 'categories': Category.objects.get(name='EPP').pk})
         item = Item.objects.get()
         self.assertRedirects(response, item.get_absolute_url())
         self.assertEqual(item.description, '')
         self.assertContains(self.client.get(item.get_absolute_url()), 'Este elemento aún no tiene descripción.')
 
     def test_empty_and_whitespace_name_are_rejected_without_losing_other_fields(self):
+        category = Category.objects.get(name='Señaléticas')
         for name in ['', '   ']:
             with self.subTest(name=name):
                 response = self.client.post(reverse('catalog:create'), {
-                    'name': name, 'item_type': Item.Type.SIGNAGE, 'description': 'Conservar texto',
+                    'name': name, 'categories': [category.pk], 'description': 'Conservar texto',
                 })
                 self.assertFormError(response.context['form'], 'name', 'Escribe el nombre del elemento.')
                 self.assertContains(response, 'Conservar texto')
-                self.assertContains(response, 'value="signage" selected')
+                self.assertContains(response, f'value="{category.pk}" selected')
                 self.assertContains(response, 'aria-invalid="true"')
         self.assertFalse(Item.objects.exists())
 
-    def test_type_is_required_and_has_no_default(self):
-        response = self.client.post(reverse('catalog:create'), {'name': 'Elemento sin tipo'})
-        self.assertFormError(response.context['form'], 'item_type', 'Selecciona el tipo de elemento.')
-        self.assertContains(response, 'Elemento sin tipo')
+    def test_multiple_categories_and_inventory_filter(self):
+        category_name = 'Herramientas'
+        self.assertEqual(self.client.post(reverse('catalog:category-create'), {'name': category_name}).status_code, 302)
+        category = Category.objects.get(name=category_name)
+        epp = Category.objects.get(name='EPP')
+        self.client.post(reverse('catalog:create'), {'name': 'Linterna', 'categories': [epp.pk, category.pk]})
+        Item.objects.create(name='Otro elemento')
+        item = Item.objects.get(name='Linterna')
+        self.assertEqual(set(item.categories.all()), {epp, category})
+        response = self.client.get(reverse('stock:data'), {'category': category.pk}).json()
+        self.assertEqual([row['name'] for row in response['data']], ['Linterna'])
+        self.assertContains(self.client.get(item.get_absolute_url()), category_name)
+        response = self.client.post(reverse('catalog:update', args=[item.pk]), {'name': item.name, 'categories': [category.pk]})
+        self.assertRedirects(response, item.get_absolute_url())
+        self.assertEqual(list(item.categories.all()), [category])
+
+    def test_at_least_one_category_is_required(self):
+        response = self.client.post(reverse('catalog:create'), {'name': 'Elemento'})
+        self.assertFormError(response.context['form'], 'categories', 'Selecciona al menos una categoría.')
         self.assertFalse(Item.objects.exists())
 
-    def test_unknown_type_is_rejected(self):
-        response = self.client.post(reverse('catalog:create'), {'name': 'Elemento', 'item_type': 'otro'})
-        self.assertFormError(response.context['form'], 'item_type', 'Selecciona EPP o Señalética.')
-        self.assertFalse(Item.objects.exists())
-
-    def test_database_also_rejects_unknown_type(self):
-        with self.assertRaises(IntegrityError), transaction.atomic():
-            Item.objects.create(name='Tipo inválido', item_type='otro')
+    def test_unknown_category_is_rejected(self):
+        response = self.client.post(reverse('catalog:create'), {'name': 'Elemento', 'categories': [99999]})
+        self.assertIn('categories', response.context['form'].errors)
         self.assertFalse(Item.objects.exists())
 
     def test_catalog_is_shared_when_navigating_between_projects(self):
-        item = Item.objects.create(name='Casco común', item_type=Item.Type.EPP)
+        item = Item.objects.create(name='Casco común')
         for name in ['Proyecto norte', 'Proyecto sur']:
             project = Project.objects.create(name=name)
             self.assertEqual(self.client.get(project.get_absolute_url()).status_code, 200)
@@ -82,7 +95,7 @@ class CatalogFlowTests(TestCase):
         self.assertEqual(self.client.get(reverse('catalog:detail', args=[999])).status_code, 404)
 
     def test_user_text_is_escaped(self):
-        item = Item.objects.create(name='<script>alert(1)</script>', item_type=Item.Type.EPP,
+        item = Item.objects.create(name='<script>alert(1)</script>',
                                    description='<img src=x onerror=alert(1)>')
         for url in [item.get_absolute_url()]:
             response = self.client.get(url, follow=True)
@@ -92,7 +105,7 @@ class CatalogFlowTests(TestCase):
 
     def test_create_requires_csrf(self):
         response = Client(enforce_csrf_checks=True).post(reverse('catalog:create'), {
-            'name': 'Sin token', 'item_type': Item.Type.EPP,
+            'name': 'Sin token',
         })
         self.assertEqual(response.status_code, 403)
         self.assertFalse(Item.objects.exists())
@@ -108,8 +121,13 @@ class CatalogFlowTests(TestCase):
 class CatalogTableTests(TestCase):
     @classmethod
     def setUpTestData(cls):
-        Item.objects.bulk_create([Item(name=f'Casco {i:02d}', item_type=Item.Type.EPP) for i in range(12)])
-        Item.objects.create(name='Salida', item_type=Item.Type.SIGNAGE, description='Evacuación')
+        Item.objects.bulk_create([Item(name=f'Casco {i:02d}') for i in range(12)])
+        epp = Category.objects.get(name='EPP')
+        for item in Item.objects.all():
+            item.categories.add(epp)
+        Item.objects.create(name='Salida', description='Evacuación').categories.add(
+            Category.objects.get(name='Señaléticas'),
+        )
 
     def data(self, **parameters):
         response = self.client.get(reverse('catalog:data'), parameters)
@@ -166,7 +184,7 @@ class CatalogTableTests(TestCase):
     def test_empty_one_row_and_read_only_endpoint(self):
         Item.objects.all().delete()
         self.assertEqual(self.data()['data'], [])
-        Item.objects.create(name='Único elemento', item_type=Item.Type.EPP)
+        Item.objects.create(name='Único elemento')
         result = self.data()
         self.assertEqual(result['recordsTotal'], 1)
         self.assertEqual(result['recordsFiltered'], 1)
@@ -178,12 +196,13 @@ class CatalogTableTests(TestCase):
 class InventoryElementCreationTests(TestCase):
     def test_initial_quantity_is_optional_or_recorded_once_with_its_date(self):
         from inventory.models import StockPosition, StockRecord
-        response = self.client.post(reverse('stock:create'), {'name': 'Sin existencias', 'item_type': 'epp'})
+        category = Category.objects.get(name='EPP')
+        response = self.client.post(reverse('stock:create'), {'name': 'Sin existencias', 'categories': category.pk})
         self.assertEqual(response.status_code, 302)
         self.assertEqual(StockPosition.common_balance(Item.objects.get().pk), 0)
         self.assertFalse(StockRecord.objects.exists())
         response = self.client.post(reverse('stock:create'), {
-            'name': 'Con existencias', 'item_type': 'epp', 'initial_quantity': 4, 'initial_date': '2026-11-12',
+            'name': 'Con existencias', 'categories': category.pk, 'initial_quantity': 4, 'initial_date': '2026-11-12',
         })
         item = Item.objects.get(name='Con existencias')
         self.assertRedirects(response, item.get_absolute_url())
@@ -194,6 +213,24 @@ class InventoryElementCreationTests(TestCase):
         self.assertEqual(StockPosition.common_balance(item.pk), 4)
 
     def test_invalid_initial_quantity_does_not_save_the_element(self):
-        response = self.client.post(reverse('stock:create'), {'name': 'Inválido', 'item_type': 'epp', 'initial_quantity': -1})
+        response = self.client.post(reverse('stock:create'), {'name': 'Inválido', 'initial_quantity': -1})
         self.assertIn('initial_quantity', response.context['form'].errors)
         self.assertFalse(Item.objects.exists())
+
+
+class CategoryMigrationTests(TransactionTestCase):
+    def test_legacy_types_and_fields_are_preserved(self):
+        current = MigrationExecutor(connection).loader.graph.leaf_nodes()
+        old = [('catalog', '0001_initial')]
+        MigrationExecutor(connection).migrate(old)
+        try:
+            old_item = MigrationExecutor(connection).loader.project_state(old).apps.get_model('catalog', 'Item')
+            helmet = old_item.objects.create(name='Casco', item_type='epp', description='Con visera')
+            sign = old_item.objects.create(name='Salida', item_type='signage')
+            MigrationExecutor(connection).migrate(current)
+            self.assertEqual(list(Item.objects.get(pk=helmet.pk).categories.values_list('name', flat=True)), ['EPP'])
+            self.assertEqual(list(Item.objects.get(pk=sign.pk).categories.values_list('name', flat=True)), ['Señaléticas'])
+            self.assertEqual(Item.objects.get(pk=helmet.pk).description, 'Con visera')
+            self.assertTrue(Category.objects.filter(name='Otros').exists())
+        finally:
+            MigrationExecutor(connection).migrate(current)

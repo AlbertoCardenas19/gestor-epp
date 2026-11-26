@@ -14,10 +14,7 @@ from .services import _create_record, _repeated_submission
 
 def common_item_basics():
     """Return searchable/sortable catalog fields without calculating stock totals."""
-    return Item.objects.annotate(
-        type_label=Case(When(item_type=Item.Type.EPP, then=Value('EPP')),
-                        default=Value('Señalética'), output_field=CharField()),
-    ).order_by('name', 'pk')
+    return Item.objects.with_category_label().order_by('name', 'pk')
 
 
 def common_items():

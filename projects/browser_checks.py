@@ -7,7 +7,7 @@ import os
 import re
 import uuid
 from concurrent.futures import ThreadPoolExecutor
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from django.db import connections
@@ -16,7 +16,7 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.urls import reverse
 from playwright.sync_api import expect, sync_playwright
 
-from catalog.models import Item
+from catalog.models import Category, Item
 from inventory.common import receive_common_stock
 from inventory.models import StockRecord, StockPosition, StockRequest
 from inventory.services import cancel_delivery, correct_record, deliver_stock, open_stock
@@ -107,10 +107,10 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
     def test_catalog_empty_one_many_search_sort_and_reload_actions(self):
         self.visit_table(reverse('catalog:list'))
         expect(self.page.locator('.dt-empty')).to_have_text('No hay registros disponibles.')
-        item = self.db(lambda: Item.objects.create(name='Único casco', item_type=Item.Type.EPP))
+        item = self.db(lambda: Item.objects.create(name='Único casco'))
         self.visit_table(reverse('catalog:list'))
         expect(self.rows()).to_have_count(1)
-        self.db(lambda: Item.objects.bulk_create([Item(name=f'Elemento {i:02d}', item_type=Item.Type.EPP) for i in range(40)]))
+        self.db(lambda: Item.objects.bulk_create([Item(name=f'Elemento {i:02d}') for i in range(40)]))
         self.visit_table(reverse('catalog:list'))
         expect(self.rows()).to_have_count(10)
         self.assertNotIn('Elemento 39', self.rows().all_text_contents())
@@ -185,7 +185,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
     def seed_deliveries():
         project = Project.objects.create(name='Obra Norte')
         other = Project.objects.create(name='Obra Sur')
-        item = Item.objects.create(name='Casco', item_type=Item.Type.EPP)
+        item = Item.objects.create(name='Casco')
         opening = open_stock(project, item, data(1000))
         records = [deliver_stock(project, item, data(quantity, worker_full_name=f'Persona {i:02d}',
                    occurred_on=date(2025, 12, 31) + timedelta(days=i * 10)))
@@ -202,8 +202,10 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
     def seed_common_stock():
         north = Project.objects.create(name='Norte')
         south = Project.objects.create(name='Sur')
-        helmet = Item.objects.create(name='Casco', item_type=Item.Type.EPP)
-        Item.objects.create(name='Guantes', item_type=Item.Type.EPP)
+        helmet = Item.objects.create(name='Casco')
+        gloves = Item.objects.create(name='Guantes')
+        epp, _ = Category.objects.get_or_create(name='EPP')
+        gloves.categories.add(epp)
         open_stock(north, helmet, data(10))
         open_stock(south, helmet, data(7))
         delivery = deliver_stock(north, helmet, data(3, worker_full_name='Ana Pérez'))
@@ -267,7 +269,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
     @staticmethod
     def seed_request_flow():
         north = Project.objects.create(name='Norte')
-        item = Item.objects.create(name='Casco', item_type=Item.Type.EPP)
+        item = Item.objects.create(name='Casco')
         receive_common_stock(item, data(2))
         return north, item
 
@@ -356,7 +358,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
 
     def test_mobile_menu_clipping_sidebar_and_project_cards(self):
         projects = self.db(lambda: [Project.objects.create(name=f'Obra {i:02d}') for i in range(14)])
-        self.db(lambda: Item.objects.bulk_create([Item(name=f'Elemento {i:02d}', item_type=Item.Type.EPP) for i in range(14)]))
+        self.db(lambda: Item.objects.bulk_create([Item(name=f'Elemento {i:02d}') for i in range(14)]))
         for width in [320, 390, 1440]:
             self.page.set_viewport_size({'width': width, 'height': 900})
             self.visit_table(reverse('catalog:list'))
@@ -420,8 +422,8 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
     def test_picker_persistence_actual_delivery_and_element_detail(self):
         def seed():
             north = Project.objects.create(name='Norte')
-            Item.objects.bulk_create([Item(name=f'Elemento {i:02d}', item_type='epp') for i in range(14)])
-            item = Item.objects.create(name='Zeta Casco', item_type='epp', description='Detalle del casco')
+            Item.objects.bulk_create([Item(name=f'Elemento {i:02d}') for i in range(14)])
+            item = Item.objects.create(name='Zeta Casco', description='Detalle del casco')
             receive_common_stock(item, data(20))
             return north, item
         north, item = self.db(seed)
@@ -442,8 +444,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         search.fill('Zeta')
         expect(choice).to_have_attribute('aria-pressed', 'true')
         self.page.set_viewport_size({'width': 390, 'height': 844})
-        if self.page.locator('.sidebar-toggle').get_attribute('aria-expanded') == 'true':
-            self.page.locator('.sidebar-toggle').click()
+        expect(self.page.locator('#sidebar')).to_have_class(re.compile('sidebar-narrow'))
         self.capture('picker-selected-mobile')
         self.page.get_by_label('Cantidad solicitada', exact=False).fill('5')
         self.page.get_by_role('button', name='Guardar solicitud', exact=True).click()
@@ -495,17 +496,21 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
             self.capture(f'element-detail-{width}')
 
     def test_shared_loading_initial_update_empty_and_error_states(self):
-        self.db(lambda: Item.objects.create(name='Casco', item_type='epp'))
+        self.db(lambda: Item.objects.create(name='Casco'))
         pending = []
         self.page.route('**/inventario/datos/**', lambda route: pending.append(route))
+        now = datetime.now(timezone.utc)
+        self.page.clock.install(time=now)
+        self.page.clock.pause_at(now + timedelta(minutes=1))
         self.page.goto(self.live_server_url + reverse('stock:list'))
         expect(self.page.locator('.list-skeleton')).to_be_hidden()
         expect(self.page.locator('.datatable-shell')).to_be_visible()
         self.assertNotIn('Loading', self.page.locator('body').inner_text())
         self.assertEqual(len(pending), 1)
-        self.page.wait_for_timeout(100)
+        self.page.clock.run_for(100)
         expect(self.page.locator('.list-skeleton')).to_be_hidden()
         pending.pop().continue_()
+        self.page.clock.resume()
         expect(self.rows()).to_have_count(1)
         expect(self.page.locator('.list-skeleton')).to_be_hidden()
         # A perceptibly slow initial response does reveal the delayed skeleton.
@@ -549,8 +554,6 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         pending = []
         self.page.route('**/inventario/datos/**', lambda route: pending.append(route))
         self.page.reload()
-        expect(self.page.locator('.list-skeleton')).to_be_hidden()
-        self.page.wait_for_timeout(200)
         expect(self.page.locator('.list-skeleton')).to_be_visible()
         pending.pop().fulfill(status=503, body='Fallo inicial simulado')
         expect(self.page.locator('.list-feedback')).to_contain_text('No se pudo cargar la tabla')
@@ -566,7 +569,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
     def test_cards_and_picker_update_failures_keep_content_and_selection(self):
         def seed():
             project = Project.objects.create(name='Proyecto prueba')
-            item = Item.objects.create(name='Casco', item_type='epp')
+            item = Item.objects.create(name='Casco')
             return project, item
         project, item = self.db(seed)
         self.page.goto(self.live_server_url + reverse('projects:list'))
@@ -607,3 +610,78 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         expect(self.page.locator('.list-feedback')).to_have_text('')
         expect(self.page.locator('[data-item-choice]')).to_have_attribute('aria-pressed', 'true')
         self.errors = [error for error in self.errors if 'status of 503' not in error]
+
+    def test_purchases_invoice_editor_receipt_and_history_on_desktop_and_mobile(self):
+        from purchases.models import Invoice, Supplier
+
+        def seed():
+            Supplier.objects.bulk_create([Supplier(name=f'Proveedor {index}', rut=f'{index}-0') for index in range(8)])
+            Supplier.objects.create(name='Zeta Seguridad', rut='9-9')
+            Item.objects.bulk_create([Item(name=f'Elemento {index}') for index in range(8)])
+            Item.objects.create(name='Zeta Casco')
+            other, _ = Category.objects.get_or_create(name='Otros')
+            return Project.objects.create(name='Norte'), Project.objects.create(name='Sur'), other
+
+        north, south, other = self.db(seed)
+        self.visit_table(reverse('purchases:list'))
+        expect(self.rows().first).to_contain_text('No hay')
+        self.page.get_by_role('link', name='Registrar factura').click()
+        self.page.get_by_label('Buscar proveedor').fill('Zeta')
+        self.page.get_by_role('button', name='Zeta Seguridad').click()
+        self.page.locator('#id_number').fill('Z-100')
+        self.page.locator('#id_issued_on').fill('2026-11-20')
+        self.page.locator('#id_due_on').fill('2026-11-26')
+        self.page.locator('#id_total').fill('12000')
+        self.page.locator('#id_lines-0-item_query').fill('Zeta')
+        self.page.get_by_role('button', name='Zeta Casco').click()
+        self.page.locator('#id_lines-0-item_query').fill('Elemento')
+        expect(self.page.get_by_role('button', name='Elemento 0')).to_be_visible()
+        expect(self.page.get_by_text('Seleccionado: Zeta Casco')).to_be_visible()
+        self.page.locator('#id_lines-0-quantity').fill('20')
+        self.page.locator('#id_lines-0-unit_price').fill('500')
+        first_line = self.page.locator('[data-form-row]').first
+        first_line.get_by_text('Distribuir cantidades por proyecto').click()
+        first_line.get_by_role('button', name='Agregar proyecto').click()
+        self.page.locator('#id_lines-0-allocations-0-project').select_option(str(north.pk))
+        self.page.locator('#id_lines-0-allocations-0-quantity').fill('12')
+        first_line.get_by_role('button', name='Agregar proyecto').click()
+        self.page.locator('#id_lines-0-allocations-1-project').select_option(str(south.pk))
+        self.page.locator('#id_lines-0-allocations-1-quantity').fill('5')
+        self.page.get_by_role('button', name='Agregar línea').click()
+        self.page.locator('#id_lines-1-item_query').fill('Sin coincidencia')
+        expect(self.page.get_by_text('No hay resultados para esta búsqueda.')).to_be_visible()
+        self.page.get_by_text('Crear un elemento nuevo').last.click()
+        self.page.locator('#id_lines-1-new-name').fill('Linterna de inspección')
+        self.page.locator('#id_lines-1-new-categories').select_option(str(other.pk))
+        self.page.locator('#id_lines-1-quantity').fill('2')
+        self.page.locator('#id_lines-1-unit_price').fill('1000')
+        for width in (320, 390, 1440):
+            self.page.set_viewport_size({'width': width, 'height': 1000})
+            self.page.wait_for_timeout(300)
+            self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+        self.page.set_viewport_size({'width': 390, 'height': 900})
+        expect(self.page.locator('#sidebar')).to_have_class(re.compile('sidebar-narrow'))
+        self.page.get_by_role('button', name='Guardar factura').click()
+        expect(self.page.get_by_role('heading', name='Factura Z-100')).to_be_visible()
+        expect(self.page.get_by_text('Sin asignar · 3')).to_be_visible()
+        expect(self.page.get_by_text('Linterna de inspección')).to_be_visible()
+        expect(self.page.get_by_text('No hay entradas asociadas.')).to_be_visible()
+        invoice = self.db(lambda: Invoice.objects.get(number='Z-100'))
+        self.page.get_by_role('link', name='Confirmar recepción completa').click()
+        self.page.get_by_role('button', name='Confirmar recepción completa').click()
+        expect(self.page.get_by_role('link', name=re.compile('Zeta Casco · 20'))).to_be_visible()
+        expect(self.page.get_by_text('Pendiente', exact=True)).to_be_visible()
+        self.page.get_by_role('link', name='Marcar como pagada').click()
+        self.page.get_by_label('Fecha de pago').fill('2026-11-26')
+        self.page.get_by_role('button', name='Marcar factura como pagada').click()
+        expect(self.page.get_by_text('Pagada · 26/11/2026', exact=True)).to_be_visible()
+        self.assertEqual(self.db(lambda: StockRecord.objects.filter(invoice=invoice).count()), 2)
+        self.page.get_by_role('link', name='Corregir').click()
+        self.page.locator('#id_lines-0-unit_price').fill('550')
+        self.page.get_by_label('Motivo de la corrección').fill('Ajustar el precio transcrito')
+        self.page.get_by_role('button', name='Guardar factura').click()
+        correction = self.page.get_by_text(re.compile('^Corrección ·'))
+        correction.click()
+        expect(correction.locator('..').get_by_text(re.compile('500 CLP por unidad sin IVA'))).to_be_visible()
+        self.assertEqual(self.db(lambda: StockRecord.objects.filter(invoice=invoice).count()), 2)
+        self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'))

@@ -1,34 +1,39 @@
 from django import forms
 from django.utils import timezone
 
-from .models import Item
+from .models import Category, Item
 
 
-class ItemForm(forms.ModelForm):
-    initial_quantity = forms.IntegerField(label='Existencias iniciales', min_value=0, max_value=9223372036854775807,
-        required=False, initial=0, widget=forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'step': 1}))
-    initial_date = forms.DateField(label='Fecha de las existencias iniciales', required=False, initial=timezone.localdate,
-        widget=forms.DateInput(format='%Y-%m-%d', attrs={'class': 'form-control', 'type': 'date'}))
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = ['name']
+        widgets = {'name': forms.TextInput(attrs={'class': 'form-control'})}
 
+
+class ItemCatalogForm(forms.ModelForm):
     class Meta:
         model = Item
-        fields = ['name', 'item_type', 'description']
+        fields = ['name', 'categories', 'description']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'autofocus': True}),
-            'item_type': forms.Select(attrs={'class': 'form-select'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'categories': forms.SelectMultiple(attrs={'class': 'form-select', 'size': 4}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
         error_messages = {
             'name': {'required': 'Escribe el nombre del elemento.'},
-            'item_type': {
-                'required': 'Selecciona el tipo de elemento.',
-                'invalid_choice': 'Selecciona EPP o Señalética.',
-            },
+            'categories': {'required': 'Selecciona al menos una categoría.'},
         }
+
+
+class ItemForm(ItemCatalogForm):
+    initial_quantity = forms.IntegerField(label='Stock inicial', min_value=0, max_value=9223372036854775807,
+        required=False, initial=0, widget=forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'step': 1}))
+    initial_date = forms.DateField(label='Fecha del stock inicial', required=False, initial=timezone.localdate,
+        widget=forms.DateInput(format='%Y-%m-%d', attrs={'class': 'form-control', 'type': 'date'}))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['item_type'].choices = [('', 'Selecciona un tipo'), *Item.Type.choices]
         for name, field in self.fields.items():
             if self.is_bound and name in self.errors:
                 field.widget.attrs.update({

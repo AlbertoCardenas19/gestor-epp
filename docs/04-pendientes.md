@@ -9,10 +9,10 @@ Esta lista explicita huecos de la evidencia recuperada para evitar que Codex los
 | P-01 | Primera entrega | Se acordó iniciar con crear, listar y consultar proyectos (S7). El alcance completo del MVP y el orden de los siguientes flujos siguen pendientes. |
 | P-02 | Proyectos | Primera etapa: nombre obligatorio y descripción opcional, aceptados por el usuario en S7. Otros datos y el ciclo de vida siguen pendientes. |
 | P-03 | Personas y acceso | S10 confirma nombre completo del trabajador en cada entrega directa. Identificación adicional, intermediarios, cuentas y permisos siguen pendientes. |
-| P-04 | Catálogo | S8 confirma catálogo común, nombre y tipo obligatorios y descripción opcional para la primera versión. Otros atributos y la forma de incorporar más tipos siguen pendientes. |
+| P-04 | Catálogo | La iteración de compras incorpora categorías múltiples y creación de categorías. Sigue pendiente qué destinatarios alternativos podrán recibir elementos y qué datos requieren. |
 | P-05 | Inventario | S9 confirma apertura inicial por proyecto y elemento, entradas posteriores, cantidades enteras y registro por la prevencionista para esta versión. Correcciones de aperturas y entradas mediante anulación con motivo y reemplazo vinculado. S10 añade descuento por entrega directa y bloqueo por saldo insuficiente. Otras salidas y movimientos siguen pendientes. Los acuerdos actuales pueden revisarse en el futuro. |
 | P-06 | Cotización y aprobación | Datos y estados; cómo registrar la aprobación del jefe y si participa directamente en la app. |
-| P-07 | Compra | Información que se registra y relación entre compra, proyecto e inventario. |
+| P-07 | Compra | Cálculo de IVA y total: tasas, redondeo, descuentos, flete, otros cargos y compras exentas u otros tratamientos. También queda pendiente la obligatoriedad de los datos de contacto del proveedor. |
 | P-08 | Entregas | S10 confirma entrega directa; S12, corrección de seis campos con original conservado y reemplazo; S13, anulación de una entrega vigente o reemplazo vigente, con motivo y restitución única. Estas dos iteraciones están implementadas. Intermediarios y devoluciones físicas siguen fuera de su alcance. |
 | P-09 | Devolución y reposición | Motivos, condiciones y efectos sobre stock y entregas. |
 | P-10 | Adjuntos | Registro asociado, formatos, límites y acceso. |
@@ -32,8 +32,7 @@ las entregas a lo comprometido pendiente.
 [Guía actual](11-inventario-y-solicitudes.md). Los enunciados S9 de la tabla describen
 la primera versión histórica, no la necesidad de abrir stock por proyecto hoy.
 
-S22 no define datos de compra/proveedor/aprobación, prioridad automática entre
-proyectos ni devoluciones/reposiciones. No se borran los datos de prueba del PC.
+El registro de compras, proveedores y recepción se describe en la [guía de desarrollo](06-desarrollo.md#categorías-proveedores-y-facturas-de-compra--26-de-noviembre-de-2026). La aprobación, la prioridad automática entre proyectos y las devoluciones/reposiciones siguen pendientes.
 
 ## Recomendaciones anteriores que no son decisiones cerradas
 Se recuperó una recomendación del asistente de usar Django, PostgreSQL y Render. No se recuperó aceptación explícita del usuario de esa combinación. [S6]

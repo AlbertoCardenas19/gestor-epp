@@ -24,7 +24,7 @@ class DirectDeliveryTests(TestCase):
     def setUp(self):
         self.project = Project.objects.create(name='Obra Norte')
         self.other = Project.objects.create(name='Obra Sur')
-        self.item = Item.objects.create(name='Casco', item_type=Item.Type.EPP)
+        self.item = Item.objects.create(name='Casco')
         self.opening = open_stock(self.project, self.item, data(10))
 
     def url(self, name, *extra, project=None):
@@ -178,7 +178,7 @@ class DirectDeliveryTests(TestCase):
 class DeliveryConcurrencyTests(TransactionTestCase):
     def setUp(self):
         self.project = Project.objects.create(name='Proyecto concurrente')
-        self.item = Item.objects.create(name='Casco', item_type=Item.Type.EPP)
+        self.item = Item.objects.create(name='Casco')
         self.opening = open_stock(self.project, self.item, data(10))
 
     def concurrent(self, actions):

@@ -1,0 +1,15 @@
+<h3 class="h6 mt-3">Datos anteriores</h3>
+<dl class="row">
+  <dt class="col-sm-5">Proveedor</dt><dd class="col-sm-7">{{ prior.supplier }} · {{ prior.supplier_rut }}</dd>
+  <dt class="col-sm-5">Número de factura</dt><dd class="col-sm-7">{{ prior.number }}</dd>
+  <dt class="col-sm-5">Emisión</dt><dd class="col-sm-7">{{ prior.issued_on }}</dd>
+  <dt class="col-sm-5">Vencimiento</dt><dd class="col-sm-7">{{ prior.due_on }}</dd>
+  <dt class="col-sm-5">Total con IVA (CLP)</dt><dd class="col-sm-7">{{ prior.total }}</dd>
+  <dt class="col-sm-5">Pago</dt><dd class="col-sm-7">{% if prior.paid_on %}Pagada · {{ prior.paid_on }}{% else %}Pendiente{% endif %}</dd>
+  <dt class="col-sm-5">Orden de compra</dt><dd class="col-sm-7">{{ prior.purchase_order|default:"Sin orden de compra" }}</dd>
+</dl>
+<ul class="mb-0">
+  {% for line in prior.lines %}<li>{{ line.item }} · {{ line.quantity }} unidades · {{ line.unit_price }} CLP por unidad sin IVA
+    {% if line.allocations %}<ul>{% for allocation in line.allocations %}<li>{{ allocation.project }} · {{ allocation.quantity }}</li>{% endfor %}</ul>{% endif %}
+  </li>{% endfor %}
+</ul>

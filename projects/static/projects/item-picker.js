@@ -1,12 +1,17 @@
 /* App-specific card selection; shared loading, server search, no duplicate catalogue. */
 (() => {
-  document.querySelectorAll('[data-item-picker]').forEach(picker => {
-    const input = picker.querySelector('[name="item"]');
+  function init(root = document) {
+    root.querySelectorAll('[data-item-picker]:not([data-picker-ready])').forEach(bind);
+  }
+  function bind(picker) {
+    picker.dataset.pickerReady = '';
+    const input = picker.querySelector('[data-picker-value], [name="item"]');
     const query = picker.querySelector('[data-picker-search]');
     const results = picker.querySelector('[data-picker-results]');
     const selected = picker.querySelector('[data-picker-selected]');
     const clear = picker.querySelector('[data-picker-clear]');
     const loading = EppLoading.create(picker, {content: results});
+    let loaded = Boolean(results.querySelector('[data-picker-grid]'));
     let controller, revision = 0, timer;
     function syncSelection() {
       results.querySelectorAll('[data-item-choice]').forEach(button => {
@@ -17,7 +22,7 @@
     async function load(page = 1) {
       clearTimeout(timer); controller?.abort(); controller = new AbortController();
       const current = ++revision;
-      loading.begin();
+      loading.begin(!loaded);
       const url = new URL(picker.dataset.source, location.origin);
       url.search = new URLSearchParams({q: query.value, page}).toString();
       try {
@@ -27,12 +32,19 @@
         if (current !== revision) return;
         const parsed = new DOMParser().parseFromString(html, 'text/html');
         if (!parsed.querySelector('[data-picker-grid]')) throw new Error('response');
-        results.replaceChildren(...parsed.body.childNodes); syncSelection(); loading.finish();
+        results.replaceChildren(...parsed.body.childNodes);
+        loaded = true; syncSelection(); loading.finish();
       } catch (error) {
         if (current !== revision || error.name === 'AbortError') return;
-        loading.finish('No se pudieron actualizar los elementos. Se conservan los resultados. Vuelve a buscar para reintentar.');
+        loading.finish('No se pudieron actualizar los resultados. Vuelve a buscar para reintentar.');
       }
     }
+    if (picker.hasAttribute('data-picker-lazy')) {
+      query.addEventListener('focus', () => load(), {once: true});
+    }
+    picker.querySelector('[data-picker-reset]')?.addEventListener('click', () => {
+      input.value = ''; selected.textContent = 'Sin selección'; syncSelection();
+    });
     query.addEventListener('input', event => {
       clear.hidden = !query.value; clearTimeout(timer); controller?.abort(); ++revision;
       loading.cancel();
@@ -51,5 +63,7 @@
       if (page) load(page.dataset.pickerPage);
     });
     syncSelection();
-  });
+  }
+  window.EppPicker = {init};
+  init();
 })();

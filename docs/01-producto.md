@@ -50,4 +50,4 @@ reúne catálogo y stock común; los proyectos solicitan, reservan lo disponible
 registran necesidad de compra por lo faltante. La entrega real al trabajador se
 confirma después sin descuento doble. Reducir pendiente conserva reservas y reduce
 primero necesidad de compra. Ver [guía 11](11-inventario-y-solicitudes.md).
-No se implementan compras, aprobación ni responsabilidad financiera adicional.
+Compras incorpora el registro de facturas recibidas y su recepción en el inventario general. La aprobación y la responsabilidad financiera siguen pendientes. [Flujo vigente](06-desarrollo.md#categorías-proveedores-y-facturas-de-compra--26-de-noviembre-de-2026).

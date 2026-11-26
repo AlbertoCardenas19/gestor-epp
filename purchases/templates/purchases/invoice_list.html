@@ -1,0 +1,31 @@
+{% extends 'projects/base.html' %}
+{% block title %}Facturas de compra{% endblock %}
+{% block extra_styles %}{% include 'projects/datatables_styles.html' %}{% endblock %}
+{% block extra_scripts %}{% include 'projects/datatables_scripts.html' %}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between gap-3 mb-4">
+  <h1>Facturas de compra</h1>
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-outline-primary" href="{% url 'purchases:suppliers' %}">Proveedores</a>
+    <a class="btn btn-primary" href="{% url 'purchases:create' %}">Registrar factura</a>
+  </div>
+</div>
+<section data-datatable-panel>
+  <p data-datatable-error role="alert" class="text-danger" hidden></p>
+  <div class="card datatable-shell"><div class="card-body">
+    <table class="table table-striped mb-0 align-middle w-100" data-datatable data-source="{% url 'purchases:data' %}" data-order='[[2,"desc"]]'>
+      <caption class="visually-hidden">Facturas recibidas de proveedores</caption>
+      <thead><tr>
+        <th scope="col" data-column="number" data-link="url">Factura</th>
+        <th scope="col" data-column="supplier">Proveedor</th>
+        <th scope="col" data-column="issued" data-format="date">Emisión</th>
+        <th scope="col" data-column="due" data-format="date">Vencimiento</th>
+        <th scope="col" data-column="total">Total con IVA (CLP)</th>
+        <th scope="col" data-column="payment">Pago</th>
+        <th scope="col" data-column="receipt">Recepción</th>
+        <th scope="col" data-column="actions" data-actions>Acciones</th>
+      </tr></thead><tbody></tbody>
+    </table>
+  </div></div>
+</section>
+{% endblock %}

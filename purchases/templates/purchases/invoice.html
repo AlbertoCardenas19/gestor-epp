@@ -1,0 +1,57 @@
+{% extends 'projects/base.html' %}
+{% block title %}Factura {{ invoice.number }}{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'purchases:list' %}">← Volver a facturas</a>
+<h1 class="my-4 text-break">Factura {{ invoice.number }}</h1>
+<div class="card card-body mb-4">
+  <dl class="row mb-2">
+    <dt class="col-sm-5">Proveedor</dt><dd class="col-sm-7"><a href="{{ invoice.supplier.get_absolute_url }}">{{ invoice.supplier }}</a></dd>
+    <dt class="col-sm-5">Fecha de emisión</dt><dd class="col-sm-7">{{ invoice.issued_on|date:'d/m/Y' }}</dd>
+    <dt class="col-sm-5">Fecha de vencimiento</dt><dd class="col-sm-7">{{ invoice.due_on|date:'d/m/Y' }}</dd>
+    <dt class="col-sm-5">Total con IVA (CLP)</dt><dd class="col-sm-7">{{ invoice.total }}</dd>
+    <dt class="col-sm-5">Estado de pago</dt><dd class="col-sm-7">{{ invoice.get_payment_status_display }}{% if invoice.paid_on %} · {{ invoice.paid_on|date:'d/m/Y' }}{% endif %}</dd>
+    <dt class="col-sm-5">Orden de compra</dt><dd class="col-sm-7">{{ invoice.purchase_order|default:"Sin orden de compra" }}</dd>
+    <dt class="col-sm-5">Recepción</dt><dd class="col-sm-7">{% if invoice.received_at %}{{ invoice.received_at|date:'d/m/Y H:i T' }}{% else %}Por recibir{% endif %}</dd>
+    {% if invoice.cancelled_at %}<dt class="col-sm-5">Anulación</dt><dd class="col-sm-7">{{ invoice.cancelled_at|date:'d/m/Y H:i T' }}</dd>{% endif %}
+  </dl>
+  {% if not invoice.cancelled_at %}
+  <div class="d-flex flex-wrap gap-2">
+    {% if not invoice.received_at %}<a class="btn btn-primary" href="{% url 'purchases:receive' invoice.pk %}">Confirmar recepción completa</a>{% endif %}
+    {% if not invoice.paid_on %}<a class="btn btn-outline-primary" href="{% url 'purchases:pay' invoice.pk %}">Marcar como pagada</a>{% endif %}
+    <a class="btn btn-outline-primary" href="{% url 'purchases:correct' invoice.pk %}">Corregir</a>
+    <a class="btn btn-outline-danger" href="{% url 'purchases:cancel' invoice.pk %}">Anular</a>
+  </div>
+  {% endif %}
+</div>
+<section class="mb-4">
+  <h2 class="h4">Detalle de compra</h2>
+  <div class="table-responsive">
+    <table class="table table-striped align-middle">
+      <thead><tr><th scope="col">Elemento</th><th scope="col">Cantidad</th><th scope="col">Unitario sin IVA (CLP)</th><th scope="col">Distribución por proyecto</th></tr></thead>
+      <tbody>{% for line in invoice.lines.all %}<tr>
+        <td><a href="{{ line.item.get_absolute_url }}">{{ line.item }}</a></td>
+        <td>{{ line.quantity }}</td><td>{{ line.unit_price }}</td>
+        <td>{% for allocation in line.allocations.all %}<div>{{ allocation.project }} · {{ allocation.quantity }}</div>{% endfor %}
+          {% if line.unassigned %}<div>Sin asignar · {{ line.unassigned }}</div>{% endif %}</td>
+      </tr>{% endfor %}</tbody>
+    </table>
+  </div>
+</section>
+<section class="mb-4">
+  <h2 class="h4">Movimientos de inventario</h2>
+  <ul>{% for record in invoice.movements.all %}
+    <li><a href="{{ record.get_absolute_url }}">{{ record.position.item }} · {{ record.quantity }} · {{ record.occurred_on|date:'d/m/Y' }}</a>
+      {% if record.voided_at %} · {% if record.is_replaced %}Sustituido{% else %}Anulado{% endif %}{% endif %}</li>
+  {% empty %}<li>No hay entradas asociadas.</li>{% endfor %}</ul>
+</section>
+<section>
+  <h2 class="h4">Historial de cambios</h2>
+  {% for event in invoice.events.all %}
+    <details class="border rounded p-3 mb-2">
+      <summary>{{ event.get_action_display }} · {{ event.recorded_at|date:'d/m/Y H:i:s T' }}</summary>
+      {% if event.reason %}<p class="mt-2 text-break">{{ event.reason }}</p>{% endif %}
+      {% include 'purchases/prior_invoice.html' with prior=event.before %}
+    </details>
+  {% empty %}<p>No hay cambios registrados.</p>{% endfor %}
+</section>
+{% endblock %}

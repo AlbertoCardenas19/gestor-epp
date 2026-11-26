@@ -66,7 +66,7 @@
       const columns = [...element.tHead.rows[0].cells].map(header => {
         const actions = header.hasAttribute('data-actions');
         return {
-          data: header.dataset.column, orderable: !actions, searchable: !actions,
+          data: header.dataset.column, orderable: !actions && header.dataset.orderable !== 'false', searchable: !actions,
           className: actions ? 'table-actions' : '',
           width: actions ? '1%' : undefined,
           render: actions ? undefined : header.dataset.format === 'pending-delivery'

@@ -24,8 +24,8 @@ def data(quantity=5, **extra):
 
 class CommonStockTests(TestCase):
     def setUp(self):
-        self.item = Item.objects.create(name='Casco', item_type=Item.Type.EPP)
-        self.other = Item.objects.create(name='Guantes', item_type=Item.Type.EPP)
+        self.item = Item.objects.create(name='Casco')
+        self.other = Item.objects.create(name='Guantes')
         self.north = Project.objects.create(name='Norte')
         self.south = Project.objects.create(name='Sur')
 
@@ -128,7 +128,7 @@ class CommonStockTests(TestCase):
         self.assertContains(self.client.get(reverse('stock:record', args=[self.item.pk, record.pk])), record.get_absolute_url())
 
     def test_common_datatables_search_sort_full_query_and_actions(self):
-        Item.objects.bulk_create([Item(name=f'Elemento {i:02d}', item_type=Item.Type.EPP) for i in range(15)])
+        Item.objects.bulk_create([Item(name=f'Elemento {i:02d}') for i in range(15)])
         receive_common_stock(self.other, data(20))
         receive_common_stock(self.item, data(3))
         result = self.client.get(reverse('stock:data'), {'search[value]': 'Elemento 14'}).json()
@@ -143,7 +143,7 @@ class CommonStockTests(TestCase):
 
     def test_selector_paginates_before_calculating_page_totals(self):
         items = Item.objects.bulk_create([
-            Item(name=f'Elemento {index:02d}', item_type=Item.Type.EPP) for index in range(30)
+            Item(name=f'Elemento {index:02d}') for index in range(30)
         ])
         receive_common_stock(items[20], data(9))
         with self.assertNumQueries(3) as queries:
@@ -156,7 +156,7 @@ class CommonStockTests(TestCase):
 
 class CommonStockConcurrencyTests(TransactionTestCase):
     def setUp(self):
-        self.item = Item.objects.create(name='Casco', item_type=Item.Type.EPP)
+        self.item = Item.objects.create(name='Casco')
 
     def test_concurrent_receipts_create_one_position_and_keep_both_quantities(self):
         barrier = Barrier(2)
@@ -195,8 +195,9 @@ class CommonStockConcurrencyTests(TransactionTestCase):
 
 class CommonStockMigrationTests(TransactionTestCase):
     def test_schema_transition_preserves_previous_ledger_and_totals(self):
-        previous = [('inventory', '0002_remove_stockrecord_inventory_valid_operation_quantity_and_more')]
-        current = [('inventory', '0004_stockrequestevent_stockrequest_and_more')]
+        previous = [('inventory', '0002_remove_stockrecord_inventory_valid_operation_quantity_and_more'),
+                    ('catalog', '0002_item_categories')]
+        current = MigrationExecutor(connection).loader.graph.leaf_nodes()
         executor = MigrationExecutor(connection)
         executor.migrate(previous)
         try:
@@ -205,7 +206,7 @@ class CommonStockMigrationTests(TransactionTestCase):
             ItemModel = apps.get_model('catalog', 'Item')
             Position = apps.get_model('inventory', 'StockPosition')
             Record = apps.get_model('inventory', 'StockRecord')
-            item = ItemModel.objects.create(name='Casco anterior', item_type='epp')
+            item = ItemModel.objects.create(name='Casco anterior')
             for name, quantity in [('Norte', 10), ('Sur', 7)]:
                 project = ProjectModel.objects.create(name=name)
                 position = Position.objects.create(project=project, item=item)

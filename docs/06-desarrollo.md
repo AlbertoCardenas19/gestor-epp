@@ -588,3 +588,109 @@ emulado a 320/390/1440 píxeles; sin errores JS/consola inesperados. Firefox se 
 iniciar y no tiene ejecutable disponible. Sin migraciones ni dependencias nuevas.
 Detalles y recorrido Ubuntu en la [guía 11](11-inventario-y-solicitudes.md).
 No se hizo commit ni push de esta iteración.
+
+## Categorías, proveedores y facturas de compra — 26 de noviembre de 2026
+
+La ampliación cubre RF-04 y RF-05 y añade registro de compras por proveedor
+según el encargo de esta iteración. El catálogo exige al menos una categoría
+al registrar un elemento y permite asignarle varias, con EPP, Señaléticas y Otros como categorías iniciales. Se pueden
+crear categorías y editar las asignaciones. Inventario permite filtrar por
+categoría y el selector conserva la búsqueda de todo el catálogo.
+
+### Proveedores y precios
+
+Compras → Proveedores permite registrar, consultar y editar nombre o razón
+social, RUT, persona de contacto, teléfono y correo. Los datos de contacto
+pueden quedar vacíos mientras se define su obligatoriedad. La ficha permite
+registrar precios unitarios de referencia sin IVA en pesos chilenos enteros.
+Un nuevo precio del par elemento/proveedor queda vigente y los anteriores
+permanecen en el historial. Los precios unitarios de la factura se guardan
+por línea de compra y son independientes de ese historial.
+
+### Factura, recepción e inventario
+
+1. **Registrar factura.** Se guarda el proveedor, número, emisión, vencimiento,
+   total con IVA del documento, estado de pago y fecha si está pagada. El número
+   es único por proveedor. La orden de compra es opcional y se puede repetir.
+   Cada línea tiene un elemento existente o creado en el formulario, cantidad
+   y precio unitario sin IVA. Guardar la factura deja el stock igual.
+2. **Distribuir, si corresponde.** Una línea puede repartirse entre varios
+   proyectos y dejar unidades sin asignar. La suma debe caber en la línea.
+   La distribución identifica a qué proyectos corresponde la compra y carece
+   de efecto financiero o de inventario. Tampoco genera reservas, solicitudes
+   ni entregas.
+3. **Confirmar recepción completa.** Las cantidades por elemento se ingresan
+   juntas en el inventario general. Las entradas enlazan la factura y el
+   historial de la factura enlaza sus movimientos. Una recepción repetida o
+   simultánea registra las unidades una sola vez. Marcar como pagada solo
+   actualiza el pago.
+4. **Solicitar y entregar.** Desde el inventario del proyecto se solicita lo
+   que se necesite. Lo comprometido se descuenta del stock disponible en ese
+   momento y se muestra como solicitado. Solo la confirmación incrementa la
+   cantidad entregada y el stock disponible conserva el descuento original.
+   Se mantienen las necesidades de compra y los flujos históricos de entregas.
+   [Guía de solicitudes y entregas](11-inventario-y-solicitudes.md)
+
+### Corrección y anulación
+
+Ambas acciones requieren motivo, conservan una copia de la factura anterior
+con sus líneas y distribuciones, y se realizan desde la ficha de la factura.
+Antes de la recepción afectan solo a la factura. Después, un cambio de
+cantidades ajusta las entradas de los elementos afectados y conserva los
+movimientos anteriores. Una corrección que solo actualiza datos o precios no
+crea movimientos. Una anulación excluye una sola vez las entradas vigentes.
+Si el ajuste dejaría stock insuficiente para solicitudes ya comprometidas o
+entregas registradas, la transacción se revierte y el formulario explica el
+bloqueo. La anulación es una rectificación del registro en la aplicación.
+
+### Decisiones pendientes
+
+El cálculo automático de IVA y total está pendiente de definir la tasa y la
+base de cálculo, el redondeo, los descuentos, el flete y otros cargos, y cómo
+registrar compras exentas u otros tratamientos. Durante la espera se transcribe
+el total del documento. También siguen pendientes los datos de contacto
+obligatorios y los posibles destinatarios distintos del trabajador. El alcance
+actual registra facturas recibidas y su pago, con estados Pendiente y Pagada,
+sin adjuntos ni pagos parciales.
+
+### Actualizar y probar en Ubuntu
+
+Con los archivos de esta iteración en tu copia, tu entorno virtual y el
+`.env` habitual apuntando al PostgreSQL existente:
+
+```bash
+cd ~/Proyectos/gestor-epp
+.venv/bin/python manage.py migrate --plan
+.venv/bin/python manage.py migrate
+.venv/bin/python manage.py check
+.venv/bin/python manage.py test projects catalog inventory purchases
+.venv/bin/python manage.py runserver
+```
+
+Las migraciones `catalog/0002_item_categories`, `purchases/0001_initial` e
+`inventory/0005_stockrecord_invoice_and_more` conservan los elementos, cantidades
+y movimientos existentes. La primera migra EPP y señalética a sus categorías
+correspondientes. La última añade una referencia opcional que queda vacía en
+los movimientos anteriores. No hay dependencias nuevas.
+
+1. Edita un elemento y asígnale dos categorías. Comprueba ambas en su ficha y
+   filtra Inventario por cada categoría.
+2. Registra dos proveedores y un precio distinto para el mismo elemento en
+   cada ficha. Actualiza uno y revisa los estados vigente e histórico.
+3. Registra una factura con 20 unidades; reparte 12 en Norte y 5 en Sur.
+   Confirma que quedan 3 sin asignar y que guardar no cambia el stock. Puedes
+   usar otra línea para crear un elemento que aún no existe.
+4. Confirma la recepción, revisa la entrada asociada y cambia el estado de pago.
+   Si el elemento partió de cero, deberá mostrar 20 unidades disponibles.
+5. Solicita 5 y confirma su entrega. Comprueba Stock 15, Solicitado 5 y
+   Entregados 5. Intenta anular la factura y comprueba que se bloquea. En una
+   factura sin unidades comprometidas, prueba corrección y anulación con motivo.
+6. Repite la navegación desde una ventana móvil. Comprueba las búsquedas de
+   facturas, proveedores y elementos, y las acciones de cada ficha.
+
+La suite ejecutada pasó 185 pruebas Django con PostgreSQL y 9 pruebas Chromium
+con base temporal. Incluye migración con datos anteriores, recepción y anulación
+simultáneas, reversión ante fallos, bloqueo por stock comprometido, el recorrido
+de compra y la regresión de solicitudes y entregas. Se comprobó la interfaz a
+320, 390 y 1440 píxeles. Las tres migraciones también se aplicaron en el PostgreSQL
+de desarrollo del espacio de trabajo. El cálculo de IVA sigue pendiente.

@@ -27,8 +27,8 @@ def data(quantity=5, **extra):
 
 class RequestFlowTests(TestCase):
     def setUp(self):
-        self.item = Item.objects.create(name='Casco', item_type=Item.Type.EPP)
-        self.other_item = Item.objects.create(name='Guantes', item_type=Item.Type.EPP)
+        self.item = Item.objects.create(name='Casco')
+        self.other_item = Item.objects.create(name='Guantes')
         self.north = Project.objects.create(name='Norte')
         self.south = Project.objects.create(name='Sur')
         self.opening = receive_common_stock(self.item, data(2))
@@ -283,7 +283,7 @@ class RequestFlowTests(TestCase):
 
 class RequestConcurrencyTests(TransactionTestCase):
     def setUp(self):
-        self.item = Item.objects.create(name='Casco', item_type=Item.Type.EPP)
+        self.item = Item.objects.create(name='Casco')
         self.north = Project.objects.create(name='Norte')
         self.south = Project.objects.create(name='Sur')
         receive_common_stock(self.item, data(5))

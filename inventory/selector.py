@@ -11,14 +11,14 @@ def selector_context(params, selected_id=None):
     items = common_item_basics()
     query = params.get('q', '').strip()[:500]
     if query:
-        items = items.filter(Q(name__icontains=query) | Q(type_label__icontains=query))
+        items = items.filter(Q(name__icontains=query) | Q(category_label__icontains=query))
     page = Paginator(items, 6).get_page(params.get('page', 1))
     page.object_list = common_items_for_page(page.object_list)
     # Selection is outside the results container; it survives pagination and search.
     selected = None
     if str(selected_id or '').isdigit() and len(str(selected_id)) <= 19 and int(selected_id) <= 9223372036854775807:
         selected = common_items().filter(pk=selected_id).first()
-    return {'selector_page': page, 'selector_query': query, 'selected_item': selected}
+    return {'selector_page': page, 'selector_query': query, 'selected_item': selected, 'show_stock': True}
 
 
 class RequestItemSelectorView(ProjectMixin, TemplateView):

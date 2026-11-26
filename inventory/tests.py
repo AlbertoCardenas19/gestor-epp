@@ -24,7 +24,7 @@ class InventoryFlowTests(TestCase):
     def setUp(self):
         self.project = Project.objects.create(name='Obra Norte')
         self.other = Project.objects.create(name='Obra Sur')
-        self.item = Item.objects.create(name='Casco', item_type=Item.Type.EPP)
+        self.item = Item.objects.create(name='Casco')
 
     def url(self, name, *extra, project=None, item=None):
         args = [(project or self.project).pk]
@@ -206,7 +206,7 @@ class InventoryFlowTests(TestCase):
 
     def test_record_cannot_be_corrected_from_another_project_or_item(self):
         original = open_stock(self.project, self.item, record_data())
-        other_item = Item.objects.create(name='Señal', item_type=Item.Type.SIGNAGE)
+        other_item = Item.objects.create(name='Señal')
         for url in [self.url('correct', original.pk, project=self.other), self.url('correct', original.pk, item=other_item)]:
             self.assertEqual(self.client.get(url).status_code, 404)
             self.assertEqual(self.client.post(url, record_data(2, reason='Error')).status_code, 404)
@@ -243,7 +243,7 @@ class InventoryFlowTests(TestCase):
 class InventoryConcurrencyTests(TransactionTestCase):
     def setUp(self):
         self.project = Project.objects.create(name='Proyecto concurrente')
-        self.item = Item.objects.create(name='Casco compartido', item_type=Item.Type.EPP)
+        self.item = Item.objects.create(name='Casco compartido')
 
     def run_concurrently(self, actions):
         barrier = Barrier(len(actions))

@@ -20,7 +20,7 @@ class IterationRequestAndDetailTests(TestCase):
     def setUp(self):
         self.north = Project.objects.create(name='Norte')
         self.south = Project.objects.create(name='Sur')
-        self.item = Item.objects.create(name='Casco <seguro>', item_type='epp', description='Descripción existente')
+        self.item = Item.objects.create(name='Casco <seguro>', description='Descripción existente')
         receive_common_stock(self.item, data(20))
 
     def inventory_row(self):
@@ -72,7 +72,7 @@ class IterationRequestAndDetailTests(TestCase):
         self.assertEqual(available_quantity(self.item.pk), 0)
 
     def test_picker_search_all_pages_and_selected_item_outside_results(self):
-        items = [Item.objects.create(name=f'Elemento {i:02d}', item_type='epp') for i in range(13)]
+        items = [Item.objects.create(name=f'Elemento {i:02d}') for i in range(13)]
         url = reverse('requests:items', args=[self.north.pk])
         response = self.client.get(url)
         self.assertEqual(len(response.context['selector_page']), 6)
@@ -128,7 +128,7 @@ class IterationRequestAndDetailTests(TestCase):
 
     def test_inventory_and_request_order_use_real_deliveries_not_allocations(self):
         request = create_request(self.north, self.item, data(15))
-        other = Item.objects.create(name='Guantes', item_type='epp')
+        other = Item.objects.create(name='Guantes')
         receive_common_stock(other, data(10))
         other_request = create_request(self.north, other, data(3))
         deliver_request(other_request, data(3, worker_full_name='Ana Pérez'))

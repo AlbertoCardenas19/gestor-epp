@@ -30,7 +30,8 @@
   if (!sidebar) return;
   const button = sidebar.querySelector('.sidebar-toggle');
   const component = coreui.Sidebar.getOrCreateInstance(sidebar);
-  let collapsed = matchMedia('(max-width: 767px)').matches;
+  const mobile = matchMedia('(max-width: 767px)');
+  let collapsed = mobile.matches;
   try {
     const saved = localStorage.getItem('gestor-epp-sidebar');
     if (saved !== null) collapsed = saved === 'collapsed';
@@ -45,6 +46,9 @@
     try { localStorage.setItem('gestor-epp-sidebar', narrow ? 'collapsed' : 'expanded'); } catch (_) {}
   }
   new MutationObserver(sync).observe(sidebar, { attributes: true, attributeFilter: ['class'] });
+  mobile.addEventListener('change', event => {
+    if (event.matches && !sidebar.classList.contains('sidebar-narrow')) component.narrow();
+  });
   button.hidden = false;
   sync();
 })();

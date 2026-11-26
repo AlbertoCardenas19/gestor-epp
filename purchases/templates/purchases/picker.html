@@ -1,0 +1,16 @@
+<fieldset class="mb-3" data-item-picker data-picker-lazy data-source="{{ picker.source }}">
+  <legend class="h6">{{ picker.field.label }}</legend>
+  {{ picker.field }}
+  <label class="form-label" for="{{ picker.field.id_for_label }}_query">Buscar {{ picker.field.label|lower }}</label>
+  <div class="search-with-clear mb-2">
+    <input class="form-control" type="search" autocomplete="off" id="{{ picker.field.id_for_label }}_query" data-picker-search>
+    <button type="button" class="search-clear" data-picker-clear aria-label="Limpiar búsqueda" hidden>×</button>
+  </div>
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+    <span class="small" role="status" data-picker-selected>{% if picker.selected %}Seleccionado: {{ picker.selected }}{% else %}Sin selección{% endif %}</span>
+    {% if picker.kind == 'item' %}<button class="btn btn-sm btn-outline-secondary" type="button" data-picker-reset>Quitar selección</button>{% endif %}
+  </div>
+  {{ picker.field.errors }}
+  <div data-picker-results></div>
+  <noscript><p>Activa JavaScript para buscar y seleccionar.</p></noscript>
+</fieldset>

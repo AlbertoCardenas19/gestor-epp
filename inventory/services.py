@@ -28,6 +28,7 @@ def _repeated_submission(position, operation, data, replaces=None):
     matches = (
         existing.position_id == position.pk and existing.operation == operation
         and existing.stock_request_id == getattr(data.get('stock_request'), 'pk', None)
+        and existing.invoice_id == getattr(data.get('invoice'), 'pk', None)
         and existing.quantity == data['quantity'] and existing.occurred_on == data['occurred_on']
         and existing.observation == data['observation']
         and existing.worker_full_name == data.get('worker_full_name', '').strip()
@@ -41,6 +42,7 @@ def _repeated_submission(position, operation, data, replaces=None):
 
 def _create_record(position, operation, data, replaces=None):
     record = StockRecord(position=position, operation=operation, replaces=replaces, stock_request=data.get('stock_request'),
+                         invoice=data.get('invoice'),
                          worker_full_name=data.get('worker_full_name', '').strip(),
                          **{key: data[key] for key in ['quantity', 'occurred_on', 'observation', 'submission_key']})
     record.full_clean()
@@ -159,6 +161,8 @@ def correct_delivery(project, record_id, data):
 @transaction.atomic
 def correct_record(project, record_id, data):
     original = _scoped_records(project).get(pk=record_id)
+    if original.invoice_id:
+        raise ValidationError('Corrige esta entrada desde su factura de compra.')
     if original.operation == StockRecord.Operation.DELIVERY:
         return correct_delivery(project, record_id, data)
     lock_items(original.position.item_id)

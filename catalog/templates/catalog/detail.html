@@ -17,7 +17,7 @@
     <h2 class="visually-hidden">Información</h2>
     <p class="fw-semibold">Stock: {{ balance }}</p><a class="btn btn-primary mb-4" href="{% url 'stock:receive' item.pk %}">Registrar entrada</a>
     <div class="card"><div class="card-body p-4 p-md-5">
-      <dl class="mb-4"><dt>Tipo</dt><dd>{{ item.get_item_type_display }}</dd></dl>
+      <a class="btn btn-outline-primary mb-3" href="{% url 'catalog:update' item.pk %}">Editar elemento</a><dl class="mb-4"><dt>Categorías</dt><dd>{{ item.categories.all|join:", "|default:"Sin categorías" }}</dd></dl>
       <h3 class="h5 mb-3">Descripción</h3>
       {% if item.description %}<div class="project-description text-break">{{ item.description|linebreaksbr }}</div>{% else %}<p class="text-body-secondary mb-0">Este elemento aún no tiene descripción.</p>{% endif %}
     </div></div>

@@ -59,11 +59,17 @@ class StockRecord(models.Model):
     voided_at = models.DateTimeField(null=True, blank=True)
     void_reason = models.TextField(blank=True)
     replaces = models.OneToOneField('self', on_delete=models.PROTECT, null=True, blank=True, related_name='replacement')
+    invoice = models.ForeignKey('purchases.Invoice', null=True, blank=True, on_delete=models.PROTECT,
+                                related_name='movements')
     submission_key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
 
     class Meta:
         ordering = ['created_at', 'pk']
         constraints = [
+            models.CheckConstraint(condition=Q(invoice__isnull=True) | Q(operation='receipt'),
+                                   name='inventory_invoice_only_receipt'),
+            models.UniqueConstraint(fields=['invoice', 'position'], condition=Q(invoice__isnull=False, voided_at__isnull=True),
+                                    name='inventory_one_invoice_receipt_per_position'),
             models.CheckConstraint(condition=Q(stock_request__isnull=True) | Q(operation='delivery'), name='inventory_request_only_delivery'),
             models.CheckConstraint(
                 condition=(Q(operation='opening', quantity__gte=0) |

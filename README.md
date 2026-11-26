@@ -10,9 +10,12 @@ por página y las solicitudes seleccionan elementos mediante tarjetas buscables.
 
 Se confirman entregas parciales a trabajadores por nombre completo, con fecha y
 observación opcional. Se pueden corregir/anular con motivo e historial y reducir
-pendientes, priorizando lo que falta comprar. No hay compras, aprobación,
-intermediarios, devoluciones físicas ni finanzas implementadas. Cuentas, permisos
-y despliegue público siguen pendientes. [Reglas actuales y pruebas](docs/11-inventario-y-solicitudes.md).
+pendientes, priorizando lo que falta comprar. [Reglas actuales y pruebas](docs/11-inventario-y-solicitudes.md).
+
+Compras registra proveedores, precios de referencia con historial y facturas
+recibidas con distribución por proyecto. La recepción completa ingresa las
+unidades al inventario general. El cálculo automático de IVA y total espera
+la definición de sus reglas. [Compras, migraciones y recorrido](docs/06-desarrollo.md#categorías-proveedores-y-facturas-de-compra--26-de-noviembre-de-2026).
 
 ## Probar en tu PC
 
@@ -96,7 +99,7 @@ presiona `Ctrl+C`. Las próximas veces solo necesitas iniciar PostgreSQL y ejecu
 
 ### 5. Recorrido de prueba
 
-1. En Inventario, crea un casco de tipo EPP con cantidad inicial 2 (vacía = 0).
+1. En Inventario, crea un casco en la categoría EPP con cantidad inicial 2 (vacía = 0).
 2. En Proyectos, crea/abre una tarjeta y entra en su pestaña Inventario.
 3. Solicita 5 cascos: se reservan 2 y quedan 3 como necesidad de compra.
    Inventario general muestra Stock 0 / Entregados 0.
@@ -119,7 +122,7 @@ Con PostgreSQL en ejecución y `.env` configurado:
 ```bash
 # Usa .\.venv\Scripts\python.exe en Windows.
 .venv/bin/python manage.py check
-.venv/bin/python manage.py test projects catalog inventory
+.venv/bin/python manage.py test projects catalog inventory purchases
 ```
 
 Si aparece «connection refused», revisa que PostgreSQL esté iniciado y que el

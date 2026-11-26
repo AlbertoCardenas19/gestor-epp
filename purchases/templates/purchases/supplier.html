@@ -1,0 +1,35 @@
+{% extends 'projects/base.html' %}
+{% block title %}{{ supplier }}{% endblock %}
+{% block extra_styles %}{% include 'projects/datatables_styles.html' %}{% endblock %}
+{% block extra_scripts %}{% include 'projects/datatables_scripts.html' %}{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'purchases:suppliers' %}">← Volver a proveedores</a>
+<h1 class="text-break my-4">{{ supplier }}</h1>
+<div class="card card-body mb-4">
+  <dl>
+    <dt>RUT</dt><dd>{{ supplier.rut }}</dd>
+    <dt>Persona de contacto</dt><dd>{{ supplier.contact|default:"Sin registrar" }}</dd>
+    <dt>Teléfono</dt><dd>{{ supplier.phone|default:"Sin registrar" }}</dd>
+    <dt>Correo electrónico</dt><dd class="text-break">{{ supplier.email|default:"Sin registrar" }}</dd>
+  </dl>
+  <div><a class="btn btn-outline-primary" href="{% url 'purchases:supplier-edit' supplier.pk %}">Editar proveedor</a></div>
+</div>
+<section data-datatable-panel>
+  <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
+    <h2 class="h4">Precios de referencia</h2>
+    <a class="btn btn-primary" href="{% url 'purchases:price-create' supplier.pk %}">Registrar precio</a>
+  </div>
+  <p data-datatable-error role="alert" class="text-danger" hidden></p>
+  <div class="card datatable-shell"><div class="card-body">
+    <table class="table table-striped mb-0 align-middle w-100" data-datatable data-source="{% url 'purchases:price-data' supplier.pk %}" data-order='[[2,"desc"]]'>
+      <caption class="visually-hidden">Historial de precios de referencia</caption>
+      <thead><tr>
+        <th scope="col" data-column="item" data-link="url">Elemento</th>
+        <th scope="col" data-column="price">Unitario sin IVA (CLP)</th>
+        <th scope="col" data-column="recorded">Registro</th>
+        <th scope="col" data-column="state" data-orderable="false">Estado</th>
+      </tr></thead><tbody></tbody>
+    </table>
+  </div></div>
+</section>
+{% endblock %}

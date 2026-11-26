@@ -318,6 +318,15 @@ Entregados combinada de S22, no las reservas internas ni necesidades de compra.
 Pide implementación verificada, documentación existente actualizada y ningún commit
 ni push. Guía vigente: [11-inventario-y-solicitudes.md](11-inventario-y-solicitudes.md).
 
+## Iteración de compras — 26 de noviembre de 2026
+
+El encargo confirma categorías múltiples, proveedores, precios de referencia
+históricos y facturas recibidas con reparto de cantidades por proyecto. Se
+separan registro, pago, recepción y entregas. La recepción se realiza completa
+en el inventario general. Para corrección y anulación se exige motivo,
+trazabilidad y protección del stock comprometido. El cálculo automático queda
+pendiente de las reglas tributarias del documento. [Alcance y recorrido](06-desarrollo.md#categorías-proveedores-y-facturas-de-compra--26-de-noviembre-de-2026).
+
 ## Qué se excluyó
 - La idea de junio de automatizar documentos para distintos profesionales: no corresponde a este producto. Se excluyen sus requisitos de plantillas, generación PDF/Excel, IPER, AST, reportes de incidentes y charlas.
 - Requisitos, decisiones y tecnología de otros proyectos del usuario.

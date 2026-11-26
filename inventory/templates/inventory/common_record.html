@@ -17,6 +17,8 @@
 {% if not record.voided_at %}<a href="{% url 'inventory:correct' record.stock_request.project_id item.pk record.pk %}">Corregir entrega</a><a href="{% url 'inventory:cancel' record.stock_request.project_id item.pk record.pk %}">Anular entrega</a>{% endif %}
 {% elif record.position.project_id %}
 <a href="{{ record.get_absolute_url }}">Ver historial del proyecto</a>
+{% elif record.invoice_id %}
+<a href="{{ record.invoice.get_absolute_url }}">Ver factura de compra</a>
 {% elif not record.voided_at %}
 <a class="btn btn-primary" href="{% url 'stock:correct' item.pk record.pk %}">Corregir entrada</a>
 {% endif %}

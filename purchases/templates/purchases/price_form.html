@@ -1,0 +1,20 @@
+{% extends 'projects/base.html' %}
+{% load static %}
+{% block title %}Registrar precio de referencia{% endblock %}
+{% block extra_scripts %}<script src="{% static 'projects/item-picker.js' %}" defer></script>{% endblock %}
+{% block content %}
+<div class="form-shell">
+  <h1>Registrar precio de referencia</h1>
+  <p>{{ supplier }}</p>
+  <form class="card card-body" method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% include 'purchases/picker.html' %}
+    {% include 'purchases/form_fields.html' with fields=form.visible_fields %}
+    <div class="d-flex flex-wrap gap-2">
+      <button class="btn btn-primary" type="submit">Guardar precio</button>
+      <a class="btn btn-outline-secondary" href="{{ supplier.get_absolute_url }}">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
