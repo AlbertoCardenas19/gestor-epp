@@ -691,7 +691,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.page.goto(self.live_server_url + reverse('stock:list'))
         nav = self.page.get_by_role('navigation', name='Principal')
         headings = nav.get_by_role('heading')
-        expect(headings).to_have_text(['General', 'Proyectos', 'Inventario', 'Compras'])
+        expect(headings).to_have_text(['Inventario', 'Compras'])
         expected = [
             ('Inicio', 'projects:home'), ('Proyectos', 'projects:list'),
             ('Inventario general', 'stock:list'), ('Catálogo de elementos', 'catalog:list'),
@@ -705,6 +705,8 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         toggle.focus()
         self.page.keyboard.press('Enter')
         expect(toggle).to_have_attribute('aria-expanded', 'false')
+        self.page.keyboard.press('Tab')
+        expect(self.page.get_by_role('link', name='Gestor EPP: inicio')).to_be_focused()
         self.page.keyboard.press('Tab')
         expect(nav.get_by_role('link', name='Inicio', exact=True)).to_be_focused()
         self.page.set_viewport_size({'width': 320, 'height': 760})
@@ -734,3 +736,53 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         expect(toggle).to_have_attribute('aria-expanded', 'true')
         nav.get_by_role('link', name='Proveedores', exact=True).click()
         expect(nav.locator('[aria-current="page"]')).to_have_accessible_name('Proveedores')
+
+    def test_sidebar_edge_control_and_single_labels(self):
+        labels = ['Inicio', 'Proyectos', 'Inventario general', 'Catálogo de elementos',
+                  'Categorías', 'Facturas', 'Proveedores']
+        self.page.goto(self.live_server_url + reverse('projects:home'))
+        sidebar = self.page.locator('#sidebar')
+        nav = sidebar.get_by_role('navigation', name='Principal')
+        toggle = self.page.locator('.sidebar-toggle')
+        expect(toggle).to_have_count(1)
+        expect(nav.get_by_role('link')).to_have_text(labels)
+
+        def check_edge():
+            sidebar_box, button_box = sidebar.bounding_box(), toggle.bounding_box()
+            self.assertAlmostEqual(button_box['x'] + button_box['width'] / 2,
+                                   sidebar_box['x'] + sidebar_box['width'], delta=1)
+            self.assertAlmostEqual(button_box['y'] + button_box['height'] / 2,
+                                   sidebar_box['y'] + sidebar_box['height'] / 2, delta=1)
+            self.assertEqual(button_box['width'], 44)
+            self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+            self.assertTrue(toggle.evaluate('''button => {
+                const toggle = button.getBoundingClientRect();
+                return Array.from(document.querySelectorAll('#sidebar nav a')).every(link =>
+                    link.getBoundingClientRect().right <= toggle.left);
+            }'''))
+            self.assertEqual(nav.locator('.sidebar-group').evaluate_all('''groups => groups.map(group =>
+                getComputedStyle(group).borderTopWidth)'''), ['0px', '1px', '1px', '1px'])
+
+        for width in (1440, 320, 390):
+            self.page.set_viewport_size({'width': width, 'height': 650})
+            self.page.reload()
+            if toggle.get_attribute('aria-expanded') == 'false':
+                toggle.click()
+            expect(toggle).to_have_accessible_name('Contraer menú')
+            self.capture(f'sidebar-expanded-{width}')
+            check_edge()
+            expect(nav.locator('.sidebar-link-label:visible')).to_have_count(7)
+            toggle.focus()
+            self.page.keyboard.press('Space')
+            expect(toggle).to_have_accessible_name('Expandir menú')
+            self.capture(f'sidebar-narrow-{width}')
+            check_edge()
+            expect(nav.locator('.sidebar-link-label:visible')).to_have_count(0)
+            for label in labels:
+                expect(nav.get_by_role('link', name=label, exact=True)).to_be_visible()
+
+        sidebar.evaluate('element => coreui.Sidebar.getInstance(element).hide()')
+        expect(toggle).to_be_in_viewport()
+        expect(toggle).to_have_accessible_name('Expandir menú')
+        toggle.click()
+        expect(sidebar).not_to_have_class(re.compile(r'\bhide\b'))

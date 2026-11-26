@@ -1,18 +1,17 @@
 <nav aria-label="Principal">
   {% for group in navigation.groups %}
-    <section aria-labelledby="sidebar-group-{{ forloop.counter }}">
-      <h2 class="sidebar-group-title" id="sidebar-group-{{ forloop.counter }}">{{ group.title }}</h2>
+    <div class="sidebar-group"{% if group.title %} role="group" aria-labelledby="sidebar-group-{{ forloop.counter }}"{% endif %}>
+      {% if group.title %}<h2 class="sidebar-group-title" id="sidebar-group-{{ forloop.counter }}">{{ group.title }}</h2>{% endif %}
       <ul class="list-unstyled mb-0">
         {% for link in group.links %}
           <li class="nav-item">
             <a class="nav-link nav-{{ link.icon }}{% if link.current %} active{% endif %}" href="{{ link.url }}"
                aria-label="{{ link.label }}" title="{{ link.label }}"{% if link.current %} aria-current="{{ link.current }}"{% endif %}>
               <span class="sidebar-link-label">{{ link.label }}</span>
-              <span class="sidebar-link-short" aria-hidden="true">{{ link.short_label }}</span>
             </a>
           </li>
         {% endfor %}
       </ul>
-    </section>
+    </div>
   {% endfor %}
 </nav>

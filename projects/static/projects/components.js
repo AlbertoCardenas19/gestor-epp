@@ -28,7 +28,7 @@
 
   const sidebar = document.querySelector('#sidebar');
   if (!sidebar) return;
-  const button = sidebar.querySelector('.sidebar-toggle');
+  const button = document.querySelector('.sidebar-toggle');
   const component = coreui.Sidebar.getOrCreateInstance(sidebar);
   const mobile = matchMedia('(max-width: 767px)');
   let collapsed = mobile.matches;
@@ -37,10 +37,15 @@
     if (!mobile.matches && saved !== null) collapsed = saved === 'collapsed';
   } catch (_) {}
   if (collapsed) component.narrow();
+  button.addEventListener('click', () => {
+    if (sidebar.classList.contains('hide')) component.show();
+    else component.toggleNarrow();
+  });
   function sync() {
     const narrow = sidebar.classList.contains('sidebar-narrow');
-    const label = narrow ? 'Expandir menú' : 'Contraer menú';
-    button.setAttribute('aria-expanded', String(!narrow));
+    const expanded = !narrow && !sidebar.classList.contains('hide');
+    const label = expanded ? 'Contraer menú' : 'Expandir menú';
+    button.setAttribute('aria-expanded', String(expanded));
     button.setAttribute('aria-label', label);
     button.title = label;
     if (!mobile.matches) {

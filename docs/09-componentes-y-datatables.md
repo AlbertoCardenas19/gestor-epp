@@ -143,7 +143,7 @@ Las pestañas interactivas usan `coreui.Tab`. `components.js` escucha el evento 
 debe copiar esta integración. Los enlaces de secciones que navegan entre rutas, como
 las pestañas del proyecto, comparten la misma presentación sin fingir un panel local.
 
-El sidebar usa `coreui.Sidebar` y `data-coreui-toggle="narrow"`. La app únicamente
+El sidebar usa `coreui.Sidebar` y su método `toggleNarrow()`. La app únicamente
 sincroniza su nombre accesible y guarda la preferencia en `localStorage`. El CSS
 mantiene el rail de iconos en móvil: anula el modo off-canvas automático mediante
 `--cui-is-mobile: initial` y adapta la clase oficial `sidebar-narrow` a 76 píxeles.
@@ -292,8 +292,8 @@ No se añaden bibliotecas ni versiones.
 - **Inventario** agrupa Inventario general, Catálogo de elementos y Categorías.
   **Compras** agrupa Facturas y Proveedores.
 - Los grupos permanecen visibles en ambos anchos del sidebar. En el ancho
-  contraído se conservan los iconos, rótulos cortos y nombres accesibles
-  completos. CoreUI gestiona la contracción y las páginas móviles abren el
+  contraído se conservan los iconos y los nombres accesibles completos. El botón circular
+  queda centrado sobre el borde derecho en ambos anchos. CoreUI gestiona la contracción y las páginas móviles abren el
   sidebar contraído. Las opciones se recorren con Tab y se activan con Enter.
 - El destino actual lleva `aria-current="page"`. Un formulario o una ficha
   dentro de una sección conserva el enlace de esa sección resaltado con
