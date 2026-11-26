@@ -26,7 +26,7 @@
 <section class="mb-4">
   <h2 class="h4">Detalle de compra</h2>
   <div class="table-responsive">
-    <table class="table table-striped align-middle">
+    <table class="table align-middle">
       <thead><tr><th scope="col">Elemento</th><th scope="col">Cantidad</th><th scope="col">Unitario sin IVA (CLP)</th><th scope="col">Distribución por proyecto</th></tr></thead>
       <tbody>{% for line in invoice.lines.all %}<tr>
         <td><a href="{{ line.item.get_absolute_url }}">{{ line.item }}</a></td>

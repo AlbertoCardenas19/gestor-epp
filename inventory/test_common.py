@@ -137,8 +137,10 @@ class CommonStockTests(TestCase):
         self.assertEqual(result['data'][0]['name'], 'Elemento 14')
         result = self.client.get(reverse('stock:data'), {'order[0][column]': 2, 'order[0][dir]': 'desc'}).json()
         self.assertEqual([row['quantity'] for row in result['data'][:2]], ['20', '3'])
-        self.assertIn(reverse('stock:receive', args=[self.other.pk]), result['data'][0]['actions'])
-        self.assertIn('data-coreui-toggle="dropdown"', result['data'][0]['actions'])
+        self.assertEqual(result['data'][0]['item_url'], self.other.get_absolute_url())
+        detail = self.client.get(self.other.get_absolute_url())
+        self.assertContains(detail, reverse('stock:receive', args=[self.other.pk]))
+        self.assertContains(detail, reverse('stock:history', args=[self.other.pk]))
         self.assertEqual(self.client.post(reverse('stock:data'), {}).status_code, 405)
 
     def test_selector_paginates_before_calculating_page_totals(self):

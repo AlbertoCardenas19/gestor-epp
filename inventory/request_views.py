@@ -2,7 +2,6 @@ from django.core.exceptions import ValidationError
 from django.db.models import BigIntegerField, Case, CharField, F, OuterRef, Subquery, Sum, Value, When
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, redirect
-from django.template.loader import render_to_string
 from django.utils import timezone
 from django.views.generic import FormView, TemplateView
 
@@ -33,7 +32,7 @@ class RequestListView(ProjectMixin, TemplateView):
 
 
 class RequestDataView(ProjectMixin, DataTableView):
-    order_columns = ('occurred_on', 'item__name', 'quantity', 'fulfilled_total', 'purchase_total', 'request_label', None)
+    order_columns = ('occurred_on', 'item__name', 'quantity', 'fulfilled_total', 'purchase_total', 'request_label')
     search_fields = ('item__name', 'observation', 'request_label')
     default_order = ('-occurred_on', '-pk')
 
@@ -44,7 +43,7 @@ class RequestDataView(ProjectMixin, DataTableView):
         return {'date': request.occurred_on.isoformat(), 'item': request.item.name, 'quantity': str(request.quantity),
                 'delivered': str(request.delivered_quantity), 'purchase': str(request.purchase_quantity),
                 'state': request.state_label, 'pending': request.pending_quantity > 0,
-                'actions': render_to_string('inventory/request_actions.html', {'request_record': request})}
+                'item_url': request.get_absolute_url()}
 
 
 class RequestCreateView(ProjectMixin, FormView):

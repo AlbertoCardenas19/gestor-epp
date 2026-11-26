@@ -4,16 +4,15 @@ from django.urls import reverse
 register = template.Library()
 
 GROUPS = (
-    (None, (('projects:home', 'Inicio', 'home'),)),
-    (None, (('projects:list', 'Proyectos', 'projects'),)),
-    ('Inventario', (
-        ('stock:list', 'Inventario general', 'stock'),
-        ('catalog:list', 'Catálogo de elementos', 'catalog'),
-        ('catalog:categories', 'Categorías', 'categories'),
+    (None, (('projects:home', 'Inicio'),)),
+    (None, (('projects:list', 'Proyectos'),)),
+    ('Elementos', (
+        ('stock:list', 'Inventario'),
+        ('catalog:categories', 'Categorías'),
     )),
     ('Compras', (
-        ('purchases:list', 'Facturas', 'purchases'),
-        ('purchases:suppliers', 'Proveedores', 'projects'),
+        ('purchases:list', 'Facturas'),
+        ('purchases:suppliers', 'Proveedores'),
     )),
 )
 
@@ -28,7 +27,7 @@ def current_section(match):
     ):
         return 'catalog:categories'
     if match.namespace == 'catalog' or match.view_name == 'stock:item':
-        return 'catalog:list'
+        return 'stock:list'
     if match.namespace == 'stock':
         return 'stock:list'
     if match.namespace == 'purchases':
@@ -45,8 +44,8 @@ def sidebar_navigation(match):
     active = None
     for title, definitions in GROUPS:
         links = []
-        for route, label, icon in definitions:
-            link = {'label': label, 'icon': icon, 'url': reverse(route)}
+        for route, label in definitions:
+            link = {'label': label, 'url': reverse(route)}
             if route == current:
                 link['current'] = 'page' if route == match.view_name else 'location'
                 active = link

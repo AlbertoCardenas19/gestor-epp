@@ -53,6 +53,9 @@
     }
   }
   new MutationObserver(sync).observe(sidebar, { attributes: true, attributeFilter: ['class'] });
+  sidebar.addEventListener('transitionend', event => {
+    if (event.target === sidebar && event.propertyName === 'width') window.EppTables?.adjust();
+  });
   mobile.addEventListener('change', event => {
     if (event.matches && !sidebar.classList.contains('sidebar-narrow')) component.narrow();
   });

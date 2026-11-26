@@ -8,6 +8,7 @@ Documentación del proyecto de gestión para la amiga prevencionista. Se reconst
 | Archivo | Uso |
 |---|---|
 | [AGENTS.md](../AGENTS.md) | Instrucciones para que Codex use correctamente esta base |
+| [ITERACIONES.md](ITERACIONES.md) | Estado actual y registro permanente de iteraciones |
 | [01-producto.md](01-producto.md) | Objetivo, contexto de trabajo y alcance conocido |
 | [02-requisitos.md](02-requisitos.md) | Necesidades expresadas, con fuente por requisito |
 | [03-flujos-y-responsabilidades.md](03-flujos-y-responsabilidades.md) | Proceso conversado y responsabilidades conocidas |

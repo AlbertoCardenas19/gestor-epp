@@ -34,7 +34,7 @@ class CommonInventoryView(TemplateView):
 
 
 class CommonInventoryDataView(DataTableView):
-    order_columns = ('name', 'category_label', 'total', 'delivered_total', None)
+    order_columns = ('name', 'category_label', 'total', 'delivered_total')
     search_fields = ('name', 'category_label', 'description')
     default_order = ('name', 'pk')
 
@@ -60,12 +60,8 @@ class CommonInventoryDataView(DataTableView):
         return common_items_for_page(super().paginate_records(records, start, length))
 
     def serialize_record(self, item):
-        return {'name': item.name, 'type': item.category_label, 'quantity': str(item.total), 'delivered': str(item.delivered_total), 'item_url': item.get_absolute_url(),
-                'actions': render_to_string('inventory/common_actions.html', {
-                    'action_id': item.pk, 'action_label': item.name,
-                    'detail_url': reverse('stock:history', args=[item.pk]), 'item_url': item.get_absolute_url(),
-                    'receipt_url': reverse('stock:receive', args=[item.pk]),
-                })}
+        return {'name': item.name, 'type': item.category_label, 'quantity': str(item.total),
+                'delivered': str(item.delivered_total), 'item_url': item.get_absolute_url()}
 
 
 class CommonHistoryView(CommonItemMixin, TemplateView):

@@ -21,7 +21,7 @@
   </div>
   <p data-datatable-error role="alert" class="text-danger" hidden></p>
   <div class="card datatable-shell"><div class="card-body">
-    <table class="table table-striped mb-0 align-middle w-100" data-datatable data-source="{% url 'purchases:price-data' supplier.pk %}" data-order='[[2,"desc"]]'>
+    <table class="table mb-0 align-middle w-100" data-datatable data-source="{% url 'purchases:price-data' supplier.pk %}" data-order='[[2,"desc"]]'>
       <caption class="visually-hidden">Historial de precios de referencia</caption>
       <thead><tr>
         <th scope="col" data-column="item" data-link="url">Elemento</th>

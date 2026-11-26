@@ -5,8 +5,7 @@
       <ul class="list-unstyled mb-0">
         {% for link in group.links %}
           <li class="nav-item">
-            <a class="nav-link nav-{{ link.icon }}{% if link.current %} active{% endif %}" href="{{ link.url }}"
-               aria-label="{{ link.label }}" title="{{ link.label }}"{% if link.current %} aria-current="{{ link.current }}"{% endif %}>
+            <a class="nav-link{% if link.current %} active{% endif %}" href="{{ link.url }}"{% if link.current %} aria-current="{{ link.current }}"{% endif %}>
               <span class="sidebar-link-label">{{ link.label }}</span>
             </a>
           </li>

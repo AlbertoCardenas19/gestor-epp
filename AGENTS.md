@@ -12,6 +12,7 @@ Este repositorio corresponde a la app web de gestión para la amiga prevencionis
 6. [Fuentes y límites](docs/05-fuentes.md).
 7. [Guía de desarrollo](docs/06-desarrollo.md).
 8. [Inventario y solicitudes vigentes](docs/11-inventario-y-solicitudes.md): S23 distingue solicitado de entregado real; mantiene necesidades de compra y el stock común de S22.
+9. [Registro de iteraciones](docs/ITERACIONES.md): lee su estado y pendientes antes de retomar el proyecto.
 
 ## Instrucciones de esta entrega
 Las siguientes pautas sirven para trabajar con esta documentación; no son nuevos requisitos del producto.
@@ -28,6 +29,7 @@ Las siguientes pautas sirven para trabajar con esta documentación; no son nuevo
 - Inspecciona el código y las instrucciones existentes antes de trabajar. Esta documentación no acredita ninguna implementación.
 - Conserva el trabajo existente. No sobrescribas instrucciones vigentes sin integrarlas y resolver contradicciones con el usuario.
 - Cuando trabajes en una funcionalidad solicitada, referencia RF-xx y explica qué decisión falta, si corresponde. Verifica el comportamiento modificado e informa el resultado real.
+- Al terminar cada iteración, actualiza `docs/ITERACIONES.md`: conserva todas las entradas previas y registra estado, pendientes, próximo paso, cambios y verificaciones realmente realizadas.
 - Si el usuario cierra una decisión pendiente, registra su respuesta y actualiza los documentos afectados. No presentes sugerencias propias como acuerdos previos.
 
 ## Convenciones actuales de interfaz — instrucción del usuario (12 de noviembre de 2026)

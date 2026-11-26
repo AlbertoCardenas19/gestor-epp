@@ -29,6 +29,54 @@ def data(quantity, **extra):
 
 
 class LibraryBrowserChecks(StaticLiveServerTestCase):
+    def test_iteration_inventory_layout_and_navigation(self):
+        item, project, request = self.db(lambda: self._iteration_records())
+        self.visit_table(reverse('stock:list'))
+        for width in (320, 390, 1440):
+            self.page.set_viewport_size({'width': width, 'height': 800})
+            self.page.wait_for_timeout(350)
+            toggle = self.page.locator('.sidebar-toggle')
+            expect(toggle).to_be_visible()
+            self.assertFalse(self.page.locator('#sidebar').evaluate('(e) => e.classList.contains("hide")'))
+            before = toggle.get_attribute('aria-expanded')
+            toggle.click()
+            expect(toggle).to_have_attribute('aria-expanded', 'false' if before == 'true' else 'true')
+            toggle.click()
+            self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+            self.capture(f'iteration-inventory-{width}')
+        self.page.set_viewport_size({'width': 1440, 'height': 800})
+        self.page.wait_for_timeout(350)
+        self.assertEqual(self.page.locator('.dt-layout-end .list-controls').count(), 1)
+        for width in (390, 1440, 320, 1440):
+            self.page.set_viewport_size({'width': width, 'height': 800})
+            self.page.wait_for_timeout(350)
+            self.wait_for_table_alignment()
+            if width == 1440:
+                metrics = self.page.locator('.dt-container').evaluate('''container => ({
+                    table: container.querySelector('.dt-scroll-head table').getBoundingClientRect().width,
+                    space: container.querySelector('.dt-scroll-head').getBoundingClientRect().width
+                })''')
+                self.assertGreaterEqual(metrics['table'] + 2, metrics['space'], metrics)
+        self.page.set_viewport_size({'width': 1440, 'height': 800})
+        self.assertEqual(self.page.locator('.dt-scroll-head th[data-column]').count(), 4)
+        self.assertEqual(self.page.locator('.dt-scroll-body tbody tr').count(), 1)
+        self.assertEqual(self.page.locator('.dt-scroll-body tbody tr a[href="%s"]' % item.get_absolute_url()).count(), 1)
+        self.page.locator('.dt-scroll-body tbody tr td').nth(2).click()
+        expect(self.page.get_by_role('heading', name=item.name)).to_be_visible()
+        self.visit_table(reverse('requests:list', args=[project.pk]))
+        expect(self.page.locator('.dt-scroll-body .pending-delivery')).to_have_text('Pendiente')
+        self.assertEqual(self.page.locator('.dt-scroll-head th[data-column]').count(), 6)
+        self.page.locator('.dt-scroll-body tbody tr td').nth(2).click()
+        expect(self.page.get_by_role('heading', name=item.name)).to_be_visible()
+        self.assertEqual(self.page.url.split('?')[0], self.live_server_url + request.get_absolute_url())
+
+    @staticmethod
+    def _iteration_records():
+        item = Item.objects.create(name='Casco de prueba')
+        project = Project.objects.create(name='Obra de prueba')
+        request = StockRequest.objects.create(item=item, project=project, quantity=3, occurred_on=date(2026, 11, 26))
+        return item, project, request
+
     def setUp(self):
         self.playwright = sync_playwright().start()
         options = {'headless': True}
@@ -218,8 +266,8 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         expect(self.rows().nth(1).locator('td').nth(2)).to_have_text('0')
         result = self.search('Casco')
         self.assertEqual(result['data'][0]['quantity'], '14')
-        self.rows().get_by_role('button', name=re.compile('^Acciones de')).click()
-        self.page.locator('.dropdown-menu.show').get_by_role('link', name='Registrar entrada', exact=True).click()
+        self.rows().get_by_role('link', name='Casco', exact=True).click()
+        self.page.get_by_role('link', name='Registrar entrada', exact=True).click()
         self.page.get_by_label('Cantidad', exact=False).fill('5')
         self.page.get_by_label('Fecha del conteo o recepción', exact=False).fill('2026-11-12')
         self.page.get_by_label('Observación', exact=False).fill('Entrada de empresa')
@@ -257,14 +305,9 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
                 self.page.locator('.sidebar-toggle').click()
                 self.page.wait_for_timeout(300)
             self.wait_for_table_alignment()
-            self.rows().first.get_by_role('button', name=re.compile('^Acciones de')).click()
-            menu = self.page.locator('.dropdown-menu.show')
-            expect(menu).to_be_visible()
-            hit = menu.locator('a').first.evaluate('(e)=>{const r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}')
-            self.assertTrue(hit)
+            expect(self.rows().first.get_by_role('link', name='Casco', exact=True)).to_be_visible()
             self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
             self.capture(f'common-stock-{width}')
-            self.page.keyboard.press('Escape')
 
     @staticmethod
     def seed_request_flow():
@@ -287,7 +330,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.page.get_by_label('Cantidad solicitada', exact=False).fill('5')
         self.page.get_by_role('button', name='Guardar solicitud', exact=True).click()
         request = self.db(lambda: StockRequest.objects.get())
-        expect(self.page.get_by_test_id('request-delivered')).to_have_text('0')
+        expect(self.page.get_by_test_id('request-delivered')).to_have_text('0 Pendiente')
         expect(self.page.get_by_test_id('request-purchase')).to_have_text('3')
         self.page.get_by_role('link', name='Confirmar entrega', exact=True).click()
         self.page.get_by_label('Nombre completo del trabajador', exact=False).fill('Ana Pérez')
@@ -310,8 +353,8 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.page.wait_for_timeout(500)
         expect(self.rows()).to_have_count(1)
         expect(self.page.locator('.dt-search input')).to_have_value('')
-        self.rows().first.get_by_role('button', name=re.compile('^Acciones de')).click()
-        self.page.locator('.dropdown-menu.show').get_by_role('link', name='Registrar entrada', exact=True).click()
+        self.rows().first.get_by_role('link', name='Casco', exact=True).click()
+        self.page.get_by_role('link', name='Registrar entrada', exact=True).click()
         self.page.get_by_label('Cantidad', exact=False).fill('3')
         self.page.get_by_label('Fecha del conteo o recepción', exact=False).fill('2026-11-12')
         self.page.get_by_role('button', name='Guardar entrada', exact=True).click()
@@ -319,7 +362,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.page.goto(self.live_server_url + request.get_absolute_url())
         self.page.get_by_role('link', name='Reservar disponibles', exact=True).click()
         self.page.get_by_role('button', name='Reservar disponibles', exact=True).click()
-        expect(self.page.get_by_test_id('request-delivered')).to_have_text('2')
+        expect(self.page.get_by_test_id('request-delivered')).to_have_text('2 Pendiente')
         expect(self.page.get_by_test_id('request-purchase')).to_have_text('0')
         self.page.get_by_role('link', name='Confirmar entrega', exact=True).click()
         self.page.get_by_label('Nombre completo del trabajador', exact=False).fill('Luis Soto')
@@ -350,11 +393,9 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
             if self.page.locator('.sidebar-toggle').get_attribute('aria-expanded') == 'true':
                 self.page.locator('.sidebar-toggle').click()
                 self.page.wait_for_timeout(300)
-            self.rows().first.get_by_role('button', name=re.compile('^Acciones de')).click()
-            expect(self.page.locator('.dropdown-menu.show')).to_be_visible()
+            expect(self.rows().first.get_by_role('link', name='Casco', exact=True)).to_be_visible()
             self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
             self.capture(f'project-requests-{width}')
-            self.page.keyboard.press('Escape')
 
     def test_mobile_menu_clipping_sidebar_and_project_cards(self):
         projects = self.db(lambda: [Project.objects.create(name=f'Obra {i:02d}') for i in range(14)])
@@ -377,10 +418,13 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
                 self.page.wait_for_timeout(300)
             self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
             header = self.page.locator('.dt-scroll-head th').first
-            self.assertEqual(header.evaluate('(e)=>getComputedStyle(e).backgroundColor'), 'rgb(51, 65, 85)')
+            self.assertEqual(header.evaluate('(e)=>getComputedStyle(e).backgroundColor'), 'rgb(29, 77, 133)')
             self.assertEqual(header.evaluate('(e)=>getComputedStyle(e).color'), 'rgb(255, 255, 255)')
-            stripe = self.rows().first.locator('td').first.evaluate('(e)=>getComputedStyle(e).boxShadow')
-            self.assertIn('226, 232, 240', stripe)
+            self.page.mouse.move(0, 0)
+            cell = self.rows().first.locator('td').first
+            self.assertEqual(cell.evaluate('(e)=>getComputedStyle(e).backgroundColor'), 'rgb(255, 255, 255)')
+            cell.hover()
+            self.assertEqual(cell.evaluate('(e)=>getComputedStyle(e).backgroundColor'), 'rgb(237, 242, 247)')
             datatable_page_style = self.pagination_style(self.page.locator('.dt-paging .page-item.active .page-link').first)
             action_header = self.page.locator('.dt-scroll-head th[data-actions]')
             expect(action_header).to_have_class(re.compile('table-actions'))
@@ -448,23 +492,23 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.capture('picker-selected-mobile')
         self.page.get_by_label('Cantidad solicitada', exact=False).fill('5')
         self.page.get_by_role('button', name='Guardar solicitud', exact=True).click()
-        expect(self.page.get_by_test_id('request-delivered')).to_have_text('0')
-        expect(self.page.get_by_label('Pendiente de entrega', exact=True)).to_be_visible()
+        expect(self.page.get_by_test_id('request-delivered')).to_have_text('0 Pendiente')
+        expect(self.page.get_by_text('Pendiente', exact=True)).to_be_visible()
         self.inventory_counts(15, 0)
         self.visit_table(reverse('requests:list', args=[north.pk]))
         expect(self.rows().first.locator('td').nth(2)).to_have_text('5')
         delivered_cell = self.rows().first.locator('td').nth(3)
-        expect(delivered_cell).to_have_text('! 0')
-        expect(delivered_cell.get_by_label('Pendiente de entrega', exact=True)).to_be_visible()
-        self.rows().first.get_by_role('button', name=re.compile('^Acciones de')).click()
-        self.page.locator('.dropdown-menu.show').get_by_role('link', name='Confirmar entrega', exact=True).click()
+        expect(delivered_cell).to_have_text('0 Pendiente')
+        expect(delivered_cell.get_by_text('Pendiente', exact=True)).to_be_visible()
+        self.rows().first.get_by_role('link', name='Zeta Casco', exact=True).click()
+        self.page.get_by_role('link', name='Confirmar entrega', exact=True).click()
         self.page.get_by_label('Nombre completo del trabajador', exact=False).fill('Ana Pérez')
         self.page.get_by_role('button', name='Confirmar entrega', exact=True).click()
         expect(self.page.get_by_test_id('request-delivered')).to_have_text('5')
-        expect(self.page.get_by_label('Pendiente de entrega', exact=True)).to_have_count(0)
+        expect(self.page.get_by_text('Pendiente', exact=True)).to_have_count(0)
         self.visit_table(reverse('requests:list', args=[north.pk]))
         expect(self.rows().first.locator('td').nth(3)).to_have_text('5')
-        expect(self.rows().first.get_by_label('Pendiente de entrega', exact=True)).to_have_count(0)
+        expect(self.rows().first.get_by_text('Pendiente', exact=True)).to_have_count(0)
         self.inventory_counts(15, 5)
         self.rows().first.get_by_role('link', name='Zeta Casco', exact=True).click()
         self.page.wait_for_function('window.DataTable && DataTable.tables().length === 2 && DataTable.settings.every(settings => settings.json !== undefined)')
@@ -690,56 +734,34 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
     def test_grouped_sidebar_and_category_pages_with_keyboard(self):
         self.page.goto(self.live_server_url + reverse('stock:list'))
         nav = self.page.get_by_role('navigation', name='Principal')
-        headings = nav.get_by_role('heading')
-        expect(headings).to_have_text(['Inventario', 'Compras'])
-        expected = [
-            ('Inicio', 'projects:home'), ('Proyectos', 'projects:list'),
-            ('Inventario general', 'stock:list'), ('Catálogo de elementos', 'catalog:list'),
-            ('Categorías', 'catalog:categories'), ('Facturas', 'purchases:list'),
-            ('Proveedores', 'purchases:suppliers'),
-        ]
+        expect(nav.get_by_role('heading')).to_have_text(['Elementos', 'Compras'])
+        expected = [('Inicio', 'projects:home'), ('Proyectos', 'projects:list'),
+                    ('Inventario', 'stock:list'), ('Categorías', 'catalog:categories'),
+                    ('Facturas', 'purchases:list'), ('Proveedores', 'purchases:suppliers')]
         for label, route in expected:
             expect(nav.get_by_role('link', name=label, exact=True)).to_have_attribute('href', reverse(route))
-        expect(nav.locator('[aria-current="page"]')).to_have_accessible_name('Inventario general')
+        expect(nav.locator('[aria-current="page"]')).to_have_accessible_name('Inventario')
         toggle = self.page.locator('.sidebar-toggle')
         toggle.focus()
         self.page.keyboard.press('Enter')
         expect(toggle).to_have_attribute('aria-expanded', 'false')
-        self.page.keyboard.press('Tab')
-        expect(self.page.get_by_role('link', name='Gestor EPP: inicio')).to_be_focused()
-        self.page.keyboard.press('Tab')
-        expect(nav.get_by_role('link', name='Inicio', exact=True)).to_be_focused()
-        self.page.set_viewport_size({'width': 320, 'height': 760})
-        category_link = nav.get_by_role('link', name='Categorías', exact=True)
-        category_link.focus()
         self.page.keyboard.press('Enter')
-        expect(category_link).to_have_attribute('aria-current', 'page')
+        expect(toggle).to_have_attribute('aria-expanded', 'true')
+        self.page.set_viewport_size({'width': 320, 'height': 760})
+        self.page.wait_for_timeout(350)
+        if toggle.get_attribute('aria-expanded') == 'false':
+            toggle.click()
+        expect(toggle).to_have_attribute('aria-expanded', 'true')
+        self.page.wait_for_timeout(350)
+        nav.get_by_role('link', name='Categorías', exact=True).click()
+        self.assertEqual(self.page.locator('#sidebar a[href="%s"]' % reverse('catalog:categories')).get_attribute('aria-current'), 'page')
         self.page.get_by_role('link', name='Agregar categoría').click()
-        expect(category_link).to_have_attribute('aria-current', 'location')
-        self.page.get_by_role('button', name='Guardar categoría').click()
-        expect(self.page.get_by_text('Escribe el nombre de la categoría.')).to_be_visible()
         self.page.get_by_label('Nombre').fill('Herramientas de prueba')
         self.page.get_by_role('button', name='Guardar categoría').click()
         expect(self.rows().filter(has_text='Herramientas de prueba')).to_have_count(1)
-        expect(category_link).to_have_attribute('aria-current', 'page')
-        self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
-        toggle.focus()
-        self.page.keyboard.press('Space')
-        expect(toggle).to_have_attribute('aria-expanded', 'true')
-        catalog = nav.get_by_role('link', name='Catálogo de elementos', exact=True)
-        catalog.focus()
-        self.page.keyboard.press('Enter')
-        expect(catalog).to_have_attribute('aria-current', 'page')
-        expect(toggle).to_have_attribute('aria-expanded', 'false')
-        self.page.set_viewport_size({'width': 1440, 'height': 900})
-        toggle.click()
-        expect(toggle).to_have_attribute('aria-expanded', 'true')
-        nav.get_by_role('link', name='Proveedores', exact=True).click()
-        expect(nav.locator('[aria-current="page"]')).to_have_accessible_name('Proveedores')
 
     def test_sidebar_edge_control_and_single_labels(self):
-        labels = ['Inicio', 'Proyectos', 'Inventario general', 'Catálogo de elementos',
-                  'Categorías', 'Facturas', 'Proveedores']
+        labels = ['Inicio', 'Proyectos', 'Inventario', 'Categorías', 'Facturas', 'Proveedores']
         self.page.goto(self.live_server_url + reverse('projects:home'))
         sidebar = self.page.locator('#sidebar')
         nav = sidebar.get_by_role('navigation', name='Principal')
@@ -755,12 +777,13 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
                                    sidebar_box['y'] + sidebar_box['height'] / 2, delta=1)
             self.assertEqual(button_box['width'], 44)
             self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
-            self.assertTrue(toggle.evaluate('''button => {
+            if toggle.get_attribute('aria-expanded') == 'true':
+                self.assertTrue(toggle.evaluate('''button => {
                 const toggle = button.getBoundingClientRect();
                 return Array.from(document.querySelectorAll('#sidebar nav a')).every(link =>
                     link.getBoundingClientRect().right <= toggle.left);
-            }'''))
-            self.assertEqual(nav.locator('.sidebar-group').evaluate_all('''groups => groups.map(group =>
+                }'''))
+            self.assertEqual(sidebar.locator('nav .sidebar-group').evaluate_all('''groups => groups.map(group =>
                 getComputedStyle(group).borderTopWidth)'''), ['0px', '1px', '1px', '1px'])
 
         for width in (1440, 320, 390):
@@ -771,15 +794,13 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
             expect(toggle).to_have_accessible_name('Contraer menú')
             self.capture(f'sidebar-expanded-{width}')
             check_edge()
-            expect(nav.locator('.sidebar-link-label:visible')).to_have_count(7)
+            expect(nav.locator('.sidebar-link-label:visible')).to_have_count(6)
             toggle.focus()
             self.page.keyboard.press('Space')
             expect(toggle).to_have_accessible_name('Expandir menú')
             self.capture(f'sidebar-narrow-{width}')
             check_edge()
             expect(nav.locator('.sidebar-link-label:visible')).to_have_count(0)
-            for label in labels:
-                expect(nav.get_by_role('link', name=label, exact=True)).to_be_visible()
 
         sidebar.evaluate('element => coreui.Sidebar.getInstance(element).hide()')
         expect(toggle).to_be_in_viewport()

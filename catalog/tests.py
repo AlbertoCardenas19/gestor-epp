@@ -116,8 +116,8 @@ class CatalogFlowTests(TestCase):
             url = reverse(route)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertContains(response, f'href="{url}"')
-            self.assertContains(response, 'aria-current="page"', count=1)
+            self.assertContains(response, f'href="{reverse("stock:list") if route == "catalog:list" else url}"')
+            self.assertContains(response, 'aria-current="location"' if route == 'catalog:list' else 'aria-current="page"', count=1)
         response = self.client.get(reverse('catalog:category-create'))
         self.assertContains(response, 'aria-current="location"', count=1)
 

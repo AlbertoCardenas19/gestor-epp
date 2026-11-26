@@ -11,44 +11,17 @@
       orderableRemove: ': activar para quitar la ordenación', paginate: { first: 'Primera página', last: 'Última página', next: 'Página siguiente', previous: 'Página anterior' } },
   };
   DataTable.ext.errMode = 'none';
-  function alignScrollTables(element) {
-    const container = element.closest('.dt-container');
-    const tables = [...(container?.querySelectorAll('.dt-scroll-head table, .dt-scroll-body table') || [])];
-    if (tables.length !== 2 || tables.some(table => !table.getBoundingClientRect().width)) return;
-    const headers = [...container.querySelectorAll('.dt-scroll-head th[data-dt-column]')];
-    if (!headers.length) return;
-    const actionIndexes = new Set(headers.filter(header => header.hasAttribute('data-actions'))
-      .flatMap(header => header.getAttribute('data-dt-column').split(',')));
-    const widths = headers.map(header => header.getBoundingClientRect().width);
-    const viewportWidth = container.clientWidth;
-    const naturalWidth = widths.reduce((total, width) => total + width, 0);
-    const width = Math.max(viewportWidth, naturalWidth);
-    const flexibleWidth = widths.reduce((total, value, index) => total + (actionIndexes.has(String(index)) ? 0 : value), 0);
-    const extra = Math.max(0, width - naturalWidth);
-    widths.forEach((value, index) => {
-      const finalWidth = actionIndexes.has(String(index)) || !flexibleWidth
-        ? value : value + extra * value / flexibleWidth;
-      container.querySelectorAll(`col[data-dt-column="${index}"]`).forEach(column => {
-        column.style.setProperty('width', `${finalWidth}px`, 'important');
-        column.style.setProperty('min-width', `${finalWidth}px`, 'important');
-        column.dataset.eppAligned = '';
-      });
-    });
-    tables.forEach(table => {
-      table.style.setProperty('width', `${width}px`, 'important');
-      table.dataset.eppAligned = '';
+  // DataTables owns scroll header widths. One frame per layout change avoids stale
+  // measurements while the sidebar, viewport, or a hidden tab changes size.
+  let adjustmentFrame = 0;
+  function adjust() {
+    if (adjustmentFrame) cancelAnimationFrame(adjustmentFrame);
+    adjustmentFrame = requestAnimationFrame(() => {
+      adjustmentFrame = 0;
+      DataTable.tables({visible: true, api: true}).columns.adjust();
     });
   }
-  function adjust(root = document) {
-    root.querySelectorAll('table[data-epp-aligned]').forEach(table => {
-      table.style.removeProperty('width'); delete table.dataset.eppAligned;
-    });
-    root.querySelectorAll('col[data-epp-aligned]').forEach(column => {
-      column.style.removeProperty('width'); column.style.removeProperty('min-width'); delete column.dataset.eppAligned;
-    });
-    DataTable.tables({visible: true, api: true}).columns.adjust();
-    requestAnimationFrame(() => root.querySelectorAll('[data-datatable]').forEach(alignScrollTables));
-  }
+  window.addEventListener('resize', adjust);
   function init(root = document) {
     root.querySelectorAll('[data-datatable]').forEach(element => {
       if (DataTable.isDataTable(element)) return;
@@ -70,7 +43,7 @@
           className: actions ? 'table-actions' : '',
           width: actions ? '1%' : undefined,
           render: actions ? undefined : header.dataset.format === 'pending-delivery'
-            ? (value, type, row) => type === 'display' ? (row.pending ? '<span class="pending-delivery" role="img" aria-label="Pendiente de entrega" title="Pendiente de entrega">!</span> ' : '') + text.display(value) : value
+            ? (value, type, row) => type === 'display' ? text.display(value) + (row.pending ? ' <span class="badge pending-delivery">Pendiente</span>' : '') : value
             : header.dataset.link ? (value, type, row) => {
               if (type !== 'display') return value;
               const link = document.createElement('a'); link.textContent = value; link.href = row[header.dataset.link];
@@ -102,7 +75,7 @@
             const json = await response.json();
             if (!Array.isArray(json.data)) throw new Error('response');
             if (current !== revision) return;
-            loaded = true; loading.finish(); callback(json); adjust(panel || document);
+            loaded = true; loading.finish(); callback(json); adjust();
           } catch (failure) {
             if (current !== revision || failure.name === 'AbortError') return;
             if (!loaded) callback({draw: params.draw, recordsTotal: 0, recordsFiltered: 0, data: []});
@@ -114,10 +87,41 @@
         preDrawCallback() { window.EppComponents.dispose(element); },
         drawCallback() {
           window.EppComponents.init(element);
-          requestAnimationFrame(() => alignScrollTables(element));
+          adjust();
           element.closest('.dt-container')?.querySelector('.dt-paging nav')?.setAttribute('aria-label', 'Páginas de la tabla');
         },
       });
+      const controls = panel?.querySelector('.list-controls') ||
+        (panel?.previousElementSibling?.matches('.list-controls') ? panel.previousElementSibling : null);
+      const end = element.closest('.dt-container')?.querySelector('.dt-layout-end');
+      if (controls && end) end.append(controls);
+      const shell = element.closest('.datatable-shell');
+      if (shell && window.ResizeObserver) {
+        let lastWidth = shell.clientWidth;
+        new ResizeObserver(() => {
+          const width = shell.clientWidth;
+          if (width && Math.abs(width - lastWidth) >= 1) { lastWidth = width; adjust(); }
+        }).observe(shell);
+      }
+      const rowKey = element.dataset.rowLink;
+      if (rowKey) {
+        let pointer;
+        element.addEventListener('pointerdown', event => {
+          pointer = event.button === 0 ? {x: event.clientX, y: event.clientY,
+            selection: String(getSelection())} : null;
+        });
+        element.addEventListener('click', event => {
+          if (!pointer || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+          const moved = Math.hypot(event.clientX - pointer.x, event.clientY - pointer.y) > 5;
+          const selected = String(getSelection()) !== pointer.selection || Boolean(String(getSelection()));
+          pointer = null;
+          if (moved || selected || event.target.closest('a, button, input, select, textarea, label, [role="button"], [contenteditable]')) return;
+          const row = event.target.closest('tbody tr');
+          if (!row) return;
+          const data = table.row(row).data();
+          if (data?.[rowKey]) location.assign(data[rowKey]);
+        });
+      }
       const searchInput = element.closest('.dt-container').querySelector('.dt-search input');
       if (searchInput && !searchInput.parentElement.querySelector('[data-search-clear]')) {
         const clear = document.createElement('button');

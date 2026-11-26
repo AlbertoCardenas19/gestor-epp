@@ -204,7 +204,8 @@ class RequestFlowTests(TestCase):
         self.assertEqual(Client(enforce_csrf_checks=True).post(url, {**data(5), 'item': self.item.pk}).status_code, 403)
         result = self.client.get(reverse('requests:data', args=[self.north.pk])).json()
         self.assertEqual(result['data'][0]['purchase'], '3')
-        self.assertIn('Confirmar entrega', result['data'][0]['actions'])
+        self.assertEqual(result['data'][0]['item_url'], request.get_absolute_url())
+        self.assertContains(self.client.get(request.get_absolute_url()), 'Confirmar entrega')
         list_response = self.client.get(reverse('requests:list', args=[self.north.pk]))
         self.assertContains(list_response, 'data-column="delivered" data-format="pending-delivery"')
         self.assertNotContains(list_response, 'data-format="pending-state"')
@@ -270,7 +271,7 @@ class RequestFlowTests(TestCase):
         result = self.client.get(url, {'search[value]': 'Pedido 11'}).json()
         self.assertEqual(result['recordsFiltered'], 1)
         self.assertEqual(result['data'][0]['quantity'], '12')
-        self.assertIn('Ver solicitud', result['data'][0]['actions'])
+        self.assertEqual(result['data'][0]['item_url'], StockRequest.objects.get(project=self.north, quantity=12).get_absolute_url())
         self.assertEqual(self.client.get(url, {'search[value]': 'Pedido privado'}).json()['recordsFiltered'], 0)
 
     def test_database_constraints_for_allocations_and_ledger_links(self):

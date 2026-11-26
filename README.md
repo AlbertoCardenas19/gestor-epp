@@ -102,7 +102,7 @@ presiona `Ctrl+C`. Las próximas veces solo necesitas iniciar PostgreSQL y ejecu
 1. En Inventario, crea un casco en la categoría EPP con cantidad inicial 2 (vacía = 0).
 2. En Proyectos, crea/abre una tarjeta y entra en su pestaña Inventario.
 3. Solicita 5 cascos: se reservan 2 y quedan 3 como necesidad de compra.
-   Inventario general muestra Stock 0 / Entregados 0.
+   Inventario muestra Stock 0 / Entregados 0.
 4. Confirma entrega de 1 a un trabajador. Las columnas pasan a Stock 0 / Entregados 1; el historial
    del proyecto muestra la entrega real. No puedes entregar más de lo reservado.
 5. Registra una entrada en Inventario; después usa «Reservar disponibles» en
@@ -110,7 +110,7 @@ presiona `Ctrl+C`. Las próximas veces solo necesitas iniciar PostgreSQL y ejecu
 6. Prueba reducción/cancelación pendiente con motivo y corrección/anulación de
    entregas. El [recorrido detallado](docs/11-inventario-y-solicitudes.md#probar-en-ubuntu)
    explica las cantidades esperadas y las diferencias entre estas operaciones.
-7. Prueba búsqueda con ×, ordenación, páginas y menús Acciones. Proyectos conserva
+7. Prueba búsqueda con ×, ordenación, páginas y los menús Acciones de los demás listados. Proyectos conserva
    tarjetas. Entregas conserva su filtro de estado.
 
 Los datos se guardan en tu PostgreSQL local. GitHub no incluye la base de la nube.
