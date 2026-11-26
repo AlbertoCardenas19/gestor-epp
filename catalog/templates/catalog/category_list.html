@@ -1,0 +1,19 @@
+{% extends 'projects/base.html' %}
+{% block title %}Categorías{% endblock %}
+{% block extra_styles %}{% include 'projects/datatables_styles.html' %}{% endblock %}
+{% block extra_scripts %}{% include 'projects/datatables_scripts.html' %}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between gap-3 mb-4">
+  <h1>Categorías</h1>
+  <a class="btn btn-primary" href="{% url 'catalog:category-create' %}">Agregar categoría</a>
+</div>
+<section data-datatable-panel>
+  <p class="small text-danger" data-datatable-error role="alert" hidden></p>
+  <div class="card datatable-shell"><div class="card-body">
+    <table class="table table-striped mb-0 align-middle w-100" data-datatable data-source="{% url 'catalog:category-data' %}">
+      <caption class="visually-hidden">Categorías de elementos</caption>
+      <thead><tr><th scope="col" data-column="name">Nombre</th></tr></thead><tbody></tbody>
+    </table>
+  </div></div>
+</section>
+{% endblock %}

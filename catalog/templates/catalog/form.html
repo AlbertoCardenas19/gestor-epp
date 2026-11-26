@@ -1,7 +1,13 @@
 {% extends 'projects/base.html' %}
 {% block title %}{% if object %}Editar elemento{% else %}Nuevo elemento{% endif %}{% endblock %}
 {% block content %}
-<a class="back-link" href="{% url 'catalog:list' %}">← Volver al inventario</a>
+{% if request.resolver_match.namespace == 'stock' %}
+  {% url 'stock:list' as back_url %}
+  <a class="back-link" href="{{ back_url }}">← Volver al inventario</a>
+{% else %}
+  {% url 'catalog:list' as back_url %}
+  <a class="back-link" href="{{ back_url }}">← Volver al catálogo</a>
+{% endif %}
 <div class="form-shell mt-4">
 
   <h1>{% if object %}Editar elemento{% else %}Nuevo elemento{% endif %}</h1>
@@ -19,7 +25,7 @@
       {% endfor %}
       <div class="d-flex flex-column flex-sm-row gap-2 pt-2">
         <button class="btn btn-primary" type="submit">Guardar elemento</button>
-        <a class="btn btn-outline-secondary" href="{% url 'catalog:list' %}">Cancelar</a>
+        <a class="btn btn-outline-secondary" href="{{ back_url }}">Cancelar</a>
       </div>
     </form>
   </div></div>

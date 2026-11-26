@@ -9,6 +9,10 @@ class CategoryForm(forms.ModelForm):
         model = Category
         fields = ['name']
         widgets = {'name': forms.TextInput(attrs={'class': 'form-control'})}
+        error_messages = {'name': {
+            'required': 'Escribe el nombre de la categoría.',
+            'unique': 'Ya existe una categoría con ese nombre.',
+        }}
 
 
 class ItemCatalogForm(forms.ModelForm):

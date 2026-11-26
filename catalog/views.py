@@ -1,4 +1,4 @@
-from django.views.generic import CreateView, DetailView, RedirectView, UpdateView
+from django.views.generic import CreateView, DetailView, TemplateView, UpdateView
 from django.db import transaction
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -15,9 +15,8 @@ class ItemQuerysetMixin:
         return Item.objects.with_category_label().order_by('name', 'pk')
 
 
-class ItemListView(RedirectView):
-    pattern_name = 'stock:list'
-    query_string = True
+class ItemListView(TemplateView):
+    template_name = 'catalog/list.html'
 
 
 class ItemDataView(ItemQuerysetMixin, DataTableView):
@@ -27,7 +26,7 @@ class ItemDataView(ItemQuerysetMixin, DataTableView):
 
     def serialize_record(self, item):
         return {
-            'name': item.name, 'type': item.category_label or 'Sin categorías', 'description': item.description or 'Sin descripción.',
+            'name': item.name, 'item_url': item.get_absolute_url(), 'type': item.category_label or 'Sin categorías', 'description': item.description or 'Sin descripción.',
             'actions': render_to_string('projects/row_actions.html', {
                 'action_id': item.pk, 'action_label': item.name,
                 'detail_url': item.get_absolute_url(), 'detail_label': 'Ver elemento',
@@ -67,11 +66,27 @@ class ItemDetailView(DetailView):
             project_options=item_projects(self.object), movement_project=self.request.GET.get('project', ''), **kwargs)
 
 
+class CategoryListView(TemplateView):
+    template_name = 'catalog/category_list.html'
+
+
+class CategoryDataView(DataTableView):
+    order_columns = ('name',)
+    search_fields = ('name',)
+    default_order = ('name', 'pk')
+
+    def get_queryset(self):
+        return Category.objects.all()
+
+    def serialize_record(self, category):
+        return {'name': category.name}
+
+
 class CategoryCreateView(CreateView):
     model = Category
     form_class = CategoryForm
     template_name = 'catalog/category_form.html'
-    success_url = reverse_lazy('stock:list')
+    success_url = reverse_lazy('catalog:categories')
 
 
 class ItemUpdateView(UpdateView):

@@ -111,11 +111,30 @@ class CatalogFlowTests(TestCase):
         self.assertFalse(Item.objects.exists())
 
     def test_navigation_marks_current_section(self):
-        for namespace, label in [('stock', 'Inventario'), ('projects', 'Proyectos')]:
-            response = self.client.get(reverse(f'{namespace}:list'))
-            self.assertContains(response, f'aria-current="page" href="{reverse(f"{namespace}:list")}">{label}</a>')
-            self.assertEqual(response.content.count(b'aria-current="page"'), 1)
-        self.assertRedirects(self.client.get(reverse('catalog:list')), reverse('stock:list'))
+        for route in ('stock:list', 'projects:list', 'catalog:list', 'catalog:categories',
+                      'purchases:list', 'purchases:suppliers', 'projects:home'):
+            url = reverse(route)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, f'href="{url}"')
+            self.assertContains(response, 'aria-current="page"', count=1)
+        response = self.client.get(reverse('catalog:category-create'))
+        self.assertContains(response, 'aria-current="location"', count=1)
+
+    def test_category_management_separates_listing_and_creation(self):
+        listing = reverse('catalog:categories')
+        create = reverse('catalog:category-create')
+        self.assertContains(self.client.get(listing), 'Agregar categoría')
+        self.assertNotContains(self.client.get(reverse('stock:list')), f'href="{create}"')
+        self.assertNotContains(self.client.get(reverse('catalog:list')), f'href="{create}"')
+        self.assertContains(self.client.get(create), f'href="{listing}">Cancelar')
+        empty = self.client.post(create, {'name': '  '})
+        self.assertFormError(empty.context['form'], 'name', 'Escribe el nombre de la categoría.')
+        duplicate = self.client.post(create, {'name': 'EPP'})
+        self.assertFormError(duplicate.context['form'], 'name', 'Ya existe una categoría con ese nombre.')
+        self.assertRedirects(self.client.post(create, {'name': 'Herramientas'}), listing)
+        result = self.client.get(reverse('catalog:category-data'), {'search[value]': 'Herram'}).json()
+        self.assertEqual(result['data'], [{'name': 'Herramientas'}])
 
 
 class CatalogTableTests(TestCase):

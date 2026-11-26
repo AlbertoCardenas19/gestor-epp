@@ -34,7 +34,7 @@
   let collapsed = mobile.matches;
   try {
     const saved = localStorage.getItem('gestor-epp-sidebar');
-    if (saved !== null) collapsed = saved === 'collapsed';
+    if (!mobile.matches && saved !== null) collapsed = saved === 'collapsed';
   } catch (_) {}
   if (collapsed) component.narrow();
   function sync() {
@@ -43,7 +43,9 @@
     button.setAttribute('aria-expanded', String(!narrow));
     button.setAttribute('aria-label', label);
     button.title = label;
-    try { localStorage.setItem('gestor-epp-sidebar', narrow ? 'collapsed' : 'expanded'); } catch (_) {}
+    if (!mobile.matches) {
+      try { localStorage.setItem('gestor-epp-sidebar', narrow ? 'collapsed' : 'expanded'); } catch (_) {}
+    }
   }
   new MutationObserver(sync).observe(sidebar, { attributes: true, attributeFilter: ['class'] });
   mobile.addEventListener('change', event => {

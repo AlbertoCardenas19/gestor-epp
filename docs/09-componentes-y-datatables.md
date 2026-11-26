@@ -284,3 +284,24 @@ No se añaden bibliotecas ni versiones.
   su componente, por ejemplo tarjetas frente a DataTables.
 - Una nueva instancia equivalente debe adoptar el componente compartido. Cualquier
   excepción técnica se justifica antes de crear JavaScript, plantilla o CSS paralelo.
+
+## Navegación principal por temas
+
+- **General** agrupa Inicio. **Proyectos** agrupa el listado de proyectos. Las
+  pantallas de cada proyecto se alcanzan desde su ficha y sus pestañas.
+- **Inventario** agrupa Inventario general, Catálogo de elementos y Categorías.
+  **Compras** agrupa Facturas y Proveedores.
+- Los grupos permanecen visibles en ambos anchos del sidebar. En el ancho
+  contraído se conservan los iconos, rótulos cortos y nombres accesibles
+  completos. CoreUI gestiona la contracción y las páginas móviles abren el
+  sidebar contraído. Las opciones se recorren con Tab y se activan con Enter.
+- El destino actual lleva `aria-current="page"`. Un formulario o una ficha
+  dentro de una sección conserva el enlace de esa sección resaltado con
+  `aria-current="location"`. El sidebar y la ruta superior usan la misma
+  selección derivada de las rutas de Django.
+- El sidebar contiene enlaces de navegación. «Agregar categoría» pertenece
+  al listado de Categorías y abre su formulario propio. Cancelar o guardar
+  vuelve al listado. Las pantallas de elementos, incluso al crear uno desde
+  una factura, conservan la selección múltiple de categorías.
+- Categorías y Catálogo reutilizan DataTables compartido en modo `serverSide`.
+  Búsqueda, orden y paginación se aplican a todos los registros de cada listado.

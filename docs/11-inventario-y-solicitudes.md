@@ -119,8 +119,9 @@ Crea solicitudes/eventos, agrega la FK nullable y restricciones. No actualiza ni
 elimina filas previas ni cambia sus cantidades; las entregas anteriores mantienen
 FK nula. La migración 0003 anterior permite posiciones comunes de empresa.
 
-El listado de Catálogo redirige a Inventario. Se conservan las rutas de fichas y
-el endpoint JSON anterior para compatibilidad; la interfaz usa una sola tabla.
+El sidebar agrupa Inventario general, Catálogo de elementos y Categorías bajo
+Inventario. El catálogo usa su listado y endpoint de datos propios. Las fichas de
+elemento y las rutas de inventario conservan sus enlaces.
 La pestaña Inventario del proyecto muestra ahora solicitudes; Entregas sigue como
 pestaña inicial y muestra solo entregas reales, con filtro de estado. Los enlaces
 antiguos de historial/corrección/anulación siguen funcionando. Las rutas antiguas
