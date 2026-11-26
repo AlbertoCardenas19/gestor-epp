@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-Iteración UI-01 implementada y verificada. Navegación, listados y estilos compartidos ajustados; lista para su publicación en `origin/main`.
+Iteración UI-01 implementada, verificada y publicada en `origin/main`. Navegación, listados y estilos compartidos ajustados.
 
 ## Pendientes
 
@@ -23,4 +23,4 @@ Actualizar la copia Ubuntu desde `origin/main` y probar el recorrido con los dat
 
 **Limitaciones y pendientes.** Las decisiones funcionales de `docs/04-pendientes.md`, incluido el IVA automático, siguen abiertas. No se añadieron migraciones ni dependencias de producción.
 
-**Entrega.** Verificada y preparada para publicar. El hash del commit que incluye esta entrada se informará con el push y podrá añadirse al documento en la próxima actualización.
+**Entrega.** Publicada en `origin/main` mediante `b47fef873ed574d5d19533546b8dc0e3f660db51`.
