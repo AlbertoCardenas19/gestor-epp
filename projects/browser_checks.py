@@ -768,6 +768,40 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         toggle = self.page.locator('.sidebar-toggle')
         expect(toggle).to_have_count(1)
         expect(nav.get_by_role('link')).to_have_text(labels)
+        self.assertRegex(self.page.locator('link[href*="projects/app.css"]').get_attribute('href'),
+                         r'/static/projects/app\.css\?v=[0-9a-f]{12}$')
+
+        def check_style(expanded):
+            values = self.page.evaluate('''() => {
+              const sidebar = document.querySelector('#sidebar');
+              const button = document.querySelector('.sidebar-toggle');
+              const heading = document.querySelector('.sidebar-group-title');
+              const link = document.querySelector('#sidebar .nav-link');
+              const circle = getComputedStyle(button, '::before');
+              const group = document.querySelector('.sidebar-group + .sidebar-group');
+              const center = button.getBoundingClientRect();
+              return {background: getComputedStyle(sidebar).backgroundColor,
+                border: getComputedStyle(group).borderTopColor,
+                heading: parseFloat(getComputedStyle(heading).fontSize),
+                weight: getComputedStyle(heading).fontWeight,
+                link: parseFloat(getComputedStyle(link).fontSize),
+                icon: getComputedStyle(link, '::before').content,
+                circle: circle.backgroundColor, radius: circle.borderRadius,
+                circleWidth: circle.width, width: sidebar.getBoundingClientRect().width,
+                hit: document.elementFromPoint(center.x + center.width / 2,
+                  center.y + center.height / 2) === button};
+            }''')
+            self.assertEqual(values['background'], 'rgb(20, 44, 75)')
+            self.assertEqual(values['border'], 'rgba(255, 255, 255, 0.4)')
+            self.assertGreater(values['heading'], values['link'])
+            self.assertLess(values['heading'] - values['link'], 1)
+            self.assertEqual(values['weight'], '700')
+            self.assertEqual(values['icon'], 'none')
+            self.assertEqual(values['circle'], values['background'])
+            self.assertEqual(values['radius'], '50%')
+            self.assertEqual(values['circleWidth'], '30px')
+            self.assertEqual(values['width'], 236 if expanded else 28)
+            self.assertTrue(values['hit'])
 
         def check_edge():
             sidebar_box, button_box = sidebar.bounding_box(), toggle.bounding_box()
@@ -794,12 +828,14 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
             expect(toggle).to_have_accessible_name('Contraer menú')
             self.capture(f'sidebar-expanded-{width}')
             check_edge()
+            check_style(True)
             expect(nav.locator('.sidebar-link-label:visible')).to_have_count(6)
             toggle.focus()
             self.page.keyboard.press('Space')
             expect(toggle).to_have_accessible_name('Expandir menú')
             self.capture(f'sidebar-narrow-{width}')
             check_edge()
+            check_style(False)
             expect(nav.locator('.sidebar-link-label:visible')).to_have_count(0)
 
         sidebar.evaluate('element => coreui.Sidebar.getInstance(element).hide()')

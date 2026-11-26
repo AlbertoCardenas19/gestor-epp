@@ -1,3 +1,7 @@
+from hashlib import sha256
+from pathlib import Path
+
+from django.contrib.staticfiles import finders
 from django.db import connection
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -6,6 +10,10 @@ from .models import Project
 
 
 class ProjectFlowTests(TestCase):
+    def test_stylesheet_url_uses_current_content_hash(self):
+        digest = sha256(Path(finders.find('projects/app.css')).read_bytes()).hexdigest()[:12]
+        self.assertContains(self.client.get('/'), f'/static/projects/app.css?v={digest}')
+
     def test_database_is_postgresql(self):
         self.assertEqual(connection.vendor, 'postgresql')
 

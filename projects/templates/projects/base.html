@@ -1,4 +1,4 @@
-{% load static navigation %}
+{% load static navigation static_assets %}
 {% sidebar_navigation request.resolver_match as navigation %}
 <!doctype html>
 <html lang="es">
@@ -8,7 +8,7 @@
   <title>{% block title %}Inicio{% endblock %} · Gestor EPP</title>
   <link rel="stylesheet" href="{% static 'vendor/coreui/coreui.min.css' %}">
   {% block extra_styles %}{% endblock %}
-  <link rel="stylesheet" href="{% static 'projects/app.css' %}">
+  <link rel="stylesheet" href="{% versioned_static 'projects/app.css' %}">
   <link rel="icon" type="image/svg+xml" href="{% static 'projects/favicon.svg' %}">
   <script src="{% static 'vendor/coreui/coreui.bundle.min.js' %}" defer></script>
   <script src="{% static 'projects/components.js' %}" defer></script>

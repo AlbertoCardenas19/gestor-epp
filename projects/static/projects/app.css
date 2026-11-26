@@ -18,18 +18,17 @@
 }
 body { min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
 a { text-underline-offset: .2em; }
-.app-sidebar { width: var(--sidebar-width); position: fixed; inset: 0 auto 0 0; padding: 28px 16px; background: var(--app-sidebar); color: var(--app-surface); display: flex; flex-direction: column; z-index: 10; overflow-y: auto; }
+.app-sidebar { --cui-is-mobile: initial; --cui-sidebar-width: var(--sidebar-width); --cui-sidebar-narrow-width: var(--sidebar-narrow-width); width: var(--sidebar-width); position: fixed; inset: 0 auto 0 0; padding: 28px 30px 28px 16px; background: var(--app-sidebar); color: var(--app-surface); display: flex; flex-direction: column; z-index: 10; overflow-y: auto; transition: width .24s ease; }
 .brand { display: flex; align-items: center; gap: 12px; color: var(--app-surface); text-decoration: none; font-size: 1.2rem; font-weight: 700; white-space: nowrap; }
 .brand:hover { color: var(--app-surface); }
 .brand-mark { display: inline-grid; place-items: center; flex-shrink: 0; width: 40px; height: 40px; border-radius: 10px; background: var(--app-surface); color: var(--app-primary); font-size: 1.5rem; }
 .app-sidebar nav { display: grid; margin-top: 24px; }
-.sidebar-group + .sidebar-group { border-top: 1px solid #ffffff40; margin-top: 10px; padding-top: 10px; }
+.sidebar-group + .sidebar-group { border-top: 1px solid #ffffff66; margin-top: 10px; padding-top: 10px; }
 .sidebar-group-title { margin: 0 0 4px; color: #e2e8f0; font-size: .94rem; font-weight: 700; letter-spacing: normal; }
 .sidebar-link-label { white-space: normal; }
-.app-sidebar .nav-link { height: auto; min-height: 44px; padding-block: 8px; }
-.nav-link { display: flex; align-items: center; gap: 12px; padding: 13px 12px; color: var(--app-border); border-radius: 8px; text-decoration: none; font-size: .9rem; font-weight: 500; white-space: nowrap; }
-.nav-link:hover { color: var(--app-surface); background: var(--app-sidebar-hover); }
-.nav-link.active { background: var(--app-surface); color: var(--app-primary); font-weight: 650; }
+.app-sidebar .nav-link { display: flex; align-items: center; height: auto; min-height: 44px; padding: 8px 12px; color: var(--app-border); border-radius: 8px; text-decoration: none; font-size: .9rem; font-weight: 500; white-space: nowrap; }
+.app-sidebar .nav-link:hover { color: var(--app-surface); background: var(--app-sidebar-hover); }
+.app-sidebar .nav-link.active { background: var(--app-surface); color: var(--app-primary); font-weight: 650; }
 .sidebar-toggle {
   position: fixed;
   z-index: 11;
@@ -55,7 +54,7 @@ a { text-underline-offset: .2em; }
   background: var(--app-sidebar);
 }
 .sidebar-toggle[hidden] { display: none; }
-.sidebar-toggle:hover::before { background: var(--app-sidebar-hover); }
+.sidebar-toggle:hover::before { border-color: var(--app-surface); }
 .sidebar-toggle:focus-visible { outline: none; }
 .sidebar-toggle:focus-visible::before { outline: 2px solid var(--app-sidebar); box-shadow: 0 0 0 4px var(--app-surface); }
 .sidebar-toggle:has(+ .sidebar-narrow) { left: var(--sidebar-narrow-width); }
@@ -146,8 +145,6 @@ h2,h3 { letter-spacing: -.02em; }
 
 .app-sidebar :focus-visible { outline-color: var(--app-surface); }
 
-.nav-link { height: 48px; min-height: 48px; }
-.app-sidebar { transition: width .24s ease; }
 .app-workspace { transition: margin-left .24s ease; }
 .sidebar-toggle svg { position: relative; transition: transform .24s ease; }
 @media (prefers-reduced-motion: reduce) {
@@ -164,7 +161,6 @@ h2,h3 { letter-spacing: -.02em; }
 .action-menu a:focus-visible { outline-offset: -3px; }
 
 /* CoreUI narrow state keeps an empty rail on every viewport. */
-.sidebar.app-sidebar { --cui-is-mobile: initial; --cui-sidebar-width: var(--sidebar-width); --cui-sidebar-narrow-width: var(--sidebar-narrow-width); padding: 28px 30px 28px 16px; }
 .sidebar.app-sidebar:not(.sidebar-end):not(.hide) { margin-inline-start: 0; }
 .sidebar.app-sidebar.sidebar-narrow { width: var(--sidebar-narrow-width); padding: 0; overflow: hidden; }
 .sidebar-narrow .brand, .sidebar-narrow nav { visibility: hidden; pointer-events: none; }
