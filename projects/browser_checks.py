@@ -57,6 +57,14 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
                     self.assertEqual(self.page.locator('.item-info-body').evaluate(
                         'e => parseInt(getComputedStyle(e).paddingLeft)'), 24 if width == 1440 else 16)
                     self.assertLessEqual(self.page.evaluate('document.documentElement.scrollWidth'), width)
+                    facts = card.locator('.item-info-fact')
+                    self.assertEqual(facts.count(), 2)
+                    self.assertLess(facts.nth(0).bounding_box()['y'], facts.nth(1).bounding_box()['y'])
+                    if width > 320:
+                        self.assertAlmostEqual(facts.nth(0).locator('.info-label').bounding_box()['x'],
+                                               facts.nth(1).locator('.info-label').bounding_box()['x'], delta=1)
+                        self.assertAlmostEqual(facts.nth(0).locator('.info-value').bounding_box()['x'],
+                                               facts.nth(1).locator('.info-value').bounding_box()['x'], delta=1)
                     if not item.description:
                         expect(card).to_contain_text('Sin descripción')
                         expect(card.locator('.item-info-facts')).to_contain_text('0')
@@ -66,23 +74,32 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
                     self.assertGreaterEqual(card.locator('.item-info-description').bounding_box()['y'] -
                                             card.locator('.item-info-top').bounding_box()['y'] -
                                             card.locator('.item-info-top').bounding_box()['height'], 22)
-                    trigger = card.get_by_role('button', name=f'Acciones de {item.name}')
-                    expect(trigger).to_contain_text('Acciones')
+                    trigger = card.get_by_role('button', name='Acciones del elemento')
+                    expect(trigger).to_have_text('⋮')
+                    self.assertGreaterEqual(trigger.bounding_box()['width'], 44)
+                    self.assertGreaterEqual(trigger.bounding_box()['height'], 44)
+                    self.assertEqual(trigger.evaluate('e => getComputedStyle(e).borderTopWidth'), '0px')
+                    trigger.hover()
+                    self.assertEqual(trigger.evaluate('e => getComputedStyle(e).backgroundColor'), 'rgb(241, 245, 249)')
                     trigger.focus()
                     self.page.keyboard.press('Enter')
+                    self.assertGreaterEqual(trigger.evaluate('e => parseInt(getComputedStyle(e).outlineWidth)'), 3)
                     menu = card.locator('.dropdown-menu')
                     expect(menu).to_be_visible()
                     self.assertGreaterEqual(menu.bounding_box()['x'], 0)
                     self.assertLessEqual(menu.bounding_box()['x'] + menu.bounding_box()['width'], width + 1)
                     expect(menu.get_by_role('link', name='Registrar entrada')).to_be_visible()
                     expect(menu.get_by_role('link', name='Editar elemento')).to_be_visible()
+                    if os.environ.get('UI_ARTIFACT_DIR') and item == long:
+                        path = Path(os.environ['UI_ARTIFACT_DIR']) / f'ui14-elemento-{"vacio" if item == single else "largo"}-{width}-menu.png'
+                        path.parent.mkdir(parents=True, exist_ok=True)
+                        self.page.screenshot(path=str(path), full_page=True)
                     self.page.keyboard.press('Escape')
                     expect(menu).to_be_hidden()
                     expect(trigger).to_be_focused()
                     if os.environ.get('UI_ARTIFACT_DIR'):
                         trigger.evaluate('e => e.blur()')
-                        path = Path(os.environ['UI_ARTIFACT_DIR']) / f'ui12-elemento-{"vacio" if item == single else "largo"}-{width}.png'
-                        path.parent.mkdir(parents=True, exist_ok=True)
+                        path = Path(os.environ['UI_ARTIFACT_DIR']) / f'ui14-elemento-{"vacio" if item == single else "largo"}-{width}.png'
                         self.page.screenshot(path=str(path), full_page=True)
                     self.page.get_by_role('tab', name='Historial de movimientos').click()
                     expect(self.page.locator('#item-history')).to_be_visible()
@@ -141,7 +158,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.page.goto(self.live_server_url + item.get_absolute_url())
         expect(self.page.locator('#item-info')).to_contain_text('Descripción del casco')
         expect(self.page.locator('#item-info')).to_contain_text('Stock')
-        self.page.get_by_role('button', name='Acciones de Casco de prueba').click()
+        self.page.get_by_role('button', name='Acciones del elemento').click()
         expect(self.page.get_by_role('link', name='Registrar entrada')).to_be_visible()
         expect(self.page.get_by_role('link', name='Editar elemento')).to_be_visible()
         self.page.get_by_role('tab', name='Proyectos', exact=True).focus()

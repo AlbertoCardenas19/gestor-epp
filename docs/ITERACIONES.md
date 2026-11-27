@@ -2,17 +2,27 @@
 
 ## Estado actual
 
-UI-01 a UI-13 publicadas. UI-13 implementa facturas en dos pasos, líneas de servicio y cálculo automático, y cuatro órdenes de proyectos. UI-12 sigue pendiente de revisión visual del usuario. Firefox en Ubuntu sigue pendiente de comprobación.
+UI-01 a UI-14 publicadas. UI-14 reemplaza el piloto visual anterior de Información del elemento y queda pendiente de validación del usuario antes de extenderlo. Firefox en Ubuntu sigue pendiente de comprobación.
 
 ## Pendientes
 
 - Decisiones funcionales abiertas de [docs/04-pendientes.md](04-pendientes.md), en particular la conciliación de facturas históricas discordantes, tratamientos de compra fuera de la base gravada definida, aprobación de compras, devoluciones y reposiciones.
-- Revisar visualmente el piloto UI-12 antes de extenderlo a otras fichas.
+- Revisar visualmente el piloto UI-14 antes de extenderlo a otras fichas.
 - Confirmar en la PC del usuario el recorrido visual y funcional con sus datos locales tras actualizar desde `origin/main`.
 
 ## Próximo paso
 
-Actualizar la copia Ubuntu desde `origin/main`, aplicar la migración de facturas, revisar las diferencias históricas que aparezcan y comprobar UI-13 y el piloto UI-12 en Firefox con los datos locales.
+Actualizar la copia Ubuntu desde `origin/main` y revisar el piloto UI-14 en Firefox con los datos locales; si aún falta aplicar la migración de facturas UI-13, hacerla tras una copia de seguridad y revisar las diferencias históricas que aparezcan.
+
+## UI-14 · 27 de noviembre de 2026 · propuesta visual pendiente de validación
+
+**Objetivo y alcance.** Ajustar solo la pestaña Información del elemento (RF-03, RF-04 y RF-05) según la nueva distribución solicitada. La propuesta reemplaza el aspecto piloto UI-12 en esa ficha, sin convertirlo en estándar para proyecto, proveedor ni factura. Se conservaron título, pestañas, datos, acciones, formularios, tablas, sidebar y reglas de negocio.
+
+**Diseño.** Una sola card blanca de altura natural, borde sutil, radio de 10px, sin sombra, con padding de 24px en escritorio y 16px en móvil. Categorías y Stock se muestran en filas distintas, con etiquetas y valores alineados en columnas; a 320px se apilan. Descripción queda debajo, sin separadores, con ancho máximo de lectura de 72 caracteres y texto completo o «Sin descripción». El menú compartido CoreUI mantiene sus acciones y recibe solo en esta ficha un disparador ⋮, sin borde ni fondo permanentes, con área de 44 × 44px, nombre «Acciones del elemento» y fondo gris suave en hover o foco.
+
+**Verificación visual.** En Chromium se probaron un elemento con una categoría, stock cero y descripción vacía, y otro con dos categorías, stock 1234, nombre y descripción extensos. A 1440 y 390px las etiquetas y los valores comienzan alineados; a 320px se apilan sin desbordar. El menú abrió con Enter, quedó dentro del viewport y cerró con Escape devolviendo el foco; Historial y Proyectos conservaron sus pestañas. Capturas: [vacío 1440](capturas/ui14-elemento-vacio-1440.png), [vacío 390](capturas/ui14-elemento-vacio-390.png), [vacío 320](capturas/ui14-elemento-vacio-320.png), [extenso 1440](capturas/ui14-elemento-largo-1440.png), [extenso 390](capturas/ui14-elemento-largo-390.png), [extenso 320](capturas/ui14-elemento-largo-320.png) y menú abierto a [1440](capturas/ui14-elemento-largo-1440-menu.png), [390](capturas/ui14-elemento-largo-390-menu.png) y [320px](capturas/ui14-elemento-largo-320-menu.png).
+
+**Comprobaciones y límite.** Pasaron 189 pruebas Django y 18 pruebas Chromium, más la prueba focalizada repetida tras reforzar sus mediciones de hover y foco. Pasaron `manage.py check`, `makemigrations --check --dry-run` y `git diff --check`. La prueba de navegador verifica disposición, ancho, menú, área pulsable de 44 × 44px, ausencia de borde, fondo gris en hover, foco visible y pestañas. El resultado sigue pendiente de validación visual del usuario. Firefox Ubuntu no está instalado aquí y queda pendiente de revisión en su PC.
 
 ## UI-13 · 27 de noviembre de 2026
 
