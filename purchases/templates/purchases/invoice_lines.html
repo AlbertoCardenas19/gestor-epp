@@ -1,0 +1,24 @@
+{% extends 'projects/base.html' %}
+{% load static %}
+{% block title %}Gestionar líneas de factura{% endblock %}
+{% block extra_scripts %}
+<script src="{% static 'projects/item-picker.js' %}" defer></script>
+<script src="{% static 'purchases/invoice-form.js' %}" defer></script>
+{% endblock %}
+{% block content %}
+<div class="form-shell">
+  <div class="form-page-heading"><h1>Gestionar líneas</h1><p>Factura {{ invoice.number }} · {{ invoice.supplier }}</p></div>
+  <form method="post" class="card card-body p-4 p-md-5" novalidate>
+    {% csrf_token %}<input type="hidden" name="revision" value="{{ invoice.revision }}">
+    {% if errors %}<ul class="text-danger" role="alert">{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+    <div data-form-group data-form-prefix="{{ editor.formset.prefix }}" class="mb-4">
+      {{ editor.formset.management_form }}{{ editor.formset.non_form_errors }}
+      <div data-form-rows>{% for row in editor.rows %}{% include 'purchases/invoice_line.html' %}{% endfor %}</div>
+      <template data-form-template>{% include 'purchases/invoice_line.html' with row=editor.empty_row %}</template>
+      <button type="button" class="btn btn-outline-secondary" data-form-add>Agregar línea</button>
+    </div>
+    <div class="form-actions"><button type="submit" class="btn btn-primary">Guardar líneas</button>
+      <a class="btn btn-outline-secondary" href="{{ invoice.get_absolute_url }}">Cancelar</a></div>
+  </form>
+</div>
+{% endblock %}

@@ -15,7 +15,7 @@ from projects.datatables import DataTableView
 from .forms import (CancellationForm, InvoiceForm, InvoiceLinesEditor, PaymentForm, ReceiptForm,
                     ReferencePriceForm, SupplierForm, selector)
 from .models import Invoice, ReferencePrice, Supplier
-from .services import cancel_invoice, mark_paid, receive_invoice, record_reference_price, save_invoice
+from .services import cancel_invoice, mark_paid, receive_invoice, record_reference_price, save_invoice, save_invoice_lines
 
 
 class SupplierList(TemplateView):
@@ -109,8 +109,8 @@ class InvoiceList(TemplateView):
 
 
 class InvoiceData(DataTableView):
-    order_columns = ('number', 'supplier__name', 'issued_on', 'due_on', 'total', 'payment_label', 'receipt_label', None)
-    search_fields = ('number', 'supplier__name', 'supplier__rut', 'purchase_order', 'payment_label', 'receipt_label')
+    order_columns = ('number', 'supplier__name', 'issued_on', 'calculated_total', 'payment_label', 'receipt_label', None)
+    search_fields = ('number', 'supplier__name', 'supplier__rut', 'purchase_order', 'payment_method', 'payment_label', 'receipt_label')
     default_order = ('-issued_on', '-pk')
 
     def get_queryset(self):
@@ -122,7 +122,8 @@ class InvoiceData(DataTableView):
 
     def serialize_record(self, invoice):
         return {'number': invoice.number, 'supplier': invoice.supplier.name, 'issued': invoice.issued_on.isoformat(),
-                'due': invoice.due_on.isoformat(), 'total': str(invoice.total), 'payment': invoice.payment_label,
+                'total': str(invoice.calculated_total) if invoice.calculated_total is not None else 'Por completar',
+                'payment': invoice.payment_label,
                 'receipt': invoice.receipt_label, 'url': invoice.get_absolute_url(),
                 'actions': render_to_string('projects/row_actions.html', {
                     'action_id': invoice.pk, 'action_label': invoice.number, 'detail_url': invoice.get_absolute_url(),
@@ -144,9 +145,11 @@ class InvoiceDetail(DetailView):
         invoice = self.object
         actions = []
         if not invoice.cancelled_at:
-            if not invoice.received_at:
+            if not invoice.received_at and invoice.lines.filter(item__isnull=False).exists():
                 actions.append({'label': 'Confirmar recepción completa', 'url': reverse('purchases:receive', args=[invoice.pk])})
-            if not invoice.paid_on:
+            if not invoice.received_at:
+                actions.append({'label': 'Gestionar líneas', 'url': reverse('purchases:lines', args=[invoice.pk])})
+            if invoice.payment_status == Invoice.Payment.PENDING:
                 actions.append({'label': 'Marcar como pagada', 'url': reverse('purchases:pay', args=[invoice.pk])})
             actions.extend([
                 {'label': 'Corregir', 'url': reverse('purchases:correct', args=[invoice.pk])},
@@ -163,11 +166,11 @@ def invoice_edit(request, pk=None):
         return redirect(invoice)
     data = request.POST if request.method == 'POST' else None
     form = InvoiceForm(data, instance=invoice)
-    editor = InvoiceLinesEditor(data, invoice)
+    editor = InvoiceLinesEditor(data, invoice) if invoice else None
     if data is not None:
         header_valid = form.is_valid()
-        lines = editor.clean()
-        if header_valid and lines:
+        lines = editor.clean() if editor else None
+        if header_valid and (editor is None or lines is not None):
             try:
                 saved = save_invoice(form.cleaned_data, lines, invoice_id=pk,
                                      reason=form.cleaned_data.get('reason', ''), revision=form.cleaned_data.get('revision'))
@@ -182,8 +185,32 @@ def invoice_edit(request, pk=None):
 
 
 @require_http_methods(['GET', 'POST'])
+def invoice_lines(request, pk):
+    invoice = get_object_or_404(Invoice, pk=pk)
+    if invoice.cancelled_at or invoice.received_at:
+        return redirect(invoice)
+    data = request.POST if request.method == 'POST' else None
+    editor = InvoiceLinesEditor(data, invoice)
+    errors = []
+    if data is not None:
+        lines = editor.clean()
+        if lines is not None:
+            try:
+                save_invoice_lines(pk, lines, int(data.get('revision', '-1')))
+            except (ValidationError, ValueError) as error:
+                errors = error.messages if isinstance(error, ValidationError) else ['Revisión inválida.']
+            else:
+                return redirect(invoice)
+    return render(request, 'purchases/invoice_lines.html', {
+        'invoice': invoice, 'editor': editor, 'errors': errors,
+    })
+
+
+@require_http_methods(['GET', 'POST'])
 def invoice_action(request, pk, action):
     invoice = get_object_or_404(Invoice, pk=pk)
+    if action == 'receive' and (invoice.cancelled_at or invoice.received_at or not invoice.lines.filter(item__isnull=False).exists()):
+        return redirect(invoice)
     if action == 'receive':
         title = 'Confirmar recepción completa'
         form_class = ReceiptForm
@@ -203,7 +230,7 @@ def invoice_action(request, pk, action):
             elif action == 'cancel':
                 cancel_invoice(pk, form.cleaned_data['reason'], form.cleaned_data['revision'])
             else:
-                mark_paid(pk, form.cleaned_data['paid_on'], form.cleaned_data['revision'])
+                mark_paid(pk, form.cleaned_data['revision'])
         except ValidationError as error:
             errors = error.messages
         else:

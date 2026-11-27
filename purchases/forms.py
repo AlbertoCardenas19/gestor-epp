@@ -42,7 +42,7 @@ class InvoiceForm(StyledForm, forms.ModelForm):
     class Meta:
         model = Invoice
         fields = HEADER
-        widgets = {name: date_input() for name in ('issued_on', 'due_on', 'paid_on')}
+        widgets = {'issued_on': date_input()}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -51,18 +51,10 @@ class InvoiceForm(StyledForm, forms.ModelForm):
         else:
             del self.fields['reason'], self.fields['revision']
 
-    def clean(self):
-        cleaned = super().clean()
-        status = cleaned.get('payment_status')
-        if status == Invoice.Payment.PAID and not cleaned.get('paid_on'):
-            self.add_error('paid_on', 'Indica la fecha de pago.')
-        elif status == Invoice.Payment.PENDING and cleaned.get('paid_on'):
-            self.add_error('paid_on', 'Deja la fecha de pago vacía si el pago está pendiente.')
-        return cleaned
-
-
 class InvoiceLineForm(StyledForm, forms.Form):
+    type = forms.ChoiceField(label='Tipo de línea', choices=(('item', 'Elemento'), ('service', 'Servicio')))
     item = picker_field(Item.objects.all(), 'Elemento', required=False)
+    description = forms.CharField(label='Descripción del servicio', required=False, widget=forms.Textarea(attrs={'rows': 2}))
     quantity = forms.IntegerField(label='Cantidad', min_value=1, max_value=2**63 - 1)
     unit_price = forms.IntegerField(label='Precio unitario sin IVA (CLP)', min_value=0, max_value=2**63 - 1)
 
@@ -72,7 +64,7 @@ class AllocationForm(StyledForm, forms.Form):
     quantity = forms.IntegerField(label='Cantidad asignada', min_value=1, max_value=2**63 - 1)
 
 
-InvoiceLines = formset_factory(InvoiceLineForm, min_num=1, validate_min=True, extra=0, can_delete=True)
+InvoiceLines = formset_factory(InvoiceLineForm, extra=0, can_delete=True)
 Allocations = formset_factory(AllocationForm, extra=0, can_delete=True)
 
 
@@ -93,14 +85,15 @@ class CancellationForm(StyledForm, ReceiptForm):
 
 
 class PaymentForm(StyledForm, ReceiptForm):
-    paid_on = forms.DateField(label='Fecha de pago', widget=date_input())
+    pass
 
 
 class InvoiceLinesEditor:
     def __init__(self, data=None, invoice=None):
         existing = list(invoice.lines.prefetch_related('allocations')) if invoice else []
         self.formset = InvoiceLines(data, prefix='lines', initial=[
-            {'item': line.item_id, 'quantity': line.quantity, 'unit_price': line.unit_price}
+            {'type': 'item' if line.item_id else 'service', 'item': line.item_id,
+             'description': line.description, 'quantity': line.quantity, 'unit_price': line.unit_price}
             for line in existing
         ])
         self.rows = [
@@ -111,6 +104,8 @@ class InvoiceLinesEditor:
 
     @staticmethod
     def build_row(form, data=None, line=None):
+        if data is None and line is None:
+            form.initial.setdefault('type', 'item')
         if data is not None:
             form.empty_permitted = False
         allocations = Allocations(data, prefix=f'{form.prefix}-allocations', initial=[
@@ -134,15 +129,27 @@ class InvoiceLinesEditor:
             allocations_valid = allocations.is_valid()
             valid &= allocations_valid
             item = values.get('item')
-            if item and new_item.has_changed():
+            kind = values.get('type')
+            if kind == 'service':
+                if item or new_item.has_changed() or not values.get('description', '').strip():
+                    form.add_error('description', 'Escribe una descripción de servicio y deja el elemento vacío.')
+                    valid = False
+                if any(entry and not entry.get('DELETE') for entry in allocations.cleaned_data):
+                    form.add_error(None, 'Los servicios no se distribuyen entre proyectos.')
+                    valid = False
+            elif values.get('description', '').strip():
+                form.add_error('description', 'La descripción de servicio corresponde solo a servicios.')
+                valid = False
+            if kind == 'item' and item and new_item.has_changed():
                 form.add_error('item', 'Selecciona un elemento existente o crea uno nuevo en esta línea.')
                 valid = False
-            elif not item and 'item' not in form.errors:
+            elif kind == 'item' and not item and 'item' not in form.errors:
                 valid &= new_item.is_valid()
             if form.errors or not values or not allocations_valid:
                 valid = False
                 continue
-            lines.append({'item': item, 'new_item': new_item,
+            lines.append({'item': item if kind == 'item' else None, 'new_item': new_item if kind == 'item' else None,
+                          'description': values.get('description', '').strip() if kind == 'service' else '',
                           'quantity': values['quantity'], 'unit_price': values['unit_price'],
                           'allocations': [(entry['project'], entry['quantity']) for entry in allocations.cleaned_data
                                           if entry and not entry.get('DELETE')]})

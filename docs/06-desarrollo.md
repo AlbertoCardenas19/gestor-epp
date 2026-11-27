@@ -609,22 +609,34 @@ por línea de compra y son independientes de ese historial.
 
 ### Factura, recepción e inventario
 
-1. **Registrar factura.** Se guarda el proveedor, número, emisión, vencimiento,
-   total con IVA del documento, estado de pago y fecha si está pagada. El número
-   es único por proveedor. La orden de compra es opcional y se puede repetir.
-   Cada línea tiene un elemento existente o creado en el formulario, cantidad
-   y precio unitario sin IVA. Guardar la factura deja el stock igual.
-2. **Distribuir, si corresponde.** Una línea puede repartirse entre varios
+1. **Registrar factura.** El primer formulario guarda solo proveedor, número,
+   emisión, orden de compra opcional, forma de pago libre y estado Pendiente o
+   Pagada. El número es único por proveedor. La forma de pago no cambia el
+   estado. Vencimiento y fecha de pago dejaron de pedirse y mostrarse; los
+   valores históricos permanecen en la base. Guardar abre la ficha sin líneas,
+   muestra «Por completar» y no altera el stock.
+2. **Gestionar líneas.** Desde el menú de la ficha se agregan o modifican líneas
+   antes de recibir. Una línea de elemento contiene elemento del catálogo,
+   cantidad y precio unitario neto; conserva la opción de crear el elemento al
+   editarla. Una línea de servicio contiene descripción, cantidad y precio
+   unitario neto, sin catálogo ni movimientos. Se pueden combinar. La línea
+   calcula cantidad × precio unitario. Los precios no siguen los precios de
+   referencia del proveedor. Solo líneas de elemento pueden distribuirse entre
    proyectos y dejar unidades sin asignar. La suma debe caber en la línea.
    La distribución identifica a qué proyectos corresponde la compra y carece
    de efecto financiero o de inventario. Tampoco genera reservas, solicitudes
    ni entregas.
-3. **Confirmar recepción completa.** Las cantidades por elemento se ingresan
+3. **Calcular importes.** El servidor suma netos de elementos y servicios en
+   pesos enteros. Calcula 19 % de IVA sobre el neto una sola vez con `Decimal`
+   y `ROUND_HALF_UP` y suma el IVA redondeado al neto. Sin líneas los tres
+   importes quedan sin calcular; con solo servicios se calculan y no aparece
+   recepción. No se computan descuentos, flete, exenciones ni otros cargos.
+4. **Confirmar recepción completa.** Las cantidades por elemento se ingresan
    juntas en el inventario general. Las entradas enlazan la factura y el
    historial de la factura enlaza sus movimientos. Una recepción repetida o
-   simultánea registra las unidades una sola vez. Marcar como pagada solo
-   actualiza el pago.
-4. **Solicitar y entregar.** Desde el inventario del proyecto se solicita lo
+   simultánea registra las unidades una sola vez. No se permite recibir sin
+   elementos. Marcar como pagada solo actualiza el estado, sin exigir fecha.
+5. **Solicitar y entregar.** Desde el inventario del proyecto se solicita lo
    que se necesite. Lo comprometido se descuenta del stock disponible en ese
    momento y se muestra como solicitado. Solo la confirmación incrementa la
    cantidad entregada y el stock disponible conserva el descuento original.
@@ -639,16 +651,23 @@ Antes de la recepción afectan solo a la factura. Después, un cambio de
 cantidades ajusta las entradas de los elementos afectados y conserva los
 movimientos anteriores. Una corrección que solo actualiza datos o precios no
 crea movimientos. Una anulación excluye una sola vez las entradas vigentes.
+Las líneas recibidas se modifican únicamente mediante Corregir con motivo;
+Gestionar líneas se bloquea al recibir. Se bloquea la factura al modificar
+líneas, corregir, recibir, anular y pagar; la revisión evita enviar formularios
+obsoletos. La gestión de líneas previa a recepción conserva instantáneas.
 Si el ajuste dejaría stock insuficiente para solicitudes ya comprometidas o
 entregas registradas, la transacción se revierte y el formulario explica el
 bloqueo. La anulación es una rectificación del registro en la aplicación.
 
 ### Decisiones pendientes
 
-El cálculo automático de IVA y total está pendiente de definir la tasa y la
-base de cálculo, el redondeo, los descuentos, el flete y otros cargos, y cómo
-registrar compras exentas u otros tratamientos. Durante la espera se transcribe
-el total del documento. También siguen pendientes los datos de contacto
+Los totales históricos transcritos se preservan en `transcribed_total`; la
+migración calcula neto, IVA y total aparte según las líneas antiguas, sin crear
+movimientos. Si difieren, la ficha señala revisión pendiente. Documentos sin
+líneas fiables o cuyos importes excedan el rango almacenable tampoco se pueden
+conciliar automáticamente. Siguen pendientes una conciliación manual, compras
+exentas u otros tratamientos, descuentos, flete y otros cargos; el cálculo
+actual no los contempla. También siguen pendientes los datos de contacto
 obligatorios y los posibles destinatarios distintos del trabajador. El alcance
 actual registra facturas recibidas y su pago, con estados Pendiente y Pagada,
 sin adjuntos ni pagos parciales.
@@ -662,25 +681,33 @@ Con los archivos de esta iteración en tu copia, tu entorno virtual y el
 cd ~/Proyectos/gestor-epp
 .venv/bin/python manage.py migrate --plan
 .venv/bin/python manage.py migrate
+.venv/bin/python manage.py makemigrations --check --dry-run
 .venv/bin/python manage.py check
 .venv/bin/python manage.py test projects catalog inventory purchases
 .venv/bin/python manage.py runserver
 ```
 
-Las migraciones `catalog/0002_item_categories`, `purchases/0001_initial` e
+Las migraciones `catalog/0002_item_categories`, `purchases/0001_initial`,
+`purchases/0002_invoice_lines_and_calculated_totals` e
 `inventory/0005_stockrecord_invoice_and_more` conservan los elementos, cantidades
 y movimientos existentes. La primera migra EPP y señalética a sus categorías
 correspondientes. La última añade una referencia opcional que queda vacía en
-los movimientos anteriores. No hay dependencias nuevas.
+los movimientos anteriores. `purchases/0002` renombra el total transcrito,
+añade importes calculados y clasifica las líneas existentes como elementos
+porque conservan su referencia a catálogo. No inventa forma de pago ni cambia
+stock; compara el valor histórico con el cálculo y señala discrepancias. Haz
+una copia de seguridad de PostgreSQL antes de migrar datos reales.
 
 1. Edita un elemento y asígnale dos categorías. Comprueba ambas en su ficha y
    filtra Inventario por cada categoría.
 2. Registra dos proveedores y un precio distinto para el mismo elemento en
    cada ficha. Actualiza uno y revisa los estados vigente e histórico.
-3. Registra una factura con 20 unidades; reparte 12 en Norte y 5 en Sur.
-   Confirma que quedan 3 sin asignar y que guardar no cambia el stock. Puedes
-   usar otra línea para crear un elemento que aún no existe.
-4. Confirma la recepción, revisa la entrada asociada y cambia el estado de pago.
+3. Registra solo los datos generales de una factura. Comprueba «Por completar»
+   y ausencia de recepción. Desde Acciones → Gestionar líneas, agrega 20 unidades
+   y reparte 12 en Norte y 5 en Sur: quedan 3 sin asignar. Añade un servicio y
+   comprueba importes sin cambios de stock.
+4. Confirma la recepción, revisa la entrada asociada y cambia el estado de pago
+   sin introducir fecha de pago.
    Si el elemento partió de cero, deberá mostrar 20 unidades disponibles.
 5. Solicita 5 y confirma su entrega. Comprueba Stock 15, Solicitado 5 y
    Entregados 5. Intenta anular la factura y comprueba que se bloquea. En una
@@ -688,9 +715,10 @@ los movimientos anteriores. No hay dependencias nuevas.
 6. Repite la navegación desde una ventana móvil. Comprueba las búsquedas de
    facturas, proveedores y elementos, y las acciones de cada ficha.
 
-La suite ejecutada pasó 185 pruebas Django con PostgreSQL y 9 pruebas Chromium
+La suite histórica de la iteración original pasó 185 pruebas Django con PostgreSQL y 9 pruebas Chromium
 con base temporal. Incluye migración con datos anteriores, recepción y anulación
 simultáneas, reversión ante fallos, bloqueo por stock comprometido, el recorrido
 de compra y la regresión de solicitudes y entregas. Se comprobó la interfaz a
 320, 390 y 1440 píxeles. Las tres migraciones también se aplicaron en el PostgreSQL
-de desarrollo del espacio de trabajo. El cálculo de IVA sigue pendiente.
+de desarrollo del espacio de trabajo. Sus cifras son históricas; consulta
+`docs/ITERACIONES.md` para los resultados de la iteración actual.

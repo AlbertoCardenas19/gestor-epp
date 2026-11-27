@@ -155,6 +155,15 @@ h2,h3 { letter-spacing: -.02em; }
 .cards-controls > div { min-width: 0; }
 .cards-controls .search-field { flex: 1 1 220px; }
 .cards-controls .form-select { max-width: 100%; }
+.cards-sort .form-select { min-width: min(100%, 16rem); padding-right: 2.75rem; }
+@media (max-width: 767px) {
+  .invoice-lines-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .invoice-lines-table, .invoice-lines-table tbody, .invoice-lines-table tr, .invoice-lines-table td { display: block; width: 100%; }
+  .invoice-lines-table tr { border-bottom: 1px solid var(--app-border); padding-block: .5rem; }
+  .invoice-lines-table td { border: 0; padding: .4rem .75rem; }
+  .invoice-lines-table td::before { content: attr(data-label); display: block; color: var(--app-secondary); font-size: .8rem; font-weight: 600; }
+  .invoice-lines-table td.service-distribution { display: none; }
+}
 .table th { font-size: .84rem; white-space: normal; font-weight: 600; }
 .table td,.table th { padding: 16px; }
 .table td { font-size: .91rem; overflow-wrap: anywhere; }

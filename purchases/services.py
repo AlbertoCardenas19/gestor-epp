@@ -1,5 +1,6 @@
 """Factura y libro de inventario se actualizan dentro de la misma transacción."""
 from collections import Counter
+from decimal import Decimal, ROUND_HALF_UP
 from uuid import uuid4
 
 from django.core.exceptions import ValidationError
@@ -13,7 +14,7 @@ from inventory.services import _create_record
 
 from .models import Allocation, Invoice, InvoiceEvent, InvoiceLine, ReferencePrice, Supplier
 
-HEADER = ('supplier', 'number', 'issued_on', 'due_on', 'total', 'payment_status', 'paid_on', 'purchase_order')
+HEADER = ('supplier', 'number', 'issued_on', 'payment_status', 'payment_method', 'purchase_order')
 MAX_QUANTITY = 2**63 - 1
 
 
@@ -27,10 +28,16 @@ def record_reference_price(supplier, item, unit_price):
 
 
 def validate_lines(lines):
-    if not lines:
-        raise ValidationError('Agrega al menos una línea a la factura.')
     for line in lines:
         allocations = line['allocations']
+        if line.get('item') is None and line.get('new_item') is None and not line.get('description', '').strip():
+            raise ValidationError('Describe el servicio de la línea.')
+        if line.get('description') and (line.get('item') is not None or line.get('new_item') is not None):
+            raise ValidationError('Una línea debe ser elemento o servicio.')
+        if line.get('description') and allocations:
+            raise ValidationError('Los servicios no se distribuyen entre proyectos.')
+        if line['quantity'] <= 0 or line['quantity'] > MAX_QUANTITY or line['unit_price'] < 0 or line['unit_price'] > MAX_QUANTITY:
+            raise ValidationError('Cantidad o precio fuera de rango.')
         if any(quantity <= 0 for _, quantity in allocations) or sum(q for _, q in allocations) > line['quantity']:
             raise ValidationError('La distribución por proyecto supera la cantidad de la línea o contiene cantidades inválidas.')
 
@@ -38,9 +45,10 @@ def validate_lines(lines):
 def save_lines(invoice, lines):
     for entry in lines:
         item = entry['item']
-        if item is None:
+        if item is None and entry.get('new_item') is not None:
             item = entry['new_item'].save()
-        line = InvoiceLine(invoice=invoice, item=item, quantity=entry['quantity'], unit_price=entry['unit_price'])
+        line = InvoiceLine(invoice=invoice, item=item, description=entry.get('description', ''),
+                           quantity=entry['quantity'], unit_price=entry['unit_price'])
         line.full_clean()
         line.save()
         distribution = Counter()
@@ -54,10 +62,14 @@ def save_lines(invoice, lines):
 
 def snapshot(invoice):
     values = {name: getattr(invoice, name) for name in HEADER if name != 'supplier'}
+    values.update(due_on=invoice.due_on, paid_on=invoice.paid_on,
+                  transcribed_total=invoice.transcribed_total, net_total=invoice.net_total,
+                  vat_total=invoice.vat_total, calculated_total=invoice.calculated_total)
     values.update(supplier_id=invoice.supplier_id, supplier=str(invoice.supplier), supplier_rut=invoice.supplier.rut,
                   received_at=invoice.received_at, cancelled_at=invoice.cancelled_at)
     values['lines'] = [
-        {'item_id': line.item_id, 'item': str(line.item), 'quantity': line.quantity, 'unit_price': line.unit_price,
+        {'item_id': line.item_id, 'item': str(line.item) if line.item_id else None,
+         'description': line.description, 'quantity': line.quantity, 'unit_price': line.unit_price,
          'allocations': [{'project_id': row.project_id, 'project': str(row.project), 'quantity': row.quantity}
                          for row in line.allocations.all()]}
         for line in invoice.lines.select_related('item').prefetch_related('allocations__project')
@@ -67,7 +79,7 @@ def snapshot(invoice):
 
 def quantities(invoice):
     totals = Counter()
-    for item_id, quantity in invoice.lines.values_list('item_id', 'quantity'):
+    for item_id, quantity in invoice.lines.filter(item__isnull=False).values_list('item_id', 'quantity'):
         totals[item_id] += quantity
     if any(total > MAX_QUANTITY for total in totals.values()):
         raise ValidationError('La cantidad total de un elemento excede el máximo permitido.')
@@ -109,9 +121,22 @@ def reconcile_receipts(invoice, desired, reason=''):
 
 def save_header(invoice, data):
     for name in HEADER:
-        setattr(invoice, name, data[name])
+        setattr(invoice, name, data.get(name, '') if name == 'payment_method' else data[name])
     invoice.full_clean()
     invoice.save()
+
+
+def recalculate(invoice):
+    lines = list(invoice.lines.all())
+    if not lines:
+        invoice.net_total = invoice.vat_total = invoice.calculated_total = None
+    else:
+        net = sum(line.net_total for line in lines)
+        vat = int((Decimal(net) * Decimal('0.19')).quantize(Decimal('1'), rounding=ROUND_HALF_UP))
+        if net + vat > MAX_QUANTITY:
+            raise ValidationError('El total calculado excede el máximo permitido.')
+        invoice.net_total, invoice.vat_total, invoice.calculated_total = net, vat, net + vat
+    invoice.save(update_fields=['net_total', 'vat_total', 'calculated_total'])
 
 
 def check_revision(invoice, revision):
@@ -120,8 +145,9 @@ def check_revision(invoice, revision):
 
 
 @transaction.atomic
-def save_invoice(data, lines, *, invoice_id=None, reason='', revision=None):
-    validate_lines(lines)
+def save_invoice(data, lines=None, *, invoice_id=None, reason='', revision=None):
+    if lines is not None:
+        validate_lines(lines)
     if invoice_id is None:
         invoice = Invoice()
     else:
@@ -136,12 +162,30 @@ def save_invoice(data, lines, *, invoice_id=None, reason='', revision=None):
     # Serialize supplier/number validation with other invoice writes for this supplier.
     Supplier.objects.select_for_update().get(pk=data['supplier'].pk)
     save_header(invoice, data)
-    if invoice_id is not None:
+    if invoice_id is not None and lines is not None:
         invoice.lines.all().delete()
+    if lines is not None:
+        save_lines(invoice, lines)
+        recalculate(invoice)
+        if invoice.received_at:
+            reconcile_receipts(invoice, quantities(invoice), reason)
+    return invoice
+
+
+@transaction.atomic
+def save_invoice_lines(invoice_id, lines, revision):
+    validate_lines(lines)
+    invoice = Invoice.objects.select_for_update().get(pk=invoice_id)
+    check_revision(invoice, revision)
+    if invoice.cancelled_at or invoice.received_at:
+        raise ValidationError('Las líneas recibidas solo pueden modificarse mediante Corregir con motivo.')
+    InvoiceEvent.objects.create(invoice=invoice, action=InvoiceEvent.Action.CORRECT,
+                                reason='Gestión de líneas antes de recepción', before=snapshot(invoice))
+    invoice.lines.all().delete()
     save_lines(invoice, lines)
-    desired = quantities(invoice)
-    if invoice.received_at:
-        reconcile_receipts(invoice, desired, reason)
+    recalculate(invoice)
+    invoice.revision += 1
+    invoice.save(update_fields=['revision'])
     return invoice
 
 
@@ -156,7 +200,7 @@ def receive_invoice(invoice_id, revision=None):
         check_revision(invoice, revision)
     desired = quantities(invoice)
     if not desired:
-        raise ValidationError('La factura debe tener al menos una línea para recibirse.')
+        raise ValidationError('La factura debe tener al menos una línea de elemento para recibirse.')
     invoice.received_at = timezone.now()
     reconcile_receipts(invoice, desired)
     invoice.revision += 1
@@ -184,15 +228,14 @@ def cancel_invoice(invoice_id, reason, revision):
 
 
 @transaction.atomic
-def mark_paid(invoice_id, paid_on, revision):
+def mark_paid(invoice_id, revision):
     invoice = Invoice.objects.select_for_update().get(pk=invoice_id)
     check_revision(invoice, revision)
-    if invoice.cancelled_at or invoice.payment_status != Invoice.Payment.PENDING or not paid_on:
-        raise ValidationError('Selecciona una fecha de pago para una factura pendiente y vigente.')
+    if invoice.cancelled_at or invoice.payment_status != Invoice.Payment.PENDING:
+        raise ValidationError('La factura debe estar pendiente y vigente.')
     InvoiceEvent.objects.create(invoice=invoice, action=InvoiceEvent.Action.PAYMENT,
                                 before=snapshot(invoice))
     invoice.payment_status = Invoice.Payment.PAID
-    invoice.paid_on = paid_on
     invoice.revision += 1
-    invoice.save(update_fields=['paid_on', 'payment_status', 'revision'])
+    invoice.save(update_fields=['payment_status', 'revision'])
     return invoice

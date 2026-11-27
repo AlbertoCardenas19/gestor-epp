@@ -5,7 +5,8 @@ from unittest.mock import patch
 from uuid import uuid4
 
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError, close_old_connections, transaction
+from django.db import IntegrityError, close_old_connections, connection, transaction
+from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase, TransactionTestCase
 from django.urls import reverse
 
@@ -17,19 +18,22 @@ from inventory.services import correct_record
 from projects.models import Project
 
 from .models import Invoice, ReferencePrice, Supplier
-from .services import cancel_invoice, receive_invoice, record_reference_price, save_invoice
+from .services import cancel_invoice, mark_paid, receive_invoice, record_reference_price, save_invoice, save_invoice_lines
 
 TODAY = date(2026, 11, 26)
 
 
 def header(default_supplier, **changes):
-    return {'supplier': default_supplier, 'number': '001', 'issued_on': TODAY, 'due_on': TODAY,
-            'total': 12000, 'payment_status': Invoice.Payment.PENDING, 'paid_on': None,
-            'purchase_order': '', **changes}
+    return {'supplier': default_supplier, 'number': '001', 'issued_on': TODAY,
+            'payment_status': Invoice.Payment.PENDING, 'payment_method': '', 'purchase_order': '', **changes}
 
 
 def line(item, quantity=20, unit_price=500, allocations=()):
-    return {'item': item, 'quantity': quantity, 'unit_price': unit_price, 'allocations': allocations}
+    return {'item': item, 'description': '', 'quantity': quantity, 'unit_price': unit_price, 'allocations': allocations}
+
+
+def service(description, quantity=1, unit_price=150):
+    return {'item': None, 'description': description, 'quantity': quantity, 'unit_price': unit_price, 'allocations': ()}
 
 
 class PurchaseTests(TestCase):
@@ -43,8 +47,8 @@ class PurchaseTests(TestCase):
         cls.south = Project.objects.create(name='Sur')
 
     def payload(self, **changes):
-        return {**header(self.supplier, supplier=self.supplier.pk, paid_on=''),
-                'lines-TOTAL_FORMS': 1, 'lines-INITIAL_FORMS': 0, 'lines-0-item': self.item.pk,
+        return {**header(self.supplier, supplier=self.supplier.pk),
+                'lines-TOTAL_FORMS': 1, 'lines-INITIAL_FORMS': 0, 'lines-0-type': 'item', 'lines-0-item': self.item.pk,
                 'lines-0-quantity': 20, 'lines-0-unit_price': 500,
                 'lines-0-allocations-TOTAL_FORMS': 0, 'lines-0-allocations-INITIAL_FORMS': 0, **changes}
 
@@ -71,7 +75,7 @@ class PurchaseTests(TestCase):
         self.assertEqual([(row['price'], row['state']) for row in result['data']],
                          [('450', 'Vigente'), ('400', 'Histórico')])
         self.assertEqual(invoice.lines.get().unit_price, 500)
-        self.assertEqual(invoice.total, 12000)
+        self.assertEqual((invoice.net_total, invoice.vat_total, invoice.calculated_total), (10000, 1900, 11900))
 
     def test_invoice_number_is_unique_per_supplier_and_order_is_optional_or_shared(self):
         first = save_invoice(header(self.supplier), [line(self.item)])
@@ -93,8 +97,9 @@ class PurchaseTests(TestCase):
                                   'lines-0-allocations-0-quantity': 12,
                                   'lines-0-allocations-1-project': self.south.pk,
                                   'lines-0-allocations-1-quantity': 5})
-        response = self.client.post(reverse('purchases:create'), payload)
-        invoice = Invoice.objects.get()
+        invoice = save_invoice(header(self.supplier))
+        payload['revision'] = invoice.revision
+        response = self.client.post(reverse('purchases:lines', args=[invoice.pk]), payload)
         self.assertRedirects(response, invoice.get_absolute_url())
         detail = invoice.lines.get()
         self.assertEqual(detail.item.name, 'Linterna')
@@ -108,26 +113,75 @@ class PurchaseTests(TestCase):
         self.assertFalse(StockRequest.objects.exists())
 
     def test_excessive_distribution_rejected_without_saving_invoice_or_inline_item(self):
-        response = self.client.post(reverse('purchases:create'), self.payload(**{
+        invoice = save_invoice(header(self.supplier))
+        response = self.client.post(reverse('purchases:lines', args=[invoice.pk]), self.payload(**{
+            'revision': invoice.revision,
             'lines-0-item': '', 'lines-0-new-name': 'Linterna',
             'lines-0-new-categories': [Category.objects.get(name='Otros').pk],
             'lines-0-allocations-TOTAL_FORMS': 1, 'lines-0-allocations-0-project': self.north.pk,
             'lines-0-allocations-0-quantity': 21,
         }))
         self.assertContains(response, 'supera la cantidad de la línea')
-        self.assertFalse(Invoice.objects.exists())
+        self.assertFalse(invoice.lines.exists())
         self.assertFalse(Item.objects.filter(name='Linterna').exists())
 
-    def test_post_requires_management_fields(self):
-        response = self.client.post(reverse('purchases:create'), header(self.supplier, supplier=self.supplier.pk, paid_on=''))
-        self.assertEqual(response.status_code, 200)
-        self.assertFalse(Invoice.objects.exists())
+    def test_create_only_header_and_empty_invoice_blocks_receipt(self):
+        response = self.client.post(reverse('purchases:create'), header(self.supplier, supplier=self.supplier.pk))
+        invoice = Invoice.objects.get()
+        self.assertRedirects(response, invoice.get_absolute_url())
+        self.assertIsNone(invoice.calculated_total)
+        self.assertContains(self.client.get(invoice.get_absolute_url()), 'Por completar')
+        self.assertNotContains(self.client.get(invoice.get_absolute_url()), 'Confirmar recepción completa')
+        with self.assertRaisesMessage(ValidationError, 'elemento'):
+            receive_invoice(invoice.pk)
+
+    def test_services_mixed_lines_rounding_and_payment_method(self):
+        invoice = save_invoice(header(self.supplier, payment_method='Crédito'))
+        self.assertEqual(invoice.payment_status, Invoice.Payment.PENDING)
+        self.assertEqual(invoice.payment_method, 'Crédito')
+        invoice = save_invoice_lines(invoice.pk, [service('Estampado')], invoice.revision)
+        self.assertEqual((invoice.net_total, invoice.vat_total, invoice.calculated_total), (150, 29, 179))
+        self.assertEqual(invoice.lines.get().item_id, None)
+        self.assertFalse(StockRecord.objects.exists())
+        self.assertNotContains(self.client.get(invoice.get_absolute_url()), 'Confirmar recepción completa')
+        with self.assertRaisesMessage(ValidationError, 'elemento'):
+            receive_invoice(invoice.pk)
+        invoice = save_invoice_lines(invoice.pk, [line(self.item, 1, 127350), service('Estampado')], invoice.revision)
+        self.assertEqual((invoice.net_total, invoice.vat_total, invoice.calculated_total), (127500, 24225, 151725))
+        self.assertEqual(available_quantity(self.item.pk), 0)
+        with self.assertRaisesMessage(ValidationError, 'cambió'):
+            save_invoice_lines(invoice.pk, [service('Otro')], invoice.revision - 1)
+        paid = mark_paid(invoice.pk, invoice.revision)
+        self.assertEqual(paid.payment_status, Invoice.Payment.PAID)
+        self.assertIsNone(paid.paid_on)
+        self.assertEqual(paid.payment_method, 'Crédito')
+        self.assertEqual(available_quantity(self.item.pk), 0)
+        received = receive_invoice(invoice.pk, paid.revision)
+        self.assertEqual((received.movements.count(), available_quantity(self.item.pk)), (1, 1))
+        self.assertEqual(receive_invoice(invoice.pk).movements.count(), 1)
+        with self.assertRaisesMessage(ValidationError, 'solo pueden modificarse'):
+            save_invoice_lines(invoice.pk, [service('Otro')], received.revision)
+        self.assertEqual(received.lines.count(), 2)
+
+    def test_line_editor_accepts_service_without_catalog_item(self):
+        invoice = save_invoice(header(self.supplier))
+        response = self.client.post(reverse('purchases:lines', args=[invoice.pk]), {
+            'revision': invoice.revision, 'lines-TOTAL_FORMS': 1, 'lines-INITIAL_FORMS': 0,
+            'lines-0-type': 'service', 'lines-0-description': 'Servicio de estampado',
+            'lines-0-quantity': 1, 'lines-0-unit_price': 150,
+            'lines-0-allocations-TOTAL_FORMS': 0, 'lines-0-allocations-INITIAL_FORMS': 0,
+        })
+        self.assertRedirects(response, invoice.get_absolute_url())
+        invoice.refresh_from_db()
+        self.assertEqual(invoice.calculated_total, 179)
+        self.assertContains(self.client.get(invoice.get_absolute_url()), 'Servicio de estampado')
+        self.assertFalse(StockRecord.objects.exists())
 
     def test_payment_and_receipt_are_independent_and_retry_is_idempotent(self):
         invoice = save_invoice(header(self.supplier), [line(self.item, 12), line(self.item, 8)])
         self.assertFalse(StockRecord.objects.exists())
         self.assertRedirects(self.client.post(reverse('purchases:pay', args=[invoice.pk]),
-                                             {'paid_on': TODAY, 'revision': invoice.revision}), invoice.get_absolute_url())
+                                             {'revision': invoice.revision}), invoice.get_absolute_url())
         invoice.refresh_from_db()
         self.assertEqual(invoice.payment_status, Invoice.Payment.PAID)
         self.assertIsNone(invoice.received_at)
@@ -201,12 +255,12 @@ class PurchaseTests(TestCase):
                 deliver_request(request, {'quantity': 5, 'observation': '', 'submission_key': uuid4(),
                                           'occurred_on': TODAY, 'worker_full_name': 'Ana Soto'})
             with self.assertRaisesMessage(ValidationError, 'stock insuficiente'):
-                save_invoice(header(self.supplier, total=123), [line(self.item, 4)],
+                save_invoice(header(self.supplier), [line(self.item, 4)],
                              invoice_id=invoice.pk, reason='Error', revision=invoice.revision)
             with self.assertRaisesMessage(ValidationError, 'stock insuficiente'):
                 cancel_invoice(invoice.pk, 'Error', invoice.revision)
             invoice.refresh_from_db()
-            self.assertEqual(invoice.total, 12000)
+            self.assertEqual(invoice.calculated_total, 17850)
             self.assertIsNone(invoice.cancelled_at)
             self.assertFalse(invoice.events.exists())
             self.assertEqual(invoice.lines.count(), 2)
@@ -233,6 +287,35 @@ class PurchaseTests(TestCase):
 
 
 class ConcurrentPurchaseTests(TransactionTestCase):
+    def test_line_edit_and_receipt_recheck_revision_under_lock(self):
+        supplier = Supplier.objects.create(name='Proveedor concurrente', rut='2-7')
+        item = Item.objects.create(name='Casco concurrente')
+        invoice = save_invoice(header(supplier), [line(item, 2)])
+        barrier = Barrier(2)
+
+        def run(operation):
+            close_old_connections()
+            try:
+                barrier.wait(timeout=10)
+                try:
+                    return operation()
+                except ValidationError:
+                    return None
+            finally:
+                close_old_connections()
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            results = list(executor.map(run, [
+                lambda: save_invoice_lines(invoice.pk, [line(item, 3)], 0),
+                lambda: receive_invoice(invoice.pk, 0),
+            ]))
+        self.assertEqual(sum(result is not None for result in results), 1)
+        invoice.refresh_from_db()
+        if invoice.received_at:
+            self.assertEqual((invoice.lines.get().quantity, available_quantity(item.pk)), (2, 2))
+        else:
+            self.assertEqual((invoice.lines.get().quantity, available_quantity(item.pk)), (3, 0))
+
     def test_simultaneous_receipt_and_cancellation_do_not_duplicate_inventory_changes(self):
         supplier = Supplier.objects.create(name='Proveedor', rut='1-9')
         item = Item.objects.create(name='Elemento')
@@ -259,3 +342,37 @@ class ConcurrentPurchaseTests(TransactionTestCase):
 
         with ThreadPoolExecutor(max_workers=2) as executor:
             list(executor.map(run, range(2)))
+
+
+class InvoiceMigrationTests(TransactionTestCase):
+    def test_historical_totals_and_stock_survive_migration(self):
+        current = MigrationExecutor(connection).loader.graph.leaf_nodes()
+        old = [('purchases', '0001_initial')]
+        MigrationExecutor(connection).migrate(old)
+        try:
+            apps = MigrationExecutor(connection).loader.project_state(old).apps
+            SupplierOld = apps.get_model('purchases', 'Supplier')
+            InvoiceOld = apps.get_model('purchases', 'Invoice')
+            InvoiceLineOld = apps.get_model('purchases', 'InvoiceLine')
+            ItemOld = apps.get_model('catalog', 'Item')
+            supplier = SupplierOld.objects.create(name='Histórico', rut='1-9')
+            item = ItemOld.objects.create(name='Casco histórico')
+            first = InvoiceOld.objects.create(supplier=supplier, number='H-1', issued_on=TODAY,
+                                              due_on=TODAY, total=151725, payment_status='pending')
+            InvoiceLineOld.objects.create(invoice=first, item=item, quantity=1, unit_price=127500)
+            second = InvoiceOld.objects.create(supplier=supplier, number='H-2', issued_on=TODAY,
+                                               due_on=TODAY, total=999, payment_status='paid', paid_on=TODAY)
+            InvoiceLineOld.objects.create(invoice=second, item=item, quantity=1, unit_price=150)
+            before_stock = StockRecord.objects.count()
+            MigrationExecutor(connection).migrate(current)
+            matching = Invoice.objects.get(pk=first.pk)
+            differing = Invoice.objects.get(pk=second.pk)
+            self.assertEqual((matching.transcribed_total, matching.calculated_total), (151725, 151725))
+            self.assertFalse(matching.needs_reconciliation)
+            self.assertEqual((differing.transcribed_total, differing.calculated_total), (999, 179))
+            self.assertTrue(differing.needs_reconciliation)
+            self.assertEqual((differing.due_on, differing.paid_on, differing.payment_status),
+                             (TODAY, TODAY, Invoice.Payment.PAID))
+            self.assertEqual(StockRecord.objects.count(), before_stock)
+        finally:
+            MigrationExecutor(connection).migrate(current)

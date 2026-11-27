@@ -3,13 +3,16 @@
   <dt class="col-sm-5">Proveedor</dt><dd class="col-sm-7">{{ prior.supplier }} · {{ prior.supplier_rut }}</dd>
   <dt class="col-sm-5">Número de factura</dt><dd class="col-sm-7">{{ prior.number }}</dd>
   <dt class="col-sm-5">Emisión</dt><dd class="col-sm-7">{{ prior.issued_on }}</dd>
-  <dt class="col-sm-5">Vencimiento</dt><dd class="col-sm-7">{{ prior.due_on }}</dd>
-  <dt class="col-sm-5">Total con IVA (CLP)</dt><dd class="col-sm-7">{{ prior.total }}</dd>
-  <dt class="col-sm-5">Pago</dt><dd class="col-sm-7">{% if prior.paid_on %}Pagada · {{ prior.paid_on }}{% else %}Pendiente{% endif %}</dd>
+  <dt class="col-sm-5">Total neto anterior</dt><dd class="col-sm-7">{{ prior.net_total|default_if_none:'Por completar' }}</dd>
+  <dt class="col-sm-5">IVA anterior</dt><dd class="col-sm-7">{{ prior.vat_total|default_if_none:'Por completar' }}</dd>
+  <dt class="col-sm-5">Total anterior</dt><dd class="col-sm-7">{{ prior.calculated_total|default_if_none:'Por completar' }}</dd>
+  {% if prior.transcribed_total != None or prior.total != None %}<dt class="col-sm-5">Total histórico transcrito</dt><dd class="col-sm-7">{{ prior.transcribed_total|default_if_none:prior.total }}</dd>{% endif %}
+  <dt class="col-sm-5">Forma de pago</dt><dd class="col-sm-7">{{ prior.payment_method|default:'Sin especificar' }}</dd>
+  <dt class="col-sm-5">Pago</dt><dd class="col-sm-7">{{ prior.payment_status }}</dd>
   <dt class="col-sm-5">Orden de compra</dt><dd class="col-sm-7">{{ prior.purchase_order|default:"Sin orden de compra" }}</dd>
 </dl>
 <ul class="mb-0">
-  {% for line in prior.lines %}<li>{{ line.item }} · {{ line.quantity }} unidades · {{ line.unit_price }} CLP por unidad sin IVA
+  {% for line in prior.lines %}<li>{{ line.item|default:line.description }} · {{ line.quantity }} unidades · {{ line.unit_price }} CLP por unidad sin IVA
     {% if line.allocations %}<ul>{% for allocation in line.allocations %}<li>{{ allocation.project }} · {{ allocation.quantity }}</li>{% endfor %}</ul>{% endif %}
   </li>{% endfor %}
 </ul>

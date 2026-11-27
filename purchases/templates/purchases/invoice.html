@@ -8,27 +8,33 @@
   <dl class="row mb-2">
     <dt class="col-sm-5">Proveedor</dt><dd class="col-sm-7"><a href="{{ invoice.supplier.get_absolute_url }}">{{ invoice.supplier }}</a></dd>
     <dt class="col-sm-5">Fecha de emisión</dt><dd class="col-sm-7">{{ invoice.issued_on|date:'d/m/Y' }}</dd>
-    <dt class="col-sm-5">Fecha de vencimiento</dt><dd class="col-sm-7">{{ invoice.due_on|date:'d/m/Y' }}</dd>
-    <dt class="col-sm-5">Total con IVA (CLP)</dt><dd class="col-sm-7">{{ invoice.total }}</dd>
-    <dt class="col-sm-5">Estado de pago</dt><dd class="col-sm-7"><span class="badge state-badge {% if invoice.paid_on %}state-success{% else %}state-warning{% endif %}">{{ invoice.get_payment_status_display }}</span>{% if invoice.paid_on %} · {{ invoice.paid_on|date:'d/m/Y' }}{% endif %}</dd>
+    <dt class="col-sm-5">Forma de pago</dt><dd class="col-sm-7">{{ invoice.payment_method|default:'Sin especificar' }}</dd>
+    {% if invoice.transcribed_total != None %}<dt class="col-sm-5">Total histórico transcrito (CLP)</dt><dd class="col-sm-7">{{ invoice.transcribed_total }}</dd>{% endif %}
+    <dt class="col-sm-5">Estado de pago</dt><dd class="col-sm-7"><span class="badge state-badge {% if invoice.payment_status == 'paid' %}state-success{% else %}state-warning{% endif %}">{{ invoice.get_payment_status_display }}</span></dd>
     <dt class="col-sm-5">Orden de compra</dt><dd class="col-sm-7">{{ invoice.purchase_order|default:"Sin orden de compra" }}</dd>
     <dt class="col-sm-5">Recepción</dt><dd class="col-sm-7">{% if invoice.received_at %}{{ invoice.received_at|date:'d/m/Y H:i T' }}{% else %}Por recibir{% endif %}</dd>
     {% if invoice.cancelled_at %}<dt class="col-sm-5">Anulación</dt><dd class="col-sm-7">{{ invoice.cancelled_at|date:'d/m/Y H:i T' }}</dd>{% endif %}
   </dl>
+  {% if invoice.needs_reconciliation %}<p class="alert alert-warning mb-0">{% if invoice.calculated_total == None %}No hay líneas suficientes para conciliar el total histórico.{% else %}El total histórico transcrito difiere del cálculo de las líneas.{% endif %} Documento pendiente de revisión.</p>{% endif %}
 </div></div>
 <section class="mb-4">
   <h2 class="h4">Detalle de compra</h2>
   <div class="table-responsive">
-    <table class="table align-middle">
-      <thead><tr><th scope="col">Elemento</th><th scope="col">Cantidad</th><th scope="col">Unitario sin IVA (CLP)</th><th scope="col">Distribución por proyecto</th></tr></thead>
+    <table class="table align-middle invoice-lines-table">
+      <thead><tr><th scope="col">Descripción o elemento</th><th scope="col">Cantidad</th><th scope="col">Precio unitario neto (CLP)</th><th scope="col">Total neto (CLP)</th><th scope="col">Distribución por proyecto</th></tr></thead>
       <tbody>{% for line in invoice.lines.all %}<tr>
-        <td><a href="{{ line.item.get_absolute_url }}">{{ line.item }}</a></td>
-        <td>{{ line.quantity }}</td><td>{{ line.unit_price }}</td>
-        <td>{% for allocation in line.allocations.all %}<div>{{ allocation.project }} · {{ allocation.quantity }}</div>{% endfor %}
-          {% if line.unassigned %}<div>Sin asignar · {{ line.unassigned }}</div>{% endif %}</td>
-      </tr>{% endfor %}</tbody>
+        <td data-label="Descripción o elemento">{% if line.item_id %}<a href="{{ line.item.get_absolute_url }}">{{ line.item }}</a>{% else %}{{ line.description }}{% endif %}</td>
+        <td data-label="Cantidad">{{ line.quantity }}</td><td data-label="Precio unitario neto (CLP)">{{ line.unit_price }}</td><td data-label="Total neto (CLP)">{{ line.net_total }}</td>
+        <td data-label="Distribución por proyecto"{% if not line.item_id %} class="service-distribution"{% endif %}>{% if line.item_id %}{% for allocation in line.allocations.all %}<div>{{ allocation.project }} · {{ allocation.quantity }}</div>{% endfor %}
+          {% if line.unassigned %}<div>Sin asignar · {{ line.unassigned }}</div>{% endif %}{% endif %}</td>
+      </tr>{% empty %}<tr><td colspan="5">Aún no hay líneas.</td></tr>{% endfor %}</tbody>
     </table>
   </div>
+  <dl class="row justify-content-end text-end">
+    <dt class="col-sm-4">Total neto</dt><dd class="col-sm-3">{{ invoice.net_total|default_if_none:'Por completar' }}</dd>
+    <dt class="col-sm-4">IVA (19 %)</dt><dd class="col-sm-3">{{ invoice.vat_total|default_if_none:'Por completar' }}</dd>
+    <dt class="col-sm-4">Total</dt><dd class="col-sm-3">{{ invoice.calculated_total|default_if_none:'Por completar' }}</dd>
+  </dl>
 </section>
 <section class="mb-4">
   <h2 class="h4">Movimientos de inventario</h2>

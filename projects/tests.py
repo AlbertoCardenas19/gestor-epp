@@ -255,13 +255,18 @@ class ProjectCardsTests(TestCase):
         self.assertEqual(next_page.context['projects'][0].name, 'Obra 04')
         self.assertEqual(list(next_page.context['projects'])[-1].name, 'Obra 11')
         self.assertContains(next_page, 'Sin fecha registrada')
-        for sort, expected in [('date', 'Obra 10'), ('name', 'Obra 00')]:
+        for sort, expected in [('date', 'Obra 10'), ('date_asc', 'Obra 00'),
+                               ('name', 'Obra 00'), ('name_desc', 'Obra 11')]:
             response = self.client.get(reverse('projects:list'), {'sort': sort, 'q': 'Obra', 'page': 1})
             self.assertEqual(response.context['projects'][0].name, expected)
             self.assertContains(response, 'q=Obra')
             self.assertContains(response, f'sort={sort}')
         name_page = self.client.get(reverse('projects:list'), {'sort': 'name', 'q': 'Obra', 'page': 2})
         self.assertEqual(name_page.context['projects'][0].name, 'Obra 06')
+        older_page = self.client.get(reverse('projects:list'), {'sort': 'date_asc', 'q': 'Obra', 'page': 2})
+        self.assertEqual([project.name for project in older_page.context['projects']],
+                         ['Obra 06', 'Obra 07', 'Obra 08', 'Obra 09', 'Obra 10', 'Obra 11'])
+        self.assertContains(older_page, 'sort=date_asc')
         self.assertEqual(self.client.get(reverse('projects:list'), {'sort': 'invalid'}).context['projects'][0].name, 'Obra 10')
         response = self.client.get(reverse('projects:list'), {'q': 'Obra 01'})
         self.assertEqual(response.context['paginator'].count, 1)

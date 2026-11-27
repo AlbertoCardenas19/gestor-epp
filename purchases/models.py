@@ -40,8 +40,12 @@ class Invoice(models.Model):
     supplier = models.ForeignKey(Supplier, verbose_name='proveedor', on_delete=models.PROTECT)
     number = models.CharField('número de factura', max_length=80)
     issued_on = models.DateField('fecha de emisión')
-    due_on = models.DateField('fecha de vencimiento')
-    total = models.PositiveBigIntegerField('total con IVA indicado en la factura (CLP)')
+    due_on = models.DateField('fecha de vencimiento histórica', null=True, blank=True)
+    transcribed_total = models.PositiveBigIntegerField('total histórico transcrito (CLP)', null=True, blank=True)
+    net_total = models.PositiveBigIntegerField('total neto calculado (CLP)', null=True, blank=True)
+    vat_total = models.PositiveBigIntegerField('IVA calculado (CLP)', null=True, blank=True)
+    calculated_total = models.PositiveBigIntegerField('total calculado (CLP)', null=True, blank=True)
+    payment_method = models.CharField('forma de pago', max_length=200, blank=True)
     payment_status = models.CharField('estado de pago', choices=Payment.choices, default=Payment.PENDING, max_length=10)
     paid_on = models.DateField('fecha de pago', null=True, blank=True)
     purchase_order = models.CharField('número de orden de compra', max_length=100, blank=True)
@@ -51,31 +55,41 @@ class Invoice(models.Model):
     revision = models.PositiveIntegerField(default=0)
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['supplier', 'number'], name='purchase_unique_invoice_number'),
-            models.CheckConstraint(condition=(
-                models.Q(payment_status='pending', paid_on__isnull=True)
-                | models.Q(payment_status='paid', paid_on__isnull=False)
-            ), name='purchase_valid_invoice_payment'),
-        ]
+        constraints = [models.UniqueConstraint(fields=['supplier', 'number'], name='purchase_unique_invoice_number')]
 
     def get_absolute_url(self):
         return reverse('purchases:invoice', args=[self.pk])
 
+    @property
+    def needs_reconciliation(self):
+        return self.transcribed_total is not None and self.transcribed_total != self.calculated_total
+
 
 class InvoiceLine(models.Model):
     invoice = models.ForeignKey(Invoice, related_name='lines', on_delete=models.PROTECT)
-    item = models.ForeignKey('catalog.Item', on_delete=models.PROTECT)
+    item = models.ForeignKey('catalog.Item', on_delete=models.PROTECT, null=True, blank=True)
+    description = models.TextField('descripción del servicio', blank=True)
     quantity = models.PositiveBigIntegerField('cantidad', validators=[MinValueValidator(1)])
     unit_price = models.PositiveBigIntegerField('precio unitario sin IVA (CLP)')
 
     class Meta:
         ordering = ['pk']
-        constraints = [models.CheckConstraint(condition=models.Q(quantity__gt=0), name='purchase_positive_line')]
+        constraints = [
+            models.CheckConstraint(condition=models.Q(quantity__gt=0), name='purchase_positive_line'),
+            models.CheckConstraint(condition=(models.Q(item__isnull=False, description='') |
+                                              (models.Q(item__isnull=True) & ~models.Q(description=''))),
+                                   name='purchase_line_item_or_service'),
+        ]
 
     @property
     def unassigned(self):
+        if self.item_id is None:
+            return 0
         return self.quantity - sum(allocation.quantity for allocation in self.allocations.all())
+
+    @property
+    def net_total(self):
+        return self.quantity * self.unit_price
 
 
 class Allocation(models.Model):

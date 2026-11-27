@@ -1,21 +1,29 @@
 <fieldset class="border rounded p-3 mb-3" data-form-row>
   <legend class="float-none w-auto px-2 h6">Línea de factura</legend>
   {{ row.form.non_field_errors }}
+  <div class="mb-3"><label class="form-label" for="{{ row.form.type.id_for_label }}">Tipo de línea</label>
+    {{ row.form.type }}{{ row.form.type.errors }}</div>
+  <div data-item-fields{% if row.form.type.value == 'service' %} hidden{% endif %}>
   {% include 'purchases/picker.html' with picker=row.item_picker %}
   <details class="mb-3"{% if row.new_item.errors or row.new_item.name.value %} open{% endif %}>
     <summary>Crear un elemento nuevo</summary>
     <p class="small mt-2">Deja el selector sin selección para crear un elemento en esta línea.</p>
     {% include 'purchases/form_fields.html' with fields=row.new_item %}
   </details>
+  </div>
+  <div data-service-fields{% if row.form.type.value != 'service' %} hidden{% endif %} class="mb-3">
+    <label class="form-label" for="{{ row.form.description.id_for_label }}">Descripción del servicio</label>
+    {{ row.form.description }}{{ row.form.description.errors }}
+  </div>
   <div class="row">
     {% for field in row.form.visible_fields %}
-      {% if field.name != 'item' %}<div class="col-sm-6">
+      {% if field.name != 'item' and field.name != 'type' and field.name != 'description' %}<div class="col-sm-6">
         <label class="form-label" for="{{ field.id_for_label }}">{% if field.name == 'DELETE' %}Quitar línea{% else %}{{ field.label }}{% endif %}</label>
         <div class="mb-2">{{ field }}{{ field.errors }}</div>
       </div>{% endif %}
     {% endfor %}
   </div>
-  <details class="mb-2"{% if row.allocations.total_form_count or row.allocations.non_form_errors %} open{% endif %}>
+  <details class="mb-2" data-allocation-fields{% if row.form.type.value == 'service' %} hidden{% endif %}{% if row.allocations.total_form_count or row.allocations.non_form_errors %} open{% endif %}>
     <summary>Distribuir cantidades por proyecto</summary>
     <div class="mt-2" data-form-group data-form-prefix="{{ row.allocations.prefix }}">
       {{ row.allocations.management_form }}

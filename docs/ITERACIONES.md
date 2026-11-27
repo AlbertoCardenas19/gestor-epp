@@ -2,17 +2,29 @@
 
 ## Estado actual
 
-UI-01 a UI-12 publicadas. UI-12 es un piloto visual de Información del elemento, pendiente de revisión del usuario. Firefox en Ubuntu sigue pendiente de comprobación.
+UI-01 a UI-13 publicadas. UI-13 implementa facturas en dos pasos, líneas de servicio y cálculo automático, y cuatro órdenes de proyectos. UI-12 sigue pendiente de revisión visual del usuario. Firefox en Ubuntu sigue pendiente de comprobación.
 
 ## Pendientes
 
-- Decisiones funcionales abiertas de [docs/04-pendientes.md](04-pendientes.md), en particular el cálculo automático de IVA (P-07), aprobación de compras, devoluciones y reposiciones.
+- Decisiones funcionales abiertas de [docs/04-pendientes.md](04-pendientes.md), en particular la conciliación de facturas históricas discordantes, tratamientos de compra fuera de la base gravada definida, aprobación de compras, devoluciones y reposiciones.
 - Revisar visualmente el piloto UI-12 antes de extenderlo a otras fichas.
 - Confirmar en la PC del usuario el recorrido visual y funcional con sus datos locales tras actualizar desde `origin/main`.
 
 ## Próximo paso
 
-Actualizar la copia Ubuntu desde `origin/main`, revisar el piloto UI-12 y comprobarlo en Firefox con los datos locales.
+Actualizar la copia Ubuntu desde `origin/main`, aplicar la migración de facturas, revisar las diferencias históricas que aparezcan y comprobar UI-13 y el piloto UI-12 en Firefox con los datos locales.
+
+## UI-13 · 27 de noviembre de 2026
+
+**Objetivo y alcance.** Aplicar las nuevas decisiones de facturas dentro de RF-04 y RF-05, y ampliar la ordenación de proyectos sin cambiar solicitudes ni entregas. Se mantiene un solo módulo Facturas.
+
+**Datos y migración.** `purchases/0002_invoice_lines_and_calculated_totals` renombra el antiguo `total` a `transcribed_total` sin perderlo, conserva vencimiento y fecha de pago históricos como campos opcionales no presentados y añade forma de pago libre, importes calculados y descripción de servicio. Las líneas antiguas siguen siendo elementos por su referencia existente al catálogo. La migración calcula neto, IVA y total aparte; las diferencias con el valor transcrito quedan señaladas en la ficha para revisión, sin reemplazar el original ni crear stock. Documentos sin líneas fiables o con importes fuera del rango de almacenamiento requieren revisión manual. No se inventan formas de pago ni fechas antiguas.
+
+**Flujo de factura.** El formulario inicial guarda únicamente proveedor, número, emisión, orden de compra opcional, forma de pago y estado. Abre la ficha sin líneas, con importes «Por completar» y sin acción de recepción. El menú CoreUI ofrece Gestionar líneas antes de recibir, conservando Corregir con motivo para las recibidas. Elementos y servicios comparten cantidad y precio unitario neto enteros; solo los elementos admiten distribución entre proyectos y recepción de inventario. El servidor calcula el neto de cada línea, suma ambos tipos, aplica IVA 19 % una vez con `Decimal` y `ROUND_HALF_UP`, y suma el total. Guardar, editar líneas y pagar no ingresan stock; recepción explícita, idempotencia, correcciones, anulaciones y bloqueo por stock comprometido se conservan. Pago y forma de pago son independientes y no exigen fecha de pago.
+
+**Proyectos.** El selector más ancho reserva espacio para la flecha y ofrece más recientes, más antiguos, nombre A–Z y Z–A. El servidor filtra, ordena y luego pagina seis tarjetas; fechas ausentes quedan al final en ambos órdenes temporales y la clave primaria desempata. Búsqueda, URL y paginación conservan el criterio.
+
+**Verificación y pendientes.** Pasaron 189 pruebas Django y 18 Chromium, `manage.py check`, `makemigrations --check --dry-run`, `node --check` y `git diff --check`; la migración se aplicó en una base PostgreSQL temporal. Django comprueba creación vacía, servicios, mezcla, redondeo, pago, precios, distribución, recepción, corrección, anulación, concurrencia entre edición de líneas y recepción, y migración con totales coincidentes y discordantes sin movimientos. Chromium recorrió formulario de dos pasos, menú de tres puntos, tablas y estados, y anchos 320, 390 y 1440px; en móvil la tabla de líneas se lee completa sin desplazamiento horizontal. La primera pasada de navegador tuvo un fallo intermitente preexistente en la intercepción de carga de Inventario; la segunda pasó completa. La conciliación de discrepancias históricas y compras exentas u otros cargos no se implementó. Capturas: [formulario 1440](capturas/ui13-formulario-factura-1440.png), [factura vacía](capturas/ui13-factura-vacia-1440.png), [menú](capturas/ui13-menu-factura-1440.png), [gestión de líneas 390](capturas/ui13-lineas-390.png), [factura 1440](capturas/ui13-factura-1440.png), [factura 390](capturas/ui13-factura-390.png) y [proyectos 390](capturas/ui13-proyectos-390.png). Firefox Ubuntu permanece pendiente.
 
 ## UI-12 · 27 de noviembre de 2026 · piloto pendiente de revisión visual
 

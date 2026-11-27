@@ -17,6 +17,7 @@ urlpatterns = [
     path('proveedores/<int:pk>/precios/nuevo/', views.reference_price, name='price-create'),
     path('<int:pk>/', views.InvoiceDetail.as_view(), name='invoice'),
     path('<int:pk>/corregir/', views.invoice_edit, name='correct'),
+    path('<int:pk>/lineas/', views.invoice_lines, name='lines'),
     path('<int:pk>/recibir/', views.invoice_action, {'action': 'receive'}, name='receive'),
     path('<int:pk>/anular/', views.invoice_action, {'action': 'cancel'}, name='cancel'),
     path('<int:pk>/pagar/', views.invoice_action, {'action': 'pay'}, name='pay'),

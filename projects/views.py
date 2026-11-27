@@ -29,8 +29,10 @@ class ProjectListView(CardsViewMixin, ListView):
         return 6
 
     sort_options = (
-        ('date', 'Fecha: más recientes primero', (F('created_on').desc(nulls_last=True), '-pk')),
+        ('date', 'Más recientes primero', (F('created_on').desc(nulls_last=True), '-pk')),
+        ('date_asc', 'Más antiguos primero', (F('created_on').asc(nulls_last=True), 'pk')),
         ('name', 'Nombre: A–Z', ('name', 'pk')),
+        ('name_desc', 'Nombre: Z–A', ('-name', '-pk')),
     )
 
     def get_queryset(self):
