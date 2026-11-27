@@ -102,7 +102,7 @@ class IterationRequestAndDetailTests(TestCase):
         legacy = deliver_stock(self.south, self.item, data(1, worker_full_name='Luis Soto'))
         response = self.client.get(self.item.get_absolute_url())
         self.assertContains(response, 'Descripción existente')
-        self.assertContains(response, 'data-datatable-filter="project"')
+        self.assertNotContains(response, 'data-datatable-filter="project"')
         for tab_id, label, selected in [
             ('item-info-tab', 'Información', 'true'),
             ('item-history-tab', 'Historial de movimientos', 'false'),

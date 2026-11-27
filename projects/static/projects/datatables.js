@@ -3,7 +3,7 @@
   const language = {
     decimal: ',', thousands: '.',
     emptyTable: 'No hay registros disponibles.', zeroRecords: 'No se encontraron resultados.',
-    search: 'Buscar:', searchPlaceholder: 'Escribe para buscar', lengthMenu: 'Mostrar _MENU_ filas',
+    search: 'Buscar', searchPlaceholder: '', lengthMenu: 'Mostrar _MENU_ filas',
     info: '_START_–_END_ de _TOTAL_ registros', infoEmpty: '0 registros',
     infoFiltered: '(filtrados de _MAX_ registros)', loadingRecords: '', processing: '',
     paginate: { first: 'Primera', last: 'Última', next: 'Siguiente', previous: 'Anterior' },
@@ -28,9 +28,7 @@
     root.querySelectorAll('[data-datatable]').forEach(element => {
       if (DataTable.isDataTable(element)) return;
       const panel = element.closest('[data-datatable-panel]');
-      const state = panel?.querySelector('[data-datatable-state]');
       const error = panel?.querySelector('[data-datatable-error]');
-      const filters = [...(panel?.querySelectorAll('[data-datatable-filter]') || [])];
       const loading = EppLoading.create(panel || element.parentElement, {
         content: panel?.querySelector('.datatable-shell') || element, shape: 'table', status: error,
       });
@@ -78,8 +76,6 @@
           controller?.abort(); controller = new AbortController(); const current = ++revision;
           loading.begin(!loaded);
           const url = new URL(element.dataset.source, location.origin);
-          if (state) params.state = state.value;
-          for (const filter of filters) params[filter.dataset.datatableFilter] = filter.value;
           // Preserve DataTables' bracket parameter protocol, including array order/search values.
           url.search = jQuery.param(params);
           const activeController = controller;
@@ -106,6 +102,9 @@
           element.closest('.dt-container')?.querySelector('.dt-paging nav')?.setAttribute('aria-label', 'Páginas de la tabla');
         },
       });
+      // The BS5 adapter adds mt-2 (a utility with !important); the shared
+      // table spacing below owns both gaps instead.
+      element.closest('.dt-container')?.querySelector('.dt-layout-table')?.classList.remove('mt-2');
       table.on('responsive-display', (_event, _api, row, shown) => {
         const button = row.node()?.querySelector('.row-expand');
         if (button) {
@@ -114,17 +113,9 @@
         }
         if (shown) window.EppComponents.init(element);
       });
-      const search = element.closest('.dt-container')?.querySelector('.dt-search');
-      const searchInput = search?.querySelector('input');
+      const searchInput = element.closest('.dt-container')?.querySelector('.dt-search input');
       const shell = element.closest('.datatable-shell');
-      if (search && searchInput && panel && shell) {
-        search.querySelector('label')?.classList.add('visually-hidden');
-        searchInput.placeholder = element.dataset.searchPlaceholder || 'Buscar en la tabla…';
-        const searchRow = document.createElement('div');
-        searchRow.className = 'table-search-row';
-        searchRow.append(search);
-        panel.insertBefore(searchRow, shell);
-      }
+      if (searchInput) searchInput.placeholder = element.dataset.searchPlaceholder || '';
       if (shell && window.ResizeObserver) {
         let lastWidth = shell.clientWidth;
         new ResizeObserver(() => {
@@ -164,13 +155,6 @@
         clear.addEventListener('click', () => { searchInput.value = ''; table.search('').draw(); sync(); searchInput.focus(); });
         sync();
       }
-      for (const filter of filters) filter.addEventListener('change', () => table.ajax.reload());
-      if (state) state.addEventListener('change', () => {
-        const url = new URL(location.href);
-        url.searchParams.set('state', state.value);
-        history.replaceState(null, '', url);
-        table.ajax.reload();
-      });
     });
   }
   window.EppTables = { init, adjust };

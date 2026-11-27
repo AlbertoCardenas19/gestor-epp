@@ -25,7 +25,7 @@ Las siguientes pautas sirven para trabajar con esta documentación; no son nuevo
 - No interpretes actores del negocio como cuentas o roles de software ya definidos. Inicialmente solo ella usará la app.
 - No supongas que la aprobación del jefe ocurre dentro de la aplicación: ese mecanismo está pendiente.
 - No impongas reglas de stock, fórmulas financieras, firmas, campos obligatorios, estados, políticas de reposición ni permisos sin respaldo. Consulta el pendiente pertinente cuando bloquee una implementación solicitada.
-- No elijas Django, PostgreSQL o Render como decisiones cerradas por aparecer en una recomendación previa.
+- La recomendación histórica no fijó Django, PostgreSQL ni Render; la decisión posterior de conservar Django y PostgreSQL para la interfaz actual sí prevalece. Render no está fijado.
 - Inspecciona el código y las instrucciones existentes antes de trabajar. Esta documentación no acredita ninguna implementación.
 - Conserva el trabajo existente. No sobrescribas instrucciones vigentes sin integrarlas y resolver contradicciones con el usuario.
 - Cuando trabajes en una funcionalidad solicitada, referencia RF-xx y explica qué decisión falta, si corresponde. Verifica el comportamiento modificado e informa el resultado real.
@@ -43,7 +43,7 @@ Estas convenciones se establecen en la solicitud actual, no en acuerdos históri
 - Asegurar que búsqueda y ordenación cubran todos los registros de la consulta.
   Elegir cliente o `serverSide` justificando volumen y arquitectura; nunca inicializar
   DataTables en cliente sobre una única página parcial de Django.
-- Las columnas de acciones no se buscan ni ordenan. Conservar los filtros de negocio.
+- Las columnas de acciones no se buscan ni ordenan. Conservar el alcance de negocio de cada consulta.
 - Usar componentes oficiales CoreUI para interacciones estándar que cubra: dropdown,
   sidebar, modal, collapse, etc. El código propio debe limitarse a necesidades de la
   app, integración entre componentes, persistencia y presentación específica.
@@ -56,7 +56,7 @@ Estas convenciones se establecen en la solicitud actual, no en acuerdos históri
 - Consultar `docs/09-componentes-y-datatables.md` para versiones, carga, reutilización
   y verificación. Estas convenciones no autorizan cambiar reglas ni datos de inventario.
 - Reutilizar los componentes compartidos para pestañas, paginaciones, indicadores de
-  carga, búsquedas, filtros, estados y acciones. No crear variantes independientes por
+  carga, búsquedas, estados y acciones. No crear variantes independientes por
   pantalla cuando cumplen la misma función.
 - Toda paginación debe conservar su motor (DataTables, Django o selector) y aplicar la
   presentación global. Proyectos permanece en tarjetas con seis resultados por página.
@@ -74,9 +74,9 @@ Estas convenciones se establecen en la solicitud actual, no en acuerdos históri
 - Inventario reemplaza el listado del catálogo. `/catalogo/` redirige a Inventario;
   creación, edición y ficha de elementos permanecen. Ningún Cancelar debe volver al
   listado retirado.
-- Los buscadores automáticos no tienen rótulo visible ni botón Aplicar. Conservan
-  etiqueta accesible, placeholder limitado a los campos buscados y fondo blanco con foco visible.
-  El buscador de DataTables se sitúa fuera de la tarjeta de la tabla.
+- Los buscadores automáticos no tienen botón Aplicar. El buscador de tarjetas de
+  Proyectos mantiene su presentación; las búsquedas de tablas siguen la norma vigente
+  de `docs/diseno-gestor-epp.md`.
 - Los botones Agregar proyecto, elemento, categoría, factura y proveedor comparten
   presentación y se sitúan junto al título principal, también en móvil.
 - Las tablas `serverSide` usan DataTables Responsive 3.0.8 y su adaptador BS5 local:
@@ -90,3 +90,26 @@ Estas convenciones se establecen en la solicitud actual, no en acuerdos históri
 - Los proyectos nuevos reciben fecha de creación automática y estado En curso. La
   edición permite pasar a Terminado sin bloquear operaciones; proyectos antiguos sin
   fecha fiable muestran «Sin fecha registrada».
+
+## Sistema visual permanente — 27 de noviembre de 2026
+
+- Leer `docs/diseno-gestor-epp.md` antes de modificar la interfaz. Usar Punto Aparte
+  `work` en `9f359ac` como referencia visual, conservando las decisiones propias de EPP.
+- Reutilizar tokens y componentes compartidos; no inventar variantes de botones,
+  campos, tarjetas, tablas, navegación o carga por pantalla.
+- Mantener CoreUI, DataTables y `serverSide` existentes, sin copiar dependencias ni
+  lógica de negocio de Punto Aparte. Calibri continúa primero como fuente local.
+- En tablas, el buscador oficial permanece dentro de la tarjeta junto a «Mostrar X
+  filas», con etiqueta visible «Buscar». El placeholder refleja solo criterios reales,
+  sin «Buscar por» ni puntos suspensivos. No se añade otro motor ni botón de envío.
+- Usar un token común `#EAF4FB` para encabezados de tabla con texto oscuro, y 1rem
+  de separación entre controles superiores, tabla y controles inferiores. Mantener
+  filas blancas y hover gris claro.
+- No mostrar filtros adicionales en los listados de tablas por ahora. Conservar el
+  alcance de cada pantalla y mostrar los estados consultables con identificación clara.
+  Proyectos y los selectores de elementos quedan fuera de este cambio de búsqueda.
+- Inicio usa tarjetas compartidas con área de acciones separada por línea y alineada
+  abajo. Facturas enlaza al listado existente.
+- Comparar visualmente las pantallas afectadas, teclado y anchos estrechos, incluido
+  redimensionamiento de ida y vuelta. Retirar reglas sustituidas, actualizar la guía
+  vigente y registrar cada iteración. Justificar y verificar toda excepción.

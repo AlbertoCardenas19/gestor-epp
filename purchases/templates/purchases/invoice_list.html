@@ -7,7 +7,7 @@
 <section data-datatable-panel>
   <p data-datatable-error role="alert" class="text-danger" hidden></p>
   <div class="card datatable-shell"><div class="card-body">
-    <table class="table mb-0 align-middle w-100" data-datatable data-search-placeholder="Buscar por número, proveedor, RUT, orden de compra o estado…" data-source="{% url 'purchases:data' %}" data-order='[[2,"desc"]]'>
+    <table class="table mb-0 align-middle w-100" data-datatable data-search-placeholder="Número, proveedor, RUT, orden de compra, estado de pago, estado de recepción" data-source="{% url 'purchases:data' %}" data-order='[[2,"desc"]]'>
       <caption class="visually-hidden">Facturas recibidas de proveedores</caption>
       <thead><tr>
         <th scope="col" data-column="number" data-link="url">Factura</th>

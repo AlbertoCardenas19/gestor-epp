@@ -7,6 +7,8 @@
   --app-surface: #FFFFFF;
   --app-text: #0F172A;
   --app-border: #CBD5E1;
+  --app-table-heading: #EAF4FB;
+  --app-table-heading-text: var(--app-text);
   --cui-primary: var(--app-primary); --cui-primary-rgb: 29,77,133;
   --cui-secondary: var(--app-secondary); --cui-secondary-rgb: 100,116,139;
   --cui-body-color: var(--app-text); --cui-body-bg: var(--app-background);
@@ -83,8 +85,9 @@ h2,h3 { letter-spacing: -.02em; }
 .home-panel:hover { color: var(--app-text); border-color: var(--app-primary); }
 .home-panel p { color: var(--app-secondary); }
 .home-panel .card-body { display: flex; flex-direction: column; align-items: start; }
-.home-panel .project-link { display: inline-block; background: var(--app-primary); color: var(--app-surface); border-radius: 7px; padding: .7rem 1rem; margin-top: auto; }
-.home-panel p { width: 100%; padding-bottom: 1rem; border-bottom: 1px solid var(--app-border); }
+.home-panel .project-link { display: inline-block; background: var(--app-primary); color: var(--app-surface); border-radius: 7px; padding: .7rem 1rem; }
+.home-panel p { width: 100%; }
+.home-panel-actions { width: 100%; margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--app-border); }
 .panel-symbol { display: block; font-size: 2rem; color: var(--app-primary); margin-bottom: 24px; }
 .btn { padding: .7rem 1.1rem; border-radius: 8px; font-size: .82rem; font-weight: 600; line-height: 1.6; }
 .btn-primary { --cui-btn-color: var(--app-surface); --cui-btn-bg: var(--app-primary); --cui-btn-border-color: var(--app-primary); --cui-btn-hover-color: var(--app-surface); --cui-btn-hover-bg: var(--app-sidebar); --cui-btn-hover-border-color: var(--app-sidebar); --cui-btn-active-color: var(--app-surface); --cui-btn-active-bg: var(--app-sidebar); --cui-btn-active-border-color: var(--app-sidebar); --cui-btn-focus-shadow-rgb: 29,77,133; }
@@ -135,7 +138,7 @@ h2,h3 { letter-spacing: -.02em; }
 /* Shared table palette. */
 .table { --cui-table-color: var(--app-text); --cui-table-bg: var(--app-surface); --cui-table-border-color: var(--app-border);
   --cui-table-striped-bg: var(--app-surface); --cui-table-striped-color: var(--app-text); }
-.table th { background: var(--app-primary); color: var(--app-surface); }
+.table th { background: var(--app-table-heading); color: var(--app-table-heading-text); }
 .table a { color: var(--app-primary); }
 .table a:hover { color: var(--app-text); }
 .table .text-bg-light { background-color: var(--app-background) !important; color: var(--app-primary) !important; border-color: var(--app-border) !important; }
@@ -167,18 +170,17 @@ h2,h3 { letter-spacing: -.02em; }
 .sidebar-narrow ~ .app-workspace { margin-left: var(--sidebar-narrow-width); }
 .sidebar-toggle svg { pointer-events: none; }
 @media (max-width: 767px) { .app-sidebar.sidebar-narrow ~ .app-workspace { margin-left: var(--sidebar-narrow-width); } }
-.business-filters { max-width: 16rem; }
 .datatable-shell, .datatable-shell .card-body { min-width: 0; }
 .datatable-shell .card-body { padding: 1.5rem; }
 .dt-container { min-width: 0; font-size: .85rem; }
+.dt-container .dt-layout-table { margin-block: 1rem; }
 .dt-container .form-control, .dt-container .form-select { padding: .5rem .75rem; }
 .dt-container .form-select { padding-right: 2rem; min-width: 5rem; }
 .dt-container .dt-info { color: var(--app-secondary); }
 .dt-container .dt-paging .pagination { flex-wrap: wrap; }
-.table-search-row { margin: 1rem 0 1.5rem; }
-.table-search-row .dt-search { max-width: 28rem; }
-.table-search-row .dt-search input { width: 100%; background-color: var(--app-surface); }
-.table-search-row .dt-search input:focus { background-color: var(--app-surface); }
+.dt-container .dt-search { display: flex; align-items: center; justify-content: flex-end; gap: .5rem; width: 34rem; max-width: 100%; min-width: 0; }
+.dt-container .dt-search input { flex: 1 1 auto; width: 0; min-width: 0; margin-left: 0; background-color: var(--app-surface); }
+.dt-container .dt-search input:focus { background-color: var(--app-surface); }
 .row-expand { display: none; align-items: center; justify-content: center; width: 2rem; height: 2rem; margin-right: .5rem; border: 1px solid var(--app-primary); border-radius: 50%; background: var(--app-surface); color: var(--app-primary); font-size: 1.2rem; line-height: 1; vertical-align: middle; }
 table.collapsed .row-expand { display: inline-flex; }
 .row-expand[aria-expanded="true"] span { transform: rotate(45deg); }
@@ -198,8 +200,8 @@ table.collapsed .row-expand { display: inline-flex; }
   --bs-border-color: var(--app-border);
 }
 .datatable-shell table.table.dataTable > thead > tr > th {
-  background-color: var(--app-primary);
-  color: var(--app-surface);
+  background-color: var(--app-table-heading);
+  color: var(--app-table-heading-text);
   box-shadow: none;
 }
 /* Override CoreUI and DataTables' ordered-column and stripe colors centrally. */
@@ -216,6 +218,11 @@ table.collapsed .row-expand { display: inline-flex; }
 .list-controls { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; }
 .list-controls > label { margin-bottom: 0; }
 .dt-container .dt-layout-end { display: flex; flex-wrap: wrap; align-items: end; justify-content: flex-end; gap: .75rem; }
+@media (max-width: 767px) {
+  .datatable-shell .card-body { padding: 1rem; }
+  .dt-container .dt-layout-table { margin-block: .75rem; }
+  .dt-container .dt-search { justify-content: flex-start; }
+}
 @media (max-width: 767px) { .list-controls > * { max-width: 100%; } }
 
 .search-with-clear { position: relative; }

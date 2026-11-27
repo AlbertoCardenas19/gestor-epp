@@ -2,8 +2,8 @@
 {% block content %}
 <h1 class="mb-4">Inicio</h1>
 <div class="row g-4">
-  <div class="col-12 col-lg-6"><a class="card home-panel h-100" href="{% url 'projects:list' %}"><div class="card-body p-4"><h2 class="h4">Proyectos</h2><p>Consulta las entregas y el inventario de cada proyecto.</p><span class="project-link">Ir a proyectos →</span></div></a></div>
-
-  <div class="col-12 col-lg-6"><a class="card home-panel h-100" href="{% url 'stock:list' %}"><div class="card-body p-4"><h2 class="h4">Inventario</h2><p>Consulta las existencias de la empresa y registra nuevas entradas.</p><span class="project-link">Ir al inventario →</span></div></a></div>
+  {% include 'projects/home_panel.html' with heading='Proyectos' description='Consulta las entregas y el inventario de cada proyecto.' action='Ir a proyectos' route='projects:list' %}
+  {% include 'projects/home_panel.html' with heading='Inventario' description='Consulta las existencias de la empresa y registra nuevas entradas.' action='Ir al inventario' route='stock:list' %}
+  {% include 'projects/home_panel.html' with heading='Facturas' description='Consulta las facturas de compra registradas y añade una nueva factura.' action='Ir a facturas' route='purchases:list' %}
 </div>
 {% endblock %}

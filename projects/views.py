@@ -56,8 +56,8 @@ class DeliveryQuerysetMixin:
         return super().dispatch(request, *args, **kwargs)
 
     def delivery_state(self):
-        state = self.request.GET.get('state', 'active')
-        return state if state in ['active', 'all', 'cancelled', 'replaced'] else 'active'
+        state = self.request.GET.get('state', 'all')
+        return state if state in ['active', 'all', 'cancelled', 'replaced'] else 'all'
 
     def get_queryset(self):
         records = StockRecord.objects.filter(Q(position__project=self.project) | Q(stock_request__project=self.project), operation=StockRecord.Operation.DELIVERY).select_related(
@@ -83,8 +83,12 @@ class ProjectDetailView(DeliveryQuerysetMixin, ListView):
     context_object_name = 'deliveries'
     paginate_by = 10
 
+    def delivery_state(self):
+        # A stale URL parameter must not leave an invisible filter active in the page.
+        return 'all'
+
     def get_context_data(self, **kwargs):
-        return super().get_context_data(project=self.project, state=self.delivery_state(), **kwargs)
+        return super().get_context_data(project=self.project, **kwargs)
 
 
 class DeliveryDataView(DeliveryQuerysetMixin, DataTableView):

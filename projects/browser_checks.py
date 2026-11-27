@@ -122,7 +122,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
             self.capture(f'iteration-inventory-{width}')
         self.page.set_viewport_size({'width': 1440, 'height': 800})
         self.page.wait_for_timeout(350)
-        self.assertEqual(self.page.locator('section[data-datatable-panel] > .list-controls').count(), 1)
+        self.assertEqual(self.page.locator('section[data-datatable-panel] > .list-controls').count(), 0)
         for width in (390, 1440, 320, 1440):
             self.page.set_viewport_size({'width': width, 'height': 800})
             self.page.wait_for_timeout(350)
@@ -247,6 +247,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         expect(self.rows()).to_have_count(10)
         payload = self.order('name')
         self.assertEqual(payload['data'][0]['name'], 'Elemento 39')
+        self.assertEqual(self.page.locator('thead th[data-column="name"]').evaluate('(e) => getComputedStyle(e).backgroundColor'), 'rgb(234, 244, 251)')
         self.table_action(lambda: self.page.locator('.dt-length select').select_option('25'))
         expect(self.rows()).to_have_count(25)
         self.page.evaluate('EppTables.init(); EppTables.init(); EppComponents.init()')
@@ -265,21 +266,68 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         expect(self.page.locator('table.dataTable tbody img')).to_have_count(0)
         self.assertIsNone(self.page.evaluate('window.uiInjected'))
 
+    def test_home_actions_and_shared_table_layout(self):
+        self.page.goto(self.live_server_url + reverse('projects:home'))
+        cards = self.page.locator('.home-panel')
+        expect(cards).to_have_count(3)
+        expect(cards.nth(2)).to_have_attribute('href', reverse('purchases:list'))
+        self.assertEqual(cards.locator('.home-panel-actions').count(), 3)
+        cards.nth(0).locator('p').evaluate('(p) => p.textContent += " Descripción extensa para comprobar la alineación de las acciones en una misma fila."')
+        actions = cards.locator('.home-panel-actions')
+        self.assertAlmostEqual(actions.nth(0).bounding_box()['y'], actions.nth(1).bounding_box()['y'], delta=2)
+        cards.nth(2).click()
+        expect(self.page).to_have_url(self.live_server_url + reverse('purchases:list'))
+
+        self.db(lambda: Item.objects.create(name='Casco de diseño'))
+        self.visit_table(reverse('stock:list'))
+        self.assertEqual(self.page.locator('[data-datatable-filter], [data-datatable-state], .table-search-row').count(), 0)
+        search = self.page.get_by_label('Buscar', exact=True)
+        expect(search).to_have_attribute('placeholder', 'Nombre, categoría, descripción')
+        self.assertEqual(self.page.locator('.dt-search').count(), 1)
+        for width in (1440, 390, 320, 1440):
+            self.page.set_viewport_size({'width': width, 'height': 850})
+            self.page.wait_for_timeout(350)
+            metrics = self.page.locator('.dt-container').evaluate('''container => {
+              const tableRow = container.querySelector('.dt-layout-table');
+              const before = tableRow.previousElementSibling;
+              const after = tableRow.nextElementSibling;
+              const length = container.querySelector('.dt-length').getBoundingClientRect();
+              const search = container.querySelector('.dt-search').getBoundingClientRect();
+              const table = container.querySelector('table.dataTable').getBoundingClientRect();
+              return {topGap: tableRow.getBoundingClientRect().top - before.getBoundingClientRect().bottom,
+                bottomGap: after.getBoundingClientRect().top - tableRow.getBoundingClientRect().bottom,
+                sameRow: Math.abs(length.top - search.top) < 4,
+                tableWidth: table.width, available: container.getBoundingClientRect().width,
+                header: getComputedStyle(container.querySelector('thead th')).backgroundColor,
+                label: container.querySelector('.dt-search label').textContent.trim()};
+            }''')
+            self.assertGreaterEqual(metrics['topGap'], 10, metrics)
+            self.assertGreaterEqual(metrics['bottomGap'], 10, metrics)
+            self.assertGreaterEqual(metrics['tableWidth'] + 2, metrics['available'], metrics)
+            self.assertEqual(metrics['header'], 'rgb(234, 244, 251)')
+            self.assertEqual(metrics['label'], 'Buscar')
+            if width == 1440:
+                self.assertTrue(metrics['sameRow'], metrics)
+            self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+        self.visit_table(reverse('stock:list') + '?category=999999')
+        self.assertEqual(self.page.evaluate('DataTable.tables({api:true}).page.info().recordsTotal'), 1)
+
     def test_delivery_dates_quantities_states_and_inventory_actions(self):
         project, item, replacement, balance, count = self.db(self.seed_deliveries)
         self.visit_table(project.get_absolute_url())
-        self.assertEqual(self.page.evaluate('DataTable.tables({api:true}).page.info().recordsTotal'), count - 1)
+        self.assertEqual(self.page.evaluate('DataTable.tables({api:true}).page.info().recordsTotal'), count + 1)
         self.assertEqual(self.search('Otro proyecto')['recordsFiltered'], 0)
         self.search('')
         self.assertEqual(self.order('quantity')['data'][0]['quantity'], '1')
         self.assertEqual(self.order('quantity')['data'][0]['quantity'], '19')
-        self.assertEqual(self.order('date')['data'][0]['date'], '2026-01-20')
-        result = self.table_action(lambda: self.page.get_by_label('Estado', exact=True).select_option('cancelled'))
-        self.assertEqual(result['recordsTotal'], 1)
+        self.assertEqual(self.order('date')['data'][0]['date'], '2025-12-31')
+        self.assertEqual(self.page.locator('[data-datatable-state]').count(), 0)
+        result = self.search('Anulado')
+        self.assertEqual(result['recordsFiltered'], 1)
         self.rows().get_by_role('button', name=re.compile('^Acciones de')).click()
         expect(self.page.locator('.dropdown-menu.show').get_by_role('link')).to_have_count(1)
         self.page.keyboard.press('Escape')
-        self.table_action(lambda: self.page.get_by_label('Estado', exact=True).select_option('active'))
+        self.search('')
         self.search('Persona corregida')
         self.rows().get_by_role('button', name=re.compile('^Acciones de')).click()
         self.page.locator('.dropdown-menu.show').get_by_role('link', name='Corregir', exact=True).click()
@@ -289,7 +337,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         expect(self.page.get_by_test_id('balance')).to_have_text(str(balance - 2))
         self.visit_table(project.get_absolute_url())
         self.search('Persona corregida')
-        self.rows().get_by_role('button', name=re.compile('^Acciones de')).click()
+        self.rows().filter(has_text='Vigente').get_by_role('button', name=re.compile('^Acciones de')).click()
         self.page.locator('.dropdown-menu.show').get_by_role('link', name='Anular', exact=True).click()
         self.page.get_by_label('Motivo de la anulación', exact=False).fill('La entrega no ocurrió')
         self.page.get_by_role('button', name='Confirmar anulación', exact=True).click()
@@ -490,8 +538,8 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
                 self.page.wait_for_timeout(300)
             self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
             header = self.page.locator('table.dataTable thead th').first
-            self.assertEqual(header.evaluate('(e)=>getComputedStyle(e).backgroundColor'), 'rgb(29, 77, 133)')
-            self.assertEqual(header.evaluate('(e)=>getComputedStyle(e).color'), 'rgb(255, 255, 255)')
+            self.assertEqual(header.evaluate('(e)=>getComputedStyle(e).backgroundColor'), 'rgb(234, 244, 251)')
+            self.assertEqual(header.evaluate('(e)=>getComputedStyle(e).color'), 'rgb(15, 23, 42)')
             self.page.mouse.move(0, 0)
             cell = self.rows().first.locator('td').first
             self.assertEqual(cell.evaluate('(e)=>getComputedStyle(e).backgroundColor'), 'rgb(255, 255, 255)')
@@ -608,10 +656,11 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         movements = self.page.locator('#item-history [data-datatable-panel]')
         expect(movements).to_be_visible()
         self.wait_for_table_alignment('#item-history')
-        self.page.get_by_label('Proyecto', exact=True).select_option('company')
+        self.assertEqual(movements.locator('[data-datatable-filter]').count(), 0)
+        self.table_action(lambda: movements.locator('.dt-search input').fill('Empresa'))
         expect(movements.locator('tbody tr')).to_have_count(1)
         expect(movements.locator('tbody tr').first).to_contain_text('Empresa')
-        self.page.get_by_label('Proyecto', exact=True).select_option(str(north.pk))
+        self.table_action(lambda: movements.locator('.dt-search input').fill('Norte'))
         expect(movements.locator('tbody tr').first).to_contain_text('Norte')
         for width in [390, 1440]:
             self.page.set_viewport_size({'width': width, 'height': 900})

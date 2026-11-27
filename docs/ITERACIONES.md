@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-UI-01 a UI-04 publicadas. UI-05 implementada y verificada localmente; falta comprobarla en Firefox en la PC del usuario.
+UI-01 a UI-06 publicadas. UI-06 verificada en Chromium; falta comprobarla en Firefox en la PC del usuario.
 
 ## Pendientes
 
@@ -11,7 +11,19 @@ UI-01 a UI-04 publicadas. UI-05 implementada y verificada localmente; falta comp
 
 ## Próximo paso
 
-Actualizar la copia Ubuntu desde `origin/main`, aplicar la migración de proyectos y comprobar el recorrido visual en Firefox con los datos locales.
+Actualizar la copia Ubuntu desde `origin/main` y comprobar el recorrido visual de UI-06 en Firefox con los datos locales. El plan restante de `diseno-gestor-epp.md` requiere iteraciones posteriores.
+
+## UI-06 · 27 de noviembre de 2026
+
+**Objetivo y alcance.** Incorporar [diseno-gestor-epp.md](diseno-gestor-epp.md) como guía permanente y aplicar únicamente las decisiones nuevas sobre tablas e Inicio (RF-03, RF-04 y RF-05). La solicitud prevalece sobre el diseño anterior del buscador y del encabezado. No se cambiaron modelos ni cálculos de stock, entregas, compras o IVA.
+
+**Cambios.** El buscador oficial de DataTables queda dentro de la tarjeta, junto a «Mostrar X filas», con etiqueta visible «Buscar» y placeholder según los campos reales de cada endpoint. Se retiró su traslado externo y se conserva la búsqueda automática única. El bloque de la tabla tiene 1rem de separación arriba y abajo en escritorio y .75rem en móvil; se retira la clase `mt-2` que añade el adaptador BS5 para evitar un margen superior en conflicto. El encabezado compartido usa `--app-table-heading: #EAF4FB` y texto oscuro, incluidos estados de ordenación; las filas blancas y el hover gris permanecen. Inicio usa un componente de tarjeta con área de acciones separada por borde y alineada abajo, y añade Facturas enlazada al listado existente.
+
+**Filtros retirados de la interfaz.** Categoría de Inventario, Proyecto del historial de movimientos y Estado de Entregas. El código compartido deja de enviar esos valores desde controles ocultos. El listado de Entregas presenta Vigentes, Anuladas y Sustituidas con su estado visible; conserva el alcance del proyecto. El historial conserva el alcance del elemento. Los endpoints siguen aceptando filtros explícitos para compatibilidad de consultas directas, pero la página no los aplica ni retiene parámetros antiguos. Proyectos y los selectores de elementos mantienen sus búsquedas. No quedó un caso que requiera decisión funcional para retirar estos tres controles temporalmente.
+
+**Documentación.** AGENTS.md enlaza la guía y declara las nuevas reglas permanentes. [09-componentes-y-datatables.md](09-componentes-y-datatables.md) distingue los resultados históricos de las convenciones vigentes. El resto del plan visual adjunto no se implementó en esta iteración.
+
+**Verificación.** Pasaron 185 pruebas Django y 15 pruebas Chromium: tabla vacía, una fila, más de una página, búsqueda y ordenación en servidor, tamaño de página, pestañas, sidebar y navegación; se comprobaron ausencia de controles duplicados, el enlace Facturas y la alineación de áreas de acciones con descripciones de longitud distinta. En Chromium se midió Inventario a 1440 → 390 → 320 → 1440 px sin recarga: tabla y contenedor midieron 1290, 296, 226 y 1290 px, respectivamente; los huecos alrededor de la tabla midieron 16 px en escritorio y 12 px en móvil. El encabezado calculado fue `rgb(234, 244, 251)`. No hubo desbordamiento horizontal ni errores de consola en ese recorrido. Capturas: [Inicio](capturas/ui06-inicio.png), [tabla escritorio](capturas/ui06-tabla-escritorio.png), [tabla 390 px](capturas/ui06-tabla-390.png), [tabla 320 px](capturas/ui06-tabla-320.png) y [tabla tras volver a escritorio](capturas/ui06-tabla-1440.png). Firefox no está disponible en este entorno.
 
 ## UI-05 · 26 de noviembre de 2026
 

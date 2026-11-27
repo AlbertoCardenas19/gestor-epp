@@ -26,12 +26,14 @@ class ProjectFlowTests(TestCase):
     def test_database_is_postgresql(self):
         self.assertEqual(connection.vendor, 'postgresql')
 
-    def test_home_offers_projects_and_catalog(self):
+    def test_home_offers_projects_inventory_and_invoices(self):
         response = self.client.get('/')
         self.assertContains(response, 'Ir a proyectos')
         self.assertContains(response, 'Ir al inventario')
+        self.assertContains(response, 'Ir a facturas')
         self.assertContains(response, reverse('projects:list'))
         self.assertContains(response, reverse('stock:list'))
+        self.assertContains(response, reverse('purchases:list'))
 
     def test_empty_list_offers_first_project(self):
         self.assertContains(self.client.get(reverse('projects:list')), 'Crear primer proyecto')
@@ -135,27 +137,29 @@ class DeliveryTableTests(TestCase):
         StockRecord.objects.create(position=other_position, operation='delivery', quantity=1,
             occurred_on=date.today(), worker_full_name='Otro proyecto')
 
-    def test_default_only_active_deliveries_with_pagination(self):
+    def test_default_shows_all_delivery_states_with_pagination(self):
         response = self.client.get(self.project.get_absolute_url())
-        self.assertEqual(response.context['paginator'].count, 13)
+        self.assertEqual(response.context['paginator'].count, 15)
         self.assertEqual(len(response.context['deliveries']), 10)
         self.assertNotContains(response, 'Otro proyecto')
-        self.assertNotContains(response, 'Original sustituido')
-        self.assertNotContains(response, 'Entrega anulada')
+        self.assertContains(response, 'Original sustituido')
+        self.assertContains(response, 'Entrega anulada')
+        self.assertNotContains(response, 'data-datatable-state')
         self.assertContains(response, self.replacement.get_absolute_url())
         self.assertContains(response, reverse('inventory:correct', args=[self.project.pk, self.position.item_id, self.replacement.pk]))
         self.assertContains(response, 'Siguiente')
 
     def test_states_do_not_offer_mutations_for_invalid_records(self):
         for state, record in [('cancelled', self.cancelled), ('replaced', self.original)]:
-            response = self.client.get(self.project.get_absolute_url(), {'state': state})
-            self.assertEqual(list(response.context['deliveries']), [record])
-            self.assertContains(response, record.get_absolute_url())
+            row = self.data(state=state)['data'][0]
+            self.assertIn(record.get_absolute_url(), row['actions'])
             for action in ['cancel', 'correct']:
-                self.assertNotContains(response, reverse(f'inventory:{action}', args=[self.project.pk, self.position.item_id, record.pk]))
+                self.assertNotIn(reverse(f'inventory:{action}', args=[self.project.pk, self.position.item_id, record.pk]), row['actions'])
         response = self.client.get(self.project.get_absolute_url(), {'state': 'all', 'per_page': '25'})
         self.assertEqual(response.context['paginator'].count, 15)
         self.assertNotContains(response, 'Otro proyecto')
+        stale = self.client.get(self.project.get_absolute_url(), {'state': 'cancelled'})
+        self.assertEqual(stale.context['paginator'].count, 15)
 
     def data(self, **parameters):
         response = self.client.get(reverse('projects:delivery-data', args=[self.project.pk]), parameters)
@@ -174,13 +178,13 @@ class DeliveryTableTests(TestCase):
         result = self.data(**{'search[value]': 'Persona', 'order[0][column]': 3, 'order[0][dir]': 'asc', 'start': 10})
         self.assertEqual([record['quantity'] for record in result['data']], ['11', '12'])
         result = self.data(**{'order[0][column]': 'invalid', 'state': 'invalid', 'length': '0', 'start': 'bad'})
-        self.assertEqual(result['recordsTotal'], 13)
+        self.assertEqual(result['recordsTotal'], 15)
         self.assertEqual(len(result['data']), 10)
         self.assertEqual(self.position.balance, balance)
 
     def test_all_record_search_and_project_state_scoping(self):
         result = self.data(**{'search[value]': 'Persona 00'})
-        self.assertEqual(result['recordsTotal'], 13)
+        self.assertEqual(result['recordsTotal'], 15)
         self.assertEqual(result['recordsFiltered'], 1)
         self.assertEqual(result['data'][0]['worker'], 'Persona 00')
         self.assertEqual(self.data(**{'search[value]': 'Otro proyecto', 'state': 'all'})['data'], [])

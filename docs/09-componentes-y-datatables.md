@@ -69,7 +69,7 @@ integridad y volver a ejecutar las comprobaciones; no editar un archivo minifica
 
 1. Incluir los estilos y scripts compartidos desde los bloques `extra_styles` y
    `extra_scripts`, como hacen Inventario y Entregas. No copiar una inicialización.
-2. Encerrar filtros, mensaje de error y tabla en un contenedor
+2. Encerrar mensaje de error y tabla en un contenedor
    `data-datatable-panel` para que cada instancia tenga su propio contexto.
 3. Marcar la tabla con `data-datatable`, `data-source`, un `data-search-placeholder`
    que refleje `search_fields` y el orden inicial JSON:
@@ -123,10 +123,10 @@ Endpoints actuales:
 - `/catalogo/categorias/datos/` — `catalog:category-data`.
 - `/proyectos/<pk>/entregas/datos/` — `projects:delivery-data`.
 
-Entregas restringe primero al proyecto y al estado elegido. `recordsTotal` refleja
-ese alcance de negocio; `recordsFiltered`, el mismo alcance más la búsqueda.
-Mantiene Vigentes, Todos, Anuladas y Sustituidas. El filtro conserva el buscador,
-el orden y el tamaño de página; al cambiar vuelve a la primera página. Fecha y
+Entregas restringe primero al proyecto. `recordsTotal` refleja ese alcance
+de negocio; `recordsFiltered`, el mismo alcance más la búsqueda. La tabla muestra
+Vigentes, Anuladas y Sustituidas con el estado identificado. El selector adicional
+de estado se retiró de la interfaz en UI-06. Fecha y
 cantidad se ordenan en PostgreSQL con sus tipos reales. Las cantidades viajan
 como cadenas exactas para no perder precisión con enteros superiores a 2^53.
 
@@ -225,7 +225,8 @@ y usa una base PostgreSQL temporal, sin modificar registros de la aplicación.
   transición y movimiento reducido, sin desborde de página ni errores de consola.
 - La revisión visual detectó y corrigió un conflicto entre `--bs-table-*` y
   `--cui-table-*`. Hay un puente de variables limitado a las tablas en `app.css` y
-  comprobaciones automáticas del encabezado grafito, texto blanco y franjas.
+  comprobaciones automáticas de la presentación de entonces. El encabezado vigente
+  se define en UI-06 y usa celeste claro con texto oscuro.
 - Integridad de los paquetes verificada con el manifest. `check`,
   `makemigrations --check --dry-run`, `migrate --check` y `git diff --check` pasan.
   No hay referencias operativas a los seis archivos retirados.
@@ -260,8 +261,7 @@ distinto de vacío. Tarjetas renderizadas inicialmente no simulan otra carga.
 `datatables.js` conserva el transporte del protocolo `serverSide` y añade cancelación
 de búsquedas obsoletas, manejo compartido de errores y recuperación. Se usan los
 controles DataTables; no hay paginadores o búsquedas de tabla paralelos.
-`data-datatable-filter="project"` envía el filtro del panel a su endpoint sin afectar
-otras tablas de la misma ficha. `data-link="item_url"` hace clicable el nombre con
+El antiguo filtro de proyecto del historial se retiró en UI-06. `data-link="item_url"` hace clicable el nombre con
 texto escapado y URL generada por Django. `data-format="pending-delivery"` añade el
 indicador rojo y accesible antes de la cantidad entregada, sin aceptar HTML del usuario.
 Acciones sigue sin búsqueda/ordenación; las cantidades se ordenan por su cálculo SQL.
@@ -293,7 +293,7 @@ No se añaden bibliotecas ni versiones.
 
 ## Navegación principal por temas
 
-- **General** agrupa Inicio. **Proyectos** agrupa el listado de proyectos. Las
+- **General** agrupa Inicio y Proyectos. Las
   pantallas de cada proyecto se alcanzan desde su ficha y sus pestañas.
 - **Elementos** agrupa Inventario y Categorías; el listado del catálogo fue retirado.
   **Compras** agrupa Facturas y Proveedores.
@@ -314,10 +314,9 @@ No se añaden bibliotecas ni versiones.
 
 ## Presentación y datos de UI-04
 
-Los buscadores automáticos mantienen una etiqueta para lectores de pantalla y
-un placeholder ajustado a los `search_fields` del endpoint. El buscador que
-genera DataTables se mueve fuera de la tarjeta; conserva el mismo motor y su
-única inicialización. Los filtros de negocio permanecen junto a la búsqueda.
+Los buscadores automáticos usan un placeholder ajustado a los `search_fields`
+del endpoint. En UI-06 el buscador oficial de DataTables vuelve a la tarjeta,
+con etiqueta visible «Buscar» y sin controles de filtro adicionales.
 La búsqueda de tarjetas de Proyectos sigue en `cards.js`, sin botón Aplicar.
 
 Responsive 3.0.8 se carga tras DataTables y su adaptador BS5, y antes de
@@ -336,3 +335,21 @@ distribuir archivos de esa tipografía. Los proyectos nuevos reciben fecha
 automática y estado En curso. La migración deja fecha nula en proyectos antiguos
 sin fuente fiable y asigna En curso como estado inicial. Terminado es informativo.
 `/catalogo/` redirige a Inventario y `/catalogo/datos/` ya no es una vista.
+
+## Presentación vigente de tablas e Inicio — UI-06
+
+La guía visual permanente es [diseno-gestor-epp.md](diseno-gestor-epp.md).
+DataTables genera una sola barra superior dentro de `.datatable-shell`, con
+«Mostrar X filas» a la izquierda y «Buscar» visible a la derecha. La etiqueta
+está asociada al campo; el placeholder describe solo `search_fields` reales.
+El espacio entre controles y tabla y entre tabla e información/paginación es
+1rem, adaptable a móvil. El token `--app-table-heading` vale `#EAF4FB`;
+encabezados ordenados conservan texto oscuro e indicador. Las filas son blancas
+con hover gris claro. No hay filtros adicionales de Categoría, Proyecto ni Estado
+en los listados; la consulta mantiene su alcance de negocio y permite buscar y
+ordenar entre todos sus registros. Proyectos y los selectores de elementos
+conservan sus buscadores propios.
+
+Inicio reutiliza `.home-panel` y su área `.home-panel-actions`: título,
+descripción, borde superior y botón alineado abajo. Facturas enlaza al listado
+de facturas de compra.

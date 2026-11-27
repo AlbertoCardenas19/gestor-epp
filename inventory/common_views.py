@@ -6,7 +6,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.views.generic import FormView, TemplateView
 
-from catalog.models import Category, Item
+from catalog.models import Item
 from projects.datatables import DataTableView
 from .common import (common_item_basics, common_items, common_items_for_page, common_records,
                      receive_common_stock, item_projects, filter_movement_project)
@@ -28,9 +28,6 @@ class CommonItemMixin:
 
 class CommonInventoryView(TemplateView):
     template_name = 'inventory/common_list.html'
-
-    def get_context_data(self, **kwargs):
-        return super().get_context_data(categories=Category.objects.all(), **kwargs)
 
 
 class CommonInventoryDataView(DataTableView):
@@ -67,10 +64,6 @@ class CommonInventoryDataView(DataTableView):
 
 class CommonHistoryView(CommonItemMixin, TemplateView):
     template_name = 'inventory/common_history.html'
-
-    def get_context_data(self, **kwargs):
-        return super().get_context_data(project_options=item_projects(self.item),
-                                       movement_project=self.request.GET.get('project', ''), **kwargs)
 
 
 class CommonHistoryDataView(CommonItemMixin, DataTableView):
