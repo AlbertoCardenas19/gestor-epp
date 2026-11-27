@@ -30,6 +30,74 @@ def data(quantity, **extra):
 
 
 class LibraryBrowserChecks(StaticLiveServerTestCase):
+    def test_project_cards_information_and_form_layout(self):
+        def seed():
+            projects = [Project.objects.create(
+                name=f'Obra {index:02d}' + (' con un nombre extenso ' * 3 if index == 8 else ''),
+                description=f'Descripción extensa {index} ' * 8,
+                created_on=date(2026, 1, 1 + index // 2) if index < 8 else None,
+            ) for index in range(9)]
+            item = Item.objects.create(name='Casco de prueba', description='Descripción del casco')
+            return projects, item
+        projects, item = self.db(seed)
+        self.page.goto(self.live_server_url + reverse('projects:list'))
+        sort = self.page.get_by_label('Ordenar por')
+        expect(sort).to_have_value('date')
+        expect(self.page.locator('.project-card')).to_have_count(6)
+        expect(self.page.locator('.project-card').first).to_contain_text('Obra 07')
+        self.assertEqual(self.page.locator('.project-card p').count(), 0)
+        self.assertLess(self.page.locator('.project-card').first.locator('h2').bounding_box()['y'],
+                        self.page.locator('.project-card').first.locator('.project-date').bounding_box()['y'])
+        sort.select_option('name')
+        expect(self.page.locator('.project-card').first).to_contain_text('Obra 00')
+        self.page.get_by_role('link', name='Siguiente', exact=True).click()
+        expect(sort).to_have_value('name')
+        expect(self.page.locator('.project-card').first).to_contain_text('Obra 06')
+        sort.select_option('date')
+        expect(self.page.locator('.project-card').first).to_contain_text('Obra 07')
+        self.assertNotIn('page=2', self.page.url)
+        sort.select_option('name')
+        expect(self.page.locator('.project-card').first).to_contain_text('Obra 00')
+        self.page.get_by_label('Buscar proyectos').fill('Obra 08')
+        expect(self.page.locator('.project-card')).to_have_count(1)
+        self.assertIn('sort=name', self.page.url)
+        self.page.locator('.project-card .project-link').click()
+        self.assertEqual(self.page.url, self.live_server_url + projects[8].get_absolute_url())
+        expect(self.page.get_by_role('link', name='Información', exact=True)).to_have_attribute('aria-current', 'page')
+        expect(self.page.locator('.info-description')).to_contain_text('Descripción extensa 8')
+        expect(self.page.locator('.info-meta')).to_contain_text('Sin fecha registrada')
+        self.page.get_by_role('link', name='Entregas', exact=True).click()
+        self.assertEqual(self.page.url, self.live_server_url + reverse('projects:detail', args=[projects[8].pk]))
+        self.page.wait_for_function('window.DataTable && DataTable.tables({api:true}).ajax.json() !== undefined')
+        self.assertGreaterEqual(self.page.locator('table.dataTable').bounding_box()['width'] + 2,
+                                self.page.locator('.dt-container').bounding_box()['width'])
+        self.page.get_by_role('link', name='Inventario', exact=True).last.click()
+        self.page.wait_for_function('window.DataTable && DataTable.tables({api:true}).ajax.json() !== undefined')
+        self.assertGreaterEqual(self.page.locator('table.dataTable').bounding_box()['width'] + 2,
+                                self.page.locator('.dt-container').bounding_box()['width'])
+        self.page.goto(self.live_server_url + item.get_absolute_url())
+        expect(self.page.locator('#item-info')).to_contain_text('Descripción del casco')
+        expect(self.page.locator('#item-info')).to_contain_text('Stock')
+        expect(self.page.get_by_role('link', name='Registrar entrada')).to_be_visible()
+        expect(self.page.get_by_role('link', name='Editar elemento')).to_be_visible()
+        self.page.get_by_role('tab', name='Proyectos', exact=True).focus()
+        self.page.keyboard.press('Enter')
+        expect(self.page.locator('#item-projects')).to_be_visible()
+        self.assertGreaterEqual(self.page.locator('#item-projects table.dataTable').bounding_box()['width'] + 2,
+                                self.page.locator('#item-projects .dt-container').bounding_box()['width'])
+        for route, label, cancel in [('projects:create', 'Volver a proyectos', reverse('projects:list')),
+                                     ('catalog:create', 'Volver al inventario', reverse('stock:list'))]:
+            self.page.goto(self.live_server_url + reverse(route))
+            expect(self.page.get_by_text(label, exact=False)).to_have_count(0)
+            expect(self.page.get_by_role('link', name='Cancelar')).to_have_attribute('href', cancel)
+            gap = self.page.locator('.form-page-heading').evaluate(
+                'e => e.nextElementSibling.getBoundingClientRect().top - e.getBoundingClientRect().bottom')
+            self.assertAlmostEqual(gap, 24, delta=2)
+        self.page.set_viewport_size({'width': 390, 'height': 850})
+        self.page.goto(self.live_server_url + reverse('projects:list'))
+        self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+        expect(self.page.get_by_label('Ordenar por')).to_be_visible()
+
     def test_responsive_row_expansion_search_order_and_pagination(self):
         self.db(lambda: Item.objects.bulk_create([
             Item(name=f'Casco {index:02d}', description='Descripción larga ' * 12)
@@ -333,7 +401,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
 
     def test_delivery_dates_quantities_states_and_inventory_actions(self):
         project, item, replacement, balance, count = self.db(self.seed_deliveries)
-        self.visit_table(project.get_absolute_url())
+        self.visit_table(reverse('projects:detail', args=[project.pk]))
         self.assertEqual(self.page.evaluate('DataTable.tables({api:true}).page.info().recordsTotal'), count + 1)
         self.assertEqual(self.search('Otro proyecto')['recordsFiltered'], 0)
         self.search('')
@@ -354,7 +422,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.page.get_by_label('Motivo de la corrección', exact=False).fill('Cantidad correcta')
         self.page.get_by_role('button', name='Guardar corrección', exact=True).click()
         expect(self.page.get_by_test_id('balance')).to_have_text(str(balance - 2))
-        self.visit_table(project.get_absolute_url())
+        self.visit_table(reverse('projects:detail', args=[project.pk]))
         self.search('Persona corregida')
         self.rows().filter(has_text='Vigente').get_by_role('button', name=re.compile('^Acciones de')).click()
         self.page.locator('.dropdown-menu.show').get_by_role('link', name='Anular', exact=True).click()

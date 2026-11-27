@@ -2,17 +2,28 @@
 
 ## Estado actual
 
-UI-01 a UI-09 publicadas. UI-09 verificada en Chromium; falta comprobarla en Firefox en la PC del usuario.
+UI-01 a UI-10 publicadas. UI-10 verificada en Chromium; falta comprobarla en Firefox en la PC del usuario.
 
 ## Pendientes
 
 - Decisiones funcionales abiertas de [docs/04-pendientes.md](04-pendientes.md), en particular el cálculo automático de IVA (P-07), aprobación de compras, devoluciones y reposiciones.
 - Confirmar en la PC del usuario el recorrido visual y funcional con sus datos locales tras actualizar desde `origin/main`.
-- Para la siguiente iteración, quitar «Volver a proyectos» de Nuevo proyecto y el enlace equivalente de Nuevo elemento; separar título y formulario; dar a las tarjetas de proyectos un título un paso mayor, fecha debajo en gris y estado más separado, sin descripción y conservando «Ver proyecto»; ordenar proyectos por fecha de forma predeterminada y añadir junto al buscador un selector fecha/nombre; definir primero la distribución de Información en proyectos y elementos antes de añadirla como primera pestaña y destino inicial del proyecto. No se implementa en UI-09.
 
 ## Próximo paso
 
-Actualizar la copia Ubuntu desde `origin/main` y comprobar el recorrido visual de UI-09 en Firefox con los datos locales. Definir la distribución de Información antes de la siguiente iteración visual.
+Actualizar la copia Ubuntu desde `origin/main` y comprobar el recorrido visual de UI-10 en Firefox con los datos locales.
+
+## UI-10 · 27 de noviembre de 2026
+
+**Objetivo y alcance.** Implementar el orden y diseño de tarjetas de proyectos, la ordenación de sus resultados, Información inicial del proyecto y un patrón compartido de Información para proyectos y elementos (RF-03, RF-04 y RF-05). No se cambian reglas de stock, solicitudes, entregas, facturas ni finanzas.
+
+**Cambios.** Nuevo proyecto y Nuevo elemento omiten el enlace de regreso redundante y conservan Cancelar con su destino; `.form-page-heading` deja 1.5rem antes de la tarjeta sin margen duplicado. Las tarjetas muestran nombre un píxel mayor, fecha gris `DD/MM/AAAA` o «Sin fecha registrada», estado separado y «Ver proyecto» alineado al fondo; la descripción deja de mostrarse en el listado y permanece en la ficha. El servidor filtra y ordena antes de paginar seis resultados: fecha descendente por defecto, fechas ausentes al final y desempate por clave primaria; Nombre A–Z es la segunda opción. El selector comparte fila con la búsqueda y se acomoda debajo en móvil; la URL y la paginación conservan el criterio, y un cambio de búsqueda u orden vuelve a la primera página.
+
+**Información y rutas.** «Ver proyecto» abre la nueva ruta `/proyectos/<id>/informacion/`, primera pestaña. La ruta anterior `/proyectos/<id>/` sigue mostrando Entregas, y el Inventario del proyecto conserva su ruta. La ficha muestra nombre una sola vez, fecha y estado compactos, y descripción o «Sin descripción». La Información del elemento conserva categorías, descripción, stock, Registrar entrada y Editar elemento; Historial y Proyectos mantienen sus pestañas y tablas. `.info-section`, `.info-meta`, `.info-field`, `.info-label`, `.info-value`, `.info-description` e `.info-actions` comparten separadores, espaciado y distribución adaptable.
+
+**Verificación visual.** En Chromium se inspeccionaron tarjetas, Información del proyecto y del elemento a 1440 y 390px con nueve proyectos, uno de nombre y descripción extensos y otro sin fecha. Se observaron seis tarjetas por página, fechas bajo los nombres, acciones alineadas, controles apilados en móvil y sin desbordamiento horizontal ni errores de consola. La ficha del proyecto abrió Información; Entregas e Inventario conservaron acceso directo. Cancelar, activado por teclado en ambos formularios nuevos, volvió a su listado correcto; la separación de encabezado a tarjeta midió 24px. Las tablas ocultas de Historial y Proyectos del elemento midieron 296px, igual que sus contenedores, al mostrarlas en móvil. Capturas: [tarjetas escritorio](capturas/ui10-tarjetas-1440.png), [tarjetas móvil](capturas/ui10-tarjetas-390.png), [Información proyecto escritorio](capturas/ui10-proyecto-1440.png), [Información proyecto móvil](capturas/ui10-proyecto-390.png), [Información elemento escritorio](capturas/ui10-elemento-1440.png) e [Información elemento móvil](capturas/ui10-elemento-390.png).
+
+**Comprobaciones y límite.** Pasaron 185 pruebas Django, 17 pruebas Chromium, `manage.py check`, `makemigrations --check --dry-run`, `node --check` y `git diff --check`. La nueva prueba Chromium cubre búsqueda, orden, paginación, pestañas, formularios y teclado. Firefox no está instalado en este entorno; queda pendiente comprobar el resultado en Firefox Ubuntu del usuario.
 
 ## UI-09 · 27 de noviembre de 2026
 

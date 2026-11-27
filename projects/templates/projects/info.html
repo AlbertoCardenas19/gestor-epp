@@ -1,0 +1,13 @@
+{% extends 'projects/base.html' %}
+{% block title %}{{ project.name }}{% endblock %}
+{% block content %}
+<div class="page-heading mb-4"><h1 class="text-break mb-0">{{ project.name }}</h1><a class="btn btn-outline-primary" href="{% url 'projects:update' project.pk %}">Editar proyecto</a></div>
+{% include 'projects/project_tabs.html' with active_tab='info' %}
+<section class="info-section" aria-label="Información del proyecto">
+  <div class="info-meta">
+    <div class="info-field"><span class="info-label">Fecha de creación</span><span class="info-value">{% if project.created_on %}{{ project.created_on|date:'d/m/Y' }}{% else %}Sin fecha registrada{% endif %}</span></div>
+    <div class="info-field"><span class="info-label">Estado</span><span class="info-value">{{ project.get_status_display }}</span></div>
+  </div>
+  <div class="info-description"><h2 class="info-label">Descripción</h2>{% if project.description %}<p class="info-reading text-break">{{ project.description|linebreaksbr }}</p>{% else %}<p class="info-reading text-body-secondary">Sin descripción</p>{% endif %}</div>
+</section>
+{% endblock %}

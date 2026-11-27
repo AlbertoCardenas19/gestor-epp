@@ -15,12 +15,12 @@
 <div class="tab-content">
   <section class="tab-pane fade show active" id="item-info" role="tabpanel" aria-labelledby="item-info-tab" tabindex="0">
     <h2 class="visually-hidden">Información</h2>
-    <p class="fw-semibold">Stock: {{ balance }}</p><a class="btn btn-primary mb-4" href="{% url 'stock:receive' item.pk %}">Registrar entrada</a>
-    <div class="card"><div class="card-body p-4 p-md-5">
-      <a class="btn btn-outline-primary mb-3" href="{% url 'catalog:update' item.pk %}">Editar elemento</a><dl class="mb-4"><dt>Categorías</dt><dd>{{ item.categories.all|join:", "|default:"Sin categorías" }}</dd></dl>
-      <h3 class="h5 mb-3">Descripción</h3>
-      {% if item.description %}<div class="project-description text-break">{{ item.description|linebreaksbr }}</div>{% else %}<p class="text-body-secondary mb-0">Este elemento aún no tiene descripción.</p>{% endif %}
-    </div></div>
+    <div class="info-section">
+      <div class="info-meta"><div class="info-field"><span class="info-label">Categorías</span><span class="info-value text-break">{{ item.categories.all|join:", "|default:"Sin categorías" }}</span></div></div>
+      <div class="info-description"><h3 class="info-label">Descripción</h3>{% if item.description %}<p class="info-reading text-break">{{ item.description|linebreaksbr }}</p>{% else %}<p class="info-reading text-body-secondary">Este elemento aún no tiene descripción.</p>{% endif %}</div>
+      <div class="info-meta"><div class="info-field"><span class="info-label">Stock</span><span class="info-value">{{ balance }}</span></div></div>
+      <div class="info-actions"><a class="btn btn-primary" href="{% url 'stock:receive' item.pk %}">Registrar entrada</a><a class="btn btn-outline-primary" href="{% url 'catalog:update' item.pk %}">Editar elemento</a></div>
+    </div>
   </section>
   <section class="tab-pane fade" id="item-history" role="tabpanel" aria-labelledby="item-history-tab" tabindex="0">
     <h2 class="visually-hidden">Historial de movimientos</h2>

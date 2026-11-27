@@ -9,10 +9,9 @@
 <div class="row g-3" tabindex="-1" data-results-focus>
 {% for project in projects %}
 <div class="col-12 col-md-6 col-xl-4"><article class="card project-card h-100"><div class="card-body p-4 d-flex flex-column align-items-start">
-  <span class="project-date mb-3">{% if project.created_on %}{{ project.created_on|date:'d/m/Y' }}{% else %}Sin fecha registrada{% endif %}</span>
-  <h2 class="h5 text-break">{{ project.name }}</h2>
-  <span class="badge project-status mb-2">{{ project.get_status_display }}</span>
-  <p class="text-body-secondary text-break">{{ project.description|truncatechars:160|default:'Sin descripción.' }}</p>
+  <h2 class="h5 text-break mb-1">{{ project.name }}</h2>
+  <span class="project-date">{% if project.created_on %}{{ project.created_on|date:'d/m/Y' }}{% else %}Sin fecha registrada{% endif %}</span>
+  <span class="badge project-status mt-3 mb-3">{{ project.get_status_display }}</span>
   <a class="project-link mt-auto" href="{{ project.get_absolute_url }}">Ver proyecto →<span class="visually-hidden">: {{ project.name }}</span></a>
 </div></article></div>
 {% empty %}<div class="col-12"><div class="card"><div class="card-body p-4">No hay proyectos para esta consulta. <a href="{% url 'projects:create' %}">Crear primer proyecto</a></div></div></div>{% endfor %}

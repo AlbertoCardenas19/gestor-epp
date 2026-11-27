@@ -1,10 +1,10 @@
 # Sistema visual de gestor-epp basado en Punto Aparte
 
-Fecha: 27 de noviembre de 2026. Versión 5.
+Fecha: 27 de noviembre de 2026. Versión 6.
 
 ## Decisiones vigentes
 
-UI-06 implementó el espaciado de DataTables, los controles de búsqueda, el encabezado claro, la tarjeta Facturas y el área de acciones de Inicio, y retiró los filtros adicionales visibles de las tablas. UI-07 sustituyó Calibri por la familia de Punto Aparte y restauró la identidad original de Gestor EPP en el sidebar. UI-08 ajustó la densidad del sidebar y las tablas, la distribución adaptable de los controles oficiales de DataTables y la posición de Descripción en Inventario. UI-09 ajustó la paleta principal, los encabezados de tabla y el espacio de navegación. El resto del plan de adopción queda pendiente. Las decisiones siguientes reemplazan cualquier indicación distinta en el análisis histórico de este documento:
+UI-06 implementó el espaciado de DataTables, los controles de búsqueda, el encabezado claro, la tarjeta Facturas y el área de acciones de Inicio, y retiró los filtros adicionales visibles de las tablas. UI-07 sustituyó Calibri por la familia de Punto Aparte y restauró la identidad original de Gestor EPP en el sidebar. UI-08 ajustó la densidad del sidebar y las tablas, la distribución adaptable de los controles oficiales de DataTables y la posición de Descripción en Inventario. UI-09 ajustó la paleta principal, los encabezados de tabla y el espacio de navegación. UI-10 ordena las tarjetas de proyectos y establece un patrón compartido de Información. El resto del plan de adopción queda pendiente. Las decisiones siguientes reemplazan cualquier indicación distinta en el análisis histórico de este documento:
 
 - El buscador oficial de DataTables permanece **dentro** de la tarjeta, en la fila superior junto a «Mostrar X filas». Tiene etiqueta visible «Buscar», placeholder con los criterios reales sin «Buscar por» ni puntos suspensivos y búsqueda automática. Proyectos y los selectores de elementos no cambian.
 - Los dos grupos de controles permanecen en una fila mientras caben; el campo Buscar se encoge antes del salto. Cuando ya no caben, «Mostrar X filas» va arriba y Buscar debajo, ambos a la izquierda y con 12px entre filas. La etiqueta Buscar permanece junto al campo, que aprovecha el ancho libre sin superposiciones.
@@ -16,11 +16,14 @@ UI-06 implementó el espaciado de DataTables, los controles de búsqueda, el enc
 - El sidebar conserva la identidad original «E» y «Gestor EPP» por encima de los grupos. En escritorio la navegación comienza 8px más abajo que en UI-08 mediante medidas compartidas; ya no se exige que coincida exactamente con el título principal. En móvil la navegación conserva un espacio cómodo bajo la identidad, sin forzar esa alineación. La identidad queda oculta dentro de la franja contraída.
 - El azul principal es el fondo actual del sidebar `#183450`, compartido por títulos de página y sección, botones principales y texto e indicador de pestañas seleccionadas. El foco de teclado permanece visible. Los colores semánticos se conservan.
 - En el sidebar, las opciones consecutivas tienen 8px adicionales de separación vertical, los encabezados de grupo miden `.7rem` y siguen en mayúsculas y negrita, y el texto de las opciones es blanco también en hover y activo. Se conservan los fondos de estos estados y el botón circular compartido.
+- Nuevo proyecto y Nuevo elemento conservan Cancelar y omiten el enlace de regreso redundante. El encabezado de formulario deja 1.5rem antes de la tarjeta mediante una clase compartida.
+- Las tarjetas de proyectos muestran nombre, fecha gris debajo, estado separado y «Ver proyecto» alineado abajo. La descripción se lee en Información. El listado muestra seis por página; fecha descendente con fechas ausentes al final es el orden inicial, y el selector junto al buscador permite nombre A–Z. Búsqueda y orden se aplican antes de paginar.
+- Información es la primera sección y el destino de «Ver proyecto». Entregas conserva `/proyectos/<id>/` e Inventario su ruta. Proyecto y elemento usan el mismo patrón de metadatos, etiqueta/valor, descripción, separadores y cuadrícula adaptable. No se repite el nombre dentro de Información; las acciones existentes permanecen.
 
 
 ## Estado y alcance
 
-Este documento reúne el análisis original de código, decisiones confirmadas y una especificación de adaptación. El análisis original no ejecutó las aplicaciones ni midió estilos computados; su evidencia visual directa fue la captura del sidebar aportada por el usuario. UI-06 a UI-09 implementan solo las decisiones vigentes enumeradas arriba y registran su verificación en `docs/ITERACIONES.md`. El resto del plan de adaptación queda pendiente. No se auditó formalmente contraste, lector de pantalla ni interacción táctil.
+Este documento reúne el análisis original de código, decisiones confirmadas y una especificación de adaptación. El análisis original no ejecutó las aplicaciones ni midió estilos computados; su evidencia visual directa fue la captura del sidebar aportada por el usuario. UI-06 a UI-10 implementan solo las decisiones vigentes enumeradas arriba y registran su verificación en `docs/ITERACIONES.md`. El resto del plan de adaptación queda pendiente. No se auditó formalmente contraste, lector de pantalla ni interacción táctil.
 
 Fuentes fijadas para evitar cambios silenciosos:
 - Punto Aparte, rama work, commit `9f359ac45a5caf38c2321b6e79b7ec989ff06cbc`.
@@ -142,15 +145,17 @@ La identidad original «E» / «Gestor EPP» permanece encima de los grupos. En 
 
 ### Tarjetas y botones
 
-Padding general adaptable entre 1.25 y 2rem. Tarjetas de tablas: 1.5rem escritorio y 1rem móvil como punto inicial. Sin sombras decorativas generales. Inicio sin iconos, acciones separadas por línea y alineadas abajo. Proyectos conserva seis tarjetas, fecha y estado.
+Padding general adaptable entre 1.25 y 2rem. Tarjetas de tablas: 1.5rem escritorio y 1rem móvil como punto inicial. Sin sombras decorativas generales. Inicio sin iconos, acciones separadas por línea y alineadas abajo. Proyectos conserva seis tarjetas por página; cada una presenta nombre un paso mayor, fecha en gris debajo, estado separado y acceso alineado al fondo sin altura rígida. La descripción no aparece en la tarjeta.
 
 Primario azul sólido: Agregar/Guardar/Confirmar. Secundario blanco con borde: Cancelar y acciones auxiliares. Peligro rojo únicamente para acciones destructivas. No colorear cada módulo con un azul diferente. Botones normales con área mínima 44px; variantes compactas explícitas sin perder usabilidad. Los enlaces de navegación no se convierten en botones de envío.
 
 ### Formularios
 
-Nuevo elemento es la referencia estructural confirmada. Compartir renderizado de campo, ayuda, error y acciones; no copiar HTML por formulario. Etiqueta siempre asociada al control; (opcional) solo si realmente corresponde, con obligaciones condicionales respetadas. Fondo blanco incluso al enfocar, foco visible y error asociado. Guardar primero y Cancelar después, orden consistente. Cancelar no modifica datos ni lleva al catálogo retirado. Formularios complejos de factura pueden agrupar líneas y totales sin inventar otro estilo.
+Nuevo elemento es la referencia estructural confirmada. Compartir renderizado de campo, ayuda, error y acciones; no copiar HTML por formulario. En Nuevo proyecto y Nuevo elemento, la separación compartida del encabezado a la tarjeta es 1.5rem, sin margen adicional duplicado y sin enlace de regreso redundante. Etiqueta siempre asociada al control; (opcional) solo si realmente corresponde, con obligaciones condicionales respetadas. Fondo blanco incluso al enfocar, foco visible y error asociado. Guardar primero y Cancelar después, orden consistente. Cancelar no modifica datos ni lleva al catálogo retirado. Formularios complejos de factura pueden agrupar líneas y totales sin inventar otro estilo.
 
 ### Tablas, búsqueda y navegación
+
+En Proyectos, el buscador automático y «Ordenar por» comparten fila mientras caben y se acomodan en móvil. El servidor filtra y ordena antes de paginar seis resultados. Fecha descendente es el valor inicial, con fechas `NULL` al final y clave primaria descendente para empates; Nombre A–Z usa la clave primaria ascendente para empates. El criterio se conserva en la URL y al paginar, y cambiarlo vuelve a la primera página.
 
 Encabezado claro, filas blancas y hover gris suave. Sin striped ni sombreado permanente de columna ordenada. Encabezados `.84rem`; celdas y detalles Responsive `.91rem`. Descripción ocupa la última columna de Inventario general y el último detalle cuando está oculta; inventario del proyecto conserva sus datos. Texto puede envolver; cifras deben mantener legibilidad. Acciones compactas solo donde todavía sean necesarias.
 
@@ -159,6 +164,12 @@ DataTables Responsive muestra detalles mediante botón explícito; debe conserva
 Buscador oficial dentro de la tarjeta, con rótulo visible «Buscar» a la izquierda del campo y sin botón de envío. El selector «Mostrar X filas» queda a la izquierda y Buscar a la derecha mientras caben; el campo se encoge antes de saltar a la segunda fila. Cuando no caben, ambos grupos se alinean a la izquierda, separados verticalmente 12px, y el campo ocupa el ancho libre. Placeholder enumera únicamente campos realmente buscados, sin prefijo ni puntos suspensivos. Un solo buscador por listado. Conservar ordenación/búsqueda global en servidor, debounce y cancelación de peticiones obsoletas. Paginación común visualmente, sin reemplazar el motor de tarjetas por DataTables. Ocultarla cuando solo haya una página conservando recuento.
 
 Reajustar columnas y Responsive al finalizar cambios relevantes de contenedor/sidebar y al mostrar pestañas. No reinicializar tablas ni emitir consultas de datos solo para corregir ancho. Pendiente aparece antes de la cantidad entregada y no se transforma en una entrega real.
+
+### Información de proyectos y elementos
+
+El nombre aparece una sola vez como título principal. La sección compartida `.info-section` usa separadores suaves y espacios de 1.5rem, sin una tarjeta para cada dato. `.info-meta` distribuye pares `.info-label` / `.info-value` en columnas adaptables; en móvil pasa a una columna. `.info-description` muestra texto de lectura con saltos y cortes de línea, o el vacío explícito. Las acciones siguen accesibles en `.info-actions` cuando corresponden.
+
+Información de proyecto muestra fecha de creación en `DD/MM/AAAA` o «Sin fecha registrada», estado informativo y descripción o «Sin descripción». Es la primera pestaña y el destino de «Ver proyecto». La ruta anterior de Entregas sigue abriendo Entregas; Inventario conserva su ruta y tabla. Información de elemento muestra categorías, descripción, stock y las acciones Registrar entrada y Editar elemento; Historial de movimientos y Proyectos mantienen sus tablas y ajuste al hacerse visibles. No se agregan datos calculados.
 
 ### Pestañas, menús, carga y accesibilidad
 

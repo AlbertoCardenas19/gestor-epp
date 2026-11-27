@@ -1,6 +1,6 @@
 <form method="get" class="cards-controls list-controls mb-4" role="search" data-live-cards aria-controls="table-results">
   <div class="search-field"><label class="visually-hidden" for="table-query">Buscar proyectos</label><div class="search-with-clear"><input class="form-control" type="search" id="table-query" name="q" autocomplete="off" value="{{ q }}" placeholder="{{ search_placeholder }}"><button class="search-clear" type="button" aria-label="Limpiar búsqueda" title="Limpiar búsqueda" data-cards-clear hidden>×</button></div></div>
 
-  <input type="hidden" name="sort" value="{{ sort }}">
+  <div class="cards-sort"><label class="form-label" for="cards-sort">Ordenar por</label><select class="form-select" id="cards-sort" name="sort">{% for value, label in sort_options %}<option value="{{ value }}"{% if sort == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
 </form>
 <p class="table-feedback small text-body-secondary" role="status" aria-live="polite" aria-atomic="true" data-cards-feedback></p>

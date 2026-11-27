@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from django.db.models import Case, CharField, Exists, OuterRef, Value, When, Q
+from django.db.models import Case, CharField, Exists, F, OuterRef, Value, When, Q
 from django.shortcuts import get_object_or_404
-from django.views.generic import CreateView, ListView, TemplateView, UpdateView
+from django.views.generic import CreateView, DetailView, ListView, TemplateView, UpdateView
 from django.template.loader import render_to_string
 
 from inventory.models import StockRecord
@@ -22,16 +22,14 @@ class ProjectListView(CardsViewMixin, ListView):
     template_name = 'projects/list.html'
     context_object_name = 'projects'
     search_fields = ('name', 'description')
-    default_sort = 'name'
+    default_sort = 'date'
 
     def get_paginate_by(self, queryset):
         return 6
 
     sort_options = (
+        ('date', 'Fecha: más recientes primero', (F('created_on').desc(nulls_last=True), '-pk')),
         ('name', 'Nombre: A–Z', ('name', 'pk')),
-        ('-name', 'Nombre: Z–A', ('-name', '-pk')),
-        ('description', 'Descripción: A–Z', ('description', 'pk')),
-        ('-description', 'Descripción: Z–A', ('-description', '-pk')),
     )
 
     def get_queryset(self):
@@ -48,6 +46,12 @@ class ProjectUpdateView(UpdateView):
     model = Project
     form_class = ProjectForm
     template_name = 'projects/form.html'
+
+
+class ProjectInfoView(DetailView):
+    model = Project
+    template_name = 'projects/info.html'
+    context_object_name = 'project'
 
 
 class DeliveryQuerysetMixin:

@@ -3,15 +3,9 @@
 {% block content %}
 {% if object %}
   <a class="back-link" href="{{ object.get_absolute_url }}">← Volver a la ficha</a>
-{% elif request.resolver_match.namespace == 'stock' %}
-  {% url 'stock:list' as back_url %}
-  <a class="back-link" href="{{ back_url }}">← Volver al inventario</a>
-{% else %}
-  <a class="back-link" href="{% url 'stock:list' %}">← Volver al inventario</a>
 {% endif %}
-<div class="form-shell mt-4">
-
-  <h1>{% if object %}Editar elemento{% else %}Nuevo elemento{% endif %}</h1>
+<div class="form-shell{% if object %} mt-4{% endif %}">
+  <div class="form-page-heading"><h1>{% if object %}Editar elemento{% else %}Nuevo elemento{% endif %}</h1></div>
 
   <div class="card"><div class="card-body p-4 p-md-5">
     <form method="post" novalidate>

@@ -1,11 +1,10 @@
 {% extends 'projects/base.html' %}
 {% block title %}{% if object %}Editar proyecto{% else %}Nuevo proyecto{% endif %}{% endblock %}
 {% block content %}
-<a class="back-link" href="{% if object %}{{ object.get_absolute_url }}{% else %}{% url 'projects:list' %}{% endif %}">← {% if object %}Volver al proyecto{% else %}Volver a proyectos{% endif %}</a>
-<div class="form-shell mt-4">
-
-  <h1>{% if object %}Editar proyecto{% else %}Nuevo proyecto{% endif %}</h1>
-  <p class="text-body-secondary mb-4">Comienza con lo esencial. La descripción es opcional.</p>
+{% if object %}<a class="back-link" href="{{ object.get_absolute_url }}">← Volver al proyecto</a>{% endif %}
+<div class="form-shell{% if object %} mt-4{% endif %}">
+  <div class="form-page-heading"><h1>{% if object %}Editar proyecto{% else %}Nuevo proyecto{% endif %}</h1>
+  <p class="text-body-secondary">Comienza con lo esencial. La descripción es opcional.</p></div>
   <div class="card"><div class="card-body p-4 p-md-5">
     <form method="post" novalidate>
       {% csrf_token %}

@@ -88,7 +88,8 @@ h2,h3 { letter-spacing: -.02em; }
 .card .h5 { font-size: 1.05rem; font-weight: 650; line-height: 1.5; }
 .card p { line-height: 1.7; }
 .project-card:hover { border-color: var(--app-secondary); }
-.project-date { color: var(--app-primary); font-size: .85rem; font-weight: 700; }
+.project-card .h5 { font-size: calc(1.05rem + 1px); }
+.project-date { color: var(--app-secondary); font-size: .85rem; font-weight: 400; }
 .project-status { background: var(--app-background); color: var(--app-primary); border: 1px solid var(--app-border); }
 .project-link,.back-link { color: var(--app-primary); font-size: .85rem; font-weight: 600; text-decoration: none; }
 .project-link:hover,.back-link:hover { color: var(--app-text); text-decoration: underline; }
@@ -105,6 +106,16 @@ h2,h3 { letter-spacing: -.02em; }
 .btn-primary { --cui-btn-color: var(--app-surface); --cui-btn-bg: var(--app-primary); --cui-btn-border-color: var(--app-primary); --cui-btn-hover-color: var(--app-surface); --cui-btn-hover-bg: var(--app-sidebar-hover); --cui-btn-hover-border-color: var(--app-sidebar-hover); --cui-btn-active-color: var(--app-surface); --cui-btn-active-bg: var(--app-sidebar-hover); --cui-btn-active-border-color: var(--app-sidebar-hover); --cui-btn-focus-shadow-rgb: 24,52,80; }
 .btn-outline-secondary { --cui-btn-color: var(--app-primary); --cui-btn-border-color: var(--app-border); --cui-btn-hover-bg: var(--app-background); --cui-btn-hover-color: var(--app-primary); --cui-btn-hover-border-color: var(--app-secondary); }
 .form-shell { width: 100%; max-width: none; }
+.form-page-heading { margin-bottom: 1.5rem; }
+.form-page-heading > :last-child { margin-bottom: 0; }
+.info-section { border-top: 1px solid var(--app-border); border-bottom: 1px solid var(--app-border); padding-block: 1.5rem; }
+.info-section > * + * { border-top: 1px solid var(--app-border); margin-top: 1.5rem; padding-top: 1.5rem; }
+.info-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: 1rem 2rem; }
+.info-field { min-width: 0; }
+.info-label { display: block; margin-bottom: .5rem; color: var(--app-secondary); font-size: .8rem; font-weight: 600; }
+.info-value { display: block; color: var(--app-text); font-size: 1rem; font-weight: 600; overflow-wrap: anywhere; }
+.info-reading { margin-bottom: 0; line-height: 1.8; }
+.info-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
 .form-control,.form-select { padding: .75rem .8rem; background-color: var(--app-surface); border-color: var(--app-border); border-radius: 7px; font-size: .9rem; }
 .form-label { font-size: .84rem; margin-bottom: .5rem; }
 .form-control:focus,.form-select:focus { background-color: var(--app-surface); border-color: var(--app-primary); box-shadow: 0 0 0 .2rem rgb(var(--cui-primary-rgb) / .19); }

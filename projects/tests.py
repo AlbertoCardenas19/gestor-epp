@@ -1,4 +1,5 @@
 from hashlib import sha256
+from datetime import date
 from pathlib import Path
 
 from django.contrib.staticfiles import finders
@@ -49,7 +50,12 @@ class ProjectFlowTests(TestCase):
         self.assertContains(client.get(reverse('projects:list')), project.name)
         detail = client.get(project.get_absolute_url())
         self.assertContains(detail, project.name)
+        self.assertContains(detail, 'Proyecto de prueba.')
+        self.assertContains(detail, 'Información')
         self.assertContains(detail, 'Entregas')
+        self.assertContains(detail, reverse('projects:detail', args=[project.pk]))
+        self.assertContains(detail, reverse('requests:list', args=[project.pk]))
+        self.assertEqual(self.client.get(reverse('projects:detail', args=[project.pk])).status_code, 200)
         project.refresh_from_db()
         self.assertEqual(project.description, 'Proyecto de prueba.\nSegunda línea.')
 
@@ -58,7 +64,8 @@ class ProjectFlowTests(TestCase):
         project = Project.objects.get()
         self.assertEqual(project.description, '')
         self.assertRedirects(response, project.get_absolute_url())
-        self.assertContains(self.client.get(project.get_absolute_url()), 'No hay entregas para esta consulta.')
+        self.assertContains(self.client.get(project.get_absolute_url()), 'Sin descripción')
+        self.assertContains(self.client.get(reverse('projects:detail', args=[project.pk])), 'No hay entregas para esta consulta.')
 
     def test_creation_date_and_informational_status(self):
         response = self.client.post(reverse('projects:create'), {'name': 'Obra nueva'})
@@ -138,7 +145,7 @@ class DeliveryTableTests(TestCase):
             occurred_on=date.today(), worker_full_name='Otro proyecto')
 
     def test_default_shows_all_delivery_states_with_pagination(self):
-        response = self.client.get(self.project.get_absolute_url())
+        response = self.client.get(reverse('projects:detail', args=[self.project.pk]))
         self.assertEqual(response.context['paginator'].count, 15)
         self.assertEqual(len(response.context['deliveries']), 10)
         self.assertNotContains(response, 'Otro proyecto')
@@ -155,10 +162,10 @@ class DeliveryTableTests(TestCase):
             self.assertIn(record.get_absolute_url(), row['actions'])
             for action in ['cancel', 'correct']:
                 self.assertNotIn(reverse(f'inventory:{action}', args=[self.project.pk, self.position.item_id, record.pk]), row['actions'])
-        response = self.client.get(self.project.get_absolute_url(), {'state': 'all', 'per_page': '25'})
+        response = self.client.get(reverse('projects:detail', args=[self.project.pk]), {'state': 'all', 'per_page': '25'})
         self.assertEqual(response.context['paginator'].count, 15)
         self.assertNotContains(response, 'Otro proyecto')
-        stale = self.client.get(self.project.get_absolute_url(), {'state': 'cancelled'})
+        stale = self.client.get(reverse('projects:detail', args=[self.project.pk]), {'state': 'cancelled'})
         self.assertEqual(stale.context['paginator'].count, 15)
 
     def data(self, **parameters):
@@ -229,7 +236,9 @@ class DeliveryTableTests(TestCase):
 class ProjectCardsTests(TestCase):
     @classmethod
     def setUpTestData(cls):
-        Project.objects.bulk_create([Project(name=f'Obra {i:02d}', description=f'Descripción {11-i:02d}') for i in range(12)])
+        Project.objects.bulk_create([Project(name=f'Obra {i:02d}', description=f'Descripción {i:02d}',
+                                    created_on=date(2026, 1, 1 + i // 2) if i < 11 else None)
+                                     for i in range(12)])
 
     def test_cards_preserve_search_pagination_and_order_parameters(self):
         response = self.client.get(reverse('projects:list'))
@@ -237,14 +246,23 @@ class ProjectCardsTests(TestCase):
         self.assertEqual(len(response.context['projects']), 6)
         self.assertContains(response, 'project-card', count=6)
         self.assertNotContains(response, '<table')
+        self.assertEqual([project.name for project in response.context['projects']],
+                         ['Obra 10', 'Obra 09', 'Obra 08', 'Obra 07', 'Obra 06', 'Obra 05'])
+        self.assertNotContains(response, 'Descripción 10')
+        self.assertContains(response, 'Ordenar por')
         next_page = self.client.get(reverse('projects:list'), {'page': 2, 'per_page': 50})
         self.assertEqual(len(next_page.context['projects']), 6)
-        self.assertEqual(next_page.context['projects'][0].name, 'Obra 06')
-        self.assertNotContains(response, 'Ordenar por')
-        for sort, expected in [('name', 'Obra 00'), ('-name', 'Obra 11'), ('description', 'Obra 11'), ('-description', 'Obra 00')]:
+        self.assertEqual(next_page.context['projects'][0].name, 'Obra 04')
+        self.assertEqual(list(next_page.context['projects'])[-1].name, 'Obra 11')
+        self.assertContains(next_page, 'Sin fecha registrada')
+        for sort, expected in [('date', 'Obra 10'), ('name', 'Obra 00')]:
             response = self.client.get(reverse('projects:list'), {'sort': sort, 'q': 'Obra', 'page': 1})
             self.assertEqual(response.context['projects'][0].name, expected)
             self.assertContains(response, 'q=Obra')
+            self.assertContains(response, f'sort={sort}')
+        name_page = self.client.get(reverse('projects:list'), {'sort': 'name', 'q': 'Obra', 'page': 2})
+        self.assertEqual(name_page.context['projects'][0].name, 'Obra 06')
+        self.assertEqual(self.client.get(reverse('projects:list'), {'sort': 'invalid'}).context['projects'][0].name, 'Obra 10')
         response = self.client.get(reverse('projects:list'), {'q': 'Obra 01'})
         self.assertEqual(response.context['paginator'].count, 1)
         self.assertEqual(response.context['projects'][0].name, 'Obra 01')
