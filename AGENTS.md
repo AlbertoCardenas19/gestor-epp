@@ -85,8 +85,8 @@ Estas convenciones se establecen en la solicitud actual, no en acuerdos históri
   siguen operando sobre el conjunto del servidor.
 - Los formularios comparten etiquetas, errores, espaciado y acciones. Solo se indica
   `(opcional)` donde el campo realmente lo es; se respetan obligaciones condicionales.
-- Calibri es la primera fuente solicitada, seguida de fuentes sans-serif. No se
-  distribuye Calibri: solo aparece si el equipo la tiene instalada.
+- La tipografía vigente se define en Sistema visual permanente; la decisión
+  anterior de Calibri fue sustituida en UI-07.
 - Los proyectos nuevos reciben fecha de creación automática y estado En curso. La
   edición permite pasar a Terminado sin bloquear operaciones; proyectos antiguos sin
   fecha fiable muestran «Sin fecha registrada».
@@ -98,7 +98,9 @@ Estas convenciones se establecen en la solicitud actual, no en acuerdos históri
 - Reutilizar tokens y componentes compartidos; no inventar variantes de botones,
   campos, tarjetas, tablas, navegación o carga por pantalla.
 - Mantener CoreUI, DataTables y `serverSide` existentes, sin copiar dependencias ni
-  lógica de negocio de Punto Aparte. Calibri continúa primero como fuente local.
+  lógica de negocio de Punto Aparte. Usar globalmente
+  `system-ui, -apple-system, "Segoe UI", sans-serif` para texto y controles;
+  reemplaza la preferencia anterior por Calibri.
 - En tablas, el buscador oficial permanece dentro de la tarjeta junto a «Mostrar X
   filas», con etiqueta visible «Buscar». El placeholder refleja solo criterios reales,
   sin «Buscar por» ni puntos suspensivos. No se añade otro motor ni botón de envío.
@@ -110,6 +112,10 @@ Estas convenciones se establecen en la solicitud actual, no en acuerdos históri
   Proyectos y los selectores de elementos quedan fuera de este cambio de búsqueda.
 - Inicio usa tarjetas compartidas con área de acciones separada por línea y alineada
   abajo. Facturas enlaza al listado existente.
+- Conservar la identidad original «E» / «Gestor EPP» encima de la navegación del
+  sidebar. En escritorio, alinear el primer título de grupo con el inicio vertical
+  del título principal usando espaciados compartidos; en móvil priorizar navegación
+  utilizable. Ocultar identidad y navegación al contraer a la franja de 28 px.
 - Comparar visualmente las pantallas afectadas, teclado y anchos estrechos, incluido
   redimensionamiento de ida y vuelta. Retirar reglas sustituidas, actualizar la guía
   vigente y registrar cada iteración. Justificar y verificar toda excepción.

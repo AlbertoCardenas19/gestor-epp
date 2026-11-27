@@ -152,6 +152,11 @@ su nombre accesible y guarda la preferencia en `localStorage`. El CSS conserva
 una franja estrecha de 28 píxeles sin iconos; el botón circular queda sobre su
 borde derecho y no depende del recorte del sidebar. Se conserva expansión,
 transición y respeto por `prefers-reduced-motion`.
+La identidad original «E» / «Gestor EPP» vuelve a la parte superior. Se oculta
+junto con la navegación en la franja contraída. En escritorio, el primer título
+de grupo comparte la altura inicial de los títulos principales mediante las
+variables de alto del encabezado y espacio superior del contenido; móvil usa
+un espacio corto bajo la identidad.
 Los grupos General, Elementos y Compras alinean sus títulos y enlaces a 28 px
 del borde izquierdo. Los separadores quedan entre grupos; Inicio y Proyectos
 pertenecen a General. El ancho expandido es 255 px.
@@ -330,8 +335,8 @@ completo permanece en la ficha. El inventario de proyecto no recibe esa columna.
 
 El formulario compartido marca únicamente campos opcionales incondicionales;
 `paid_on` mantiene su obligación según estado de pago. Los botones Agregar se
-colocan con el título principal. Calibri encabeza la pila de fuentes, sin
-distribuir archivos de esa tipografía. Los proyectos nuevos reciben fecha
+colocan con el título principal. La preferencia por Calibri fue sustituida en
+UI-07 por `system-ui, -apple-system, "Segoe UI", sans-serif`. Los proyectos nuevos reciben fecha
 automática y estado En curso. La migración deja fecha nula en proyectos antiguos
 sin fuente fiable y asigna En curso como estado inicial. Terminado es informativo.
 `/catalogo/` redirige a Inventario y `/catalogo/datos/` ya no es una vista.

@@ -888,6 +888,50 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.page.get_by_role('button', name='Guardar categoría').click()
         expect(self.rows().filter(has_text='Herramientas de prueba')).to_have_count(1)
 
+    def test_sidebar_identity_font_and_title_alignment(self):
+        expected_font = 'system-ui, -apple-system, "Segoe UI", sans-serif'
+        for route in ('projects:home', 'projects:list', 'stock:list'):
+            self.page.set_viewport_size({'width': 1440, 'height': 850})
+            self.page.goto(self.live_server_url + reverse(route))
+            button = self.page.locator('.sidebar-toggle')
+            if button.get_attribute('aria-expanded') == 'false':
+                button.click()
+            self.page.wait_for_timeout(300)
+            brand = self.page.locator('#sidebar .brand')
+            expect(brand).to_have_accessible_name('Gestor EPP: inicio')
+            expect(brand.locator('.brand-mark')).to_have_text('E')
+            alignment = self.page.evaluate('''() => ({
+              navigation: document.querySelector('.sidebar-group-title').getBoundingClientRect().top,
+              title: document.querySelector('main h1').getBoundingClientRect().top,
+              font: getComputedStyle(document.body).fontFamily,
+              buttonFont: getComputedStyle(document.querySelector('.sidebar-toggle')).fontFamily,
+              overflow: document.documentElement.scrollWidth > innerWidth
+            })''')
+            self.assertAlmostEqual(alignment['navigation'], alignment['title'], delta=3, msg=alignment)
+            self.assertEqual(alignment['font'], expected_font)
+            self.assertEqual(alignment['buttonFont'], expected_font)
+            self.assertFalse(alignment['overflow'])
+            if route == 'stock:list':
+                for selector in ('input', 'select', 'table'):
+                    self.assertEqual(self.page.locator(selector).first.evaluate('(e) => getComputedStyle(e).fontFamily'), expected_font)
+            button.click()
+            expect(self.page.locator('#sidebar')).to_have_class(re.compile('sidebar-narrow'))
+            expect(brand).to_be_hidden()
+            self.page.wait_for_timeout(300)
+            self.assertEqual(self.page.locator('#sidebar').bounding_box()['width'], 28)
+
+        self.page.set_viewport_size({'width': 390, 'height': 850})
+        self.page.locator('.sidebar-toggle').click()
+        expect(self.page.locator('#sidebar .brand')).to_be_visible()
+        expect(self.page.get_by_role('navigation', name='Principal').get_by_role('link', name='Inventario')).to_be_visible()
+        self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+        self.page.set_viewport_size({'width': 320, 'height': 850})
+        self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+        self.page.set_viewport_size({'width': 1440, 'height': 850})
+        self.page.wait_for_timeout(300)
+        self.assertAlmostEqual(self.page.locator('.sidebar-group-title').first.bounding_box()['y'],
+                               self.page.locator('main h1').bounding_box()['y'], delta=3)
+
     def test_sidebar_edge_control_and_single_labels(self):
         labels = ['Inicio', 'Proyectos', 'Inventario', 'Categorías', 'Facturas', 'Proveedores']
         self.page.goto(self.live_server_url + reverse('projects:home'))

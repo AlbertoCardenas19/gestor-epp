@@ -1,20 +1,22 @@
 # Sistema visual de gestor-epp basado en Punto Aparte
 
-Fecha: 27 de noviembre de 2026. Versión 2.
+Fecha: 27 de noviembre de 2026. Versión 3.
 
-## Decisiones vigentes de esta iteración
+## Decisiones vigentes
 
-Esta iteración implementa únicamente el espaciado de DataTables, los controles de búsqueda, el encabezado claro, la tarjeta Facturas y el área de acciones de Inicio, y retira los filtros adicionales visibles de las tablas. El resto del plan de adopción queda pendiente. Las decisiones siguientes reemplazan cualquier indicación distinta en el análisis histórico de este documento:
+UI-06 implementó el espaciado de DataTables, los controles de búsqueda, el encabezado claro, la tarjeta Facturas y el área de acciones de Inicio, y retiró los filtros adicionales visibles de las tablas. UI-07 sustituyó Calibri por la familia de Punto Aparte y restauró la identidad original de Gestor EPP en el sidebar. El resto del plan de adopción queda pendiente. Las decisiones siguientes reemplazan cualquier indicación distinta en el análisis histórico de este documento:
 
 - El buscador oficial de DataTables permanece **dentro** de la tarjeta, en la fila superior junto a «Mostrar X filas». Tiene etiqueta visible «Buscar», placeholder con los criterios reales sin «Buscar por» ni puntos suspensivos y búsqueda automática. Proyectos y los selectores de elementos no cambian.
 - La tabla tiene 1rem de separación entre controles superiores y tabla, y entre tabla y controles inferiores, ajustable en móvil. El encabezado usa el token compartido `#EAF4FB` con texto oscuro, incluso al ordenar. Las filas permanecen blancas con hover gris.
 - Inicio incluye una tarjeta Facturas hacia el listado existente. Todas sus tarjetas usan título, descripción y área de acciones con borde superior y botón alineado abajo mediante flex.
 - Se retiran temporalmente los filtros adicionales de las tablas: categoría de Inventario, proyecto del historial de movimientos y estado de Entregas. Buscar, tamaño de página, orden y paginación permanecen. Entregas muestra todos los estados con su identificación; el alcance de proyecto y elemento se mantiene. No se dejan filtros implícitos por URL o persistencia.
+- La fuente global de texto y controles es `system-ui, -apple-system, "Segoe UI", sans-serif`. Esta decisión reemplaza Calibri; UI-07 no cambia tamaños, pesos ni espaciados del texto.
+- El sidebar conserva la identidad original «E» y «Gestor EPP» por encima de los grupos. En escritorio el primer encabezado de grupo comienza a la altura del título principal mediante medidas compartidas del encabezado y contenido. En móvil la navegación conserva un espacio cómodo bajo la identidad, sin forzar esa alineación. La identidad queda oculta dentro de la franja contraída.
 
 
 ## Estado y alcance
 
-Este documento reúne el análisis original de código, decisiones confirmadas y una especificación de adaptación. El análisis original no ejecutó las aplicaciones ni midió estilos computados; su evidencia visual directa fue la captura del sidebar aportada por el usuario. UI-06 implementa solo las decisiones vigentes enumeradas arriba y registra su verificación en `docs/ITERACIONES.md`. El resto del plan de adaptación queda pendiente. No se auditó formalmente contraste, lector de pantalla ni interacción táctil.
+Este documento reúne el análisis original de código, decisiones confirmadas y una especificación de adaptación. El análisis original no ejecutó las aplicaciones ni midió estilos computados; su evidencia visual directa fue la captura del sidebar aportada por el usuario. UI-06 y UI-07 implementan solo las decisiones vigentes enumeradas arriba y registran su verificación en `docs/ITERACIONES.md`. El resto del plan de adaptación queda pendiente. No se auditó formalmente contraste, lector de pantalla ni interacción táctil.
 
 Fuentes fijadas para evitar cambios silenciosos:
 - Punto Aparte, rama work, commit `9f359ac45a5caf38c2321b6e79b7ec989ff06cbc`.
@@ -88,7 +90,7 @@ La hoja general contiene reglas iniciales de sidebar blanco que luego se sobresc
 | Botones | Altura mínima 2.75rem | Fuente .82rem | Variante normal legible |
 | Encabezado tabla | Claro y texto oscuro | Azul y texto blanco | Adoptar encabezado claro |
 | Formulario | Tarjeta centrada | form-shell sin límite | Conservar estructura Nuevo elemento; ajustar tokens compartidos |
-| Fuente | system-ui | Calibri primero | Conservar Calibri por decisión expresa |
+| Fuente | system-ui | Calibri primero antes de UI-07 | Usar `system-ui, -apple-system, "Segoe UI", sans-serif` |
 | Sidebar contraído | 4.5rem | 28px | Conservar franja 28px de EPP |
 | Motor de tablas | HTML con DataTables | serverSide | Conservar serverSide |
 
@@ -121,7 +123,7 @@ Una única fuente de valores en app.css o un archivo de tokens importado una vez
 | Radio etiqueta | .5rem |
 | Separaciones | .25, .5, .75, 1, 1.25, 1.5, 2, 3rem |
 
-Calibri continúa primero, con Segoe UI, Arial y sans-serif de respaldo. Sin archivo autorizado no se distribuye Calibri ni se garantiza igual resultado entre equipos. Tamaños objetivo de adaptación: cuerpo y botones normales 1rem; etiquetas .9375rem; ayudas y encabezados de tabla .875rem; títulos de grupo .72rem; h1 adaptable entre 1.65 y 2rem. Interlineado general 1.6. No reducir texto para resolver problemas de ancho.
+La familia vigente es `system-ui, -apple-system, "Segoe UI", sans-serif`, aplicada globalmente a texto y controles. UI-07 no modifica tamaños, pesos ni espaciados tipográficos. Los tamaños objetivo de una adaptación futura siguen pendientes de decisión e implementación: cuerpo y botones normales 1rem; etiquetas .9375rem; ayudas y encabezados de tabla .875rem; títulos de grupo .72rem; h1 adaptable entre 1.65 y 2rem. Interlineado general 1.6. No reducir texto para resolver problemas de ancho.
 
 ### Estructura de página
 
@@ -132,6 +134,7 @@ Contenedores flex/grid deben permitir encogimiento mediante min-width:0. Tablas 
 ### Sidebar
 
 Mantener 255px expandido y franja 28px contraída. Fondo institucional; grupos pequeños en mayúsculas/negrita; títulos y opciones alineados al mismo eje izquierdo; sin iconos de navegación. Separadores solo entre grupos. Conservar opciones y permisos EPP. Marca activa y hover como referencia. Botón centrado sobre borde derecho, círculo visual aproximadamente 28–30px y área interactiva 44px. Fuera de cualquier recorte y alcanzable con teclado. El contenido oculto no recibe foco. Un único controlador CoreUI con integración de aplicación; nunca dos manejadores de toggle.
+La identidad original «E» / «Gestor EPP» permanece encima de los grupos. En escritorio el primer título de grupo se alinea en altura con el título principal usando espaciados compartidos del encabezado y del contenido. En móvil se prioriza la navegación; en la franja contraída se ocultan identidad y enlaces.
 
 ### Tarjetas y botones
 
@@ -191,7 +194,7 @@ Integrar en las convenciones vigentes; no sustituir el archivo completo ni dejar
 - Usar Punto Aparte work, commit 9f359ac, como referencia visual; las decisiones propias de EPP prevalecen.
 - Reutilizar tokens y componentes compartidos. No inventar variantes de botones, campos, tarjetas, tablas, navegación o carga por pantalla.
 - Mantener CoreUI y DataTables oficiales, carga única y serverSide existente. No copiar dependencias ni lógica de negocio de Punto Aparte.
-- Aplicar la paleta, tamaños, estados y criterios responsive de la guía. Calibri sigue como primera opción local, sin distribuirla.
+- Aplicar las decisiones vigentes de esta guía. La familia global es `system-ui, -apple-system, "Segoe UI", sans-serif`; no cambiar tamaños, pesos ni espaciados sin una solicitud específica.
 - Comparar visualmente las pantallas afectadas; cubrir teclado, tamaños estrechos y redimensionamiento de ida y vuelta.
 - Retirar reglas sustituidas, actualizar la guía vigente y registrar la iteración. Separar explícitamente historia de instrucciones actuales.
 - Toda excepción debe explicar la necesidad, su alcance y su verificación; no ampliar el producto por razones estéticas.

@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-UI-01 a UI-06 publicadas. UI-06 verificada en Chromium; falta comprobarla en Firefox en la PC del usuario.
+UI-01 a UI-07 publicadas. UI-07 verificada en Chromium; falta comprobarla en Firefox en la PC del usuario.
 
 ## Pendientes
 
@@ -11,7 +11,17 @@ UI-01 a UI-06 publicadas. UI-06 verificada en Chromium; falta comprobarla en Fir
 
 ## Próximo paso
 
-Actualizar la copia Ubuntu desde `origin/main` y comprobar el recorrido visual de UI-06 en Firefox con los datos locales. El plan restante de `diseno-gestor-epp.md` requiere iteraciones posteriores.
+Actualizar la copia Ubuntu desde `origin/main` y comprobar el recorrido visual de UI-07 en Firefox con los datos locales. El plan restante de `diseno-gestor-epp.md` requiere iteraciones posteriores.
+
+## UI-07 · 27 de noviembre de 2026
+
+**Objetivo y alcance.** Sustituir la preferencia anterior por Calibri por la familia `system-ui, -apple-system, "Segoe UI", sans-serif`, recuperar la identidad original del sidebar y alinear verticalmente su navegación con los títulos principales en escritorio (RF-03). No se modifican reglas de negocio ni otros componentes visuales.
+
+**Cambios.** Se restauró desde Git el bloque original «E» / «Gestor EPP», por encima de los grupos. La familia global se declara una vez como `--app-font-family`, se comunica a las variables de CoreUI y Bootstrap y se aplica a texto y controles. El alto del encabezado, el espacio superior del contenido, el espacio superior del sidebar y la altura de la identidad se declaran como medidas compartidas; de ellas se calcula la posición inicial de la navegación. En móvil se usa un espacio corto bajo la identidad. En la franja contraída de 28 px, identidad y navegación quedan ocultas; el botón circular permanece centrado en el borde. No se cambiaron tamaños, pesos ni espaciados tipográficos.
+
+**Verificación visual.** En Chromium a 1440 × 850 px, el primer título de grupo empezó en y=100 px y los títulos principales de Inicio, Proyectos e Inventario en y=100,19 / 101,75 / 101,75 px. En los tres recorridos, la franja contraída midió 28 px, la identidad calculó `visibility: hidden`, el botón quedó centrado en x=28 y no hubo desbordamiento. En móvil a 390 px, la identidad y los enlaces fueron visibles al expandir; a 320 px tampoco hubo desbordamiento. Se pasó de escritorio a móvil y de vuelta sin recargar. Texto, botones, campos, selectores, tablas y menú desplegable calcularon la misma familia. No hubo errores de consola. Capturas: [Inicio expandido](capturas/ui07-inicio-expandido.png), [Proyectos expandido](capturas/ui07-proyectos-expandido.png), [Inventario expandido](capturas/ui07-inventario-expandido.png), [Inventario contraído](capturas/ui07-inventario-contraido.png) e [Inventario móvil expandido](capturas/ui07-inventario-movil-expandido.png).
+
+**Comprobaciones y límite.** Pasaron 185 pruebas Django y 16 pruebas Chromium con la nueva comprobación de identidad, fuente, alineación y estados del sidebar, además de `manage.py check`, `makemigrations --check --dry-run` y `git diff --check`. Firefox no está instalado en este entorno; la apariencia en la PC Ubuntu del usuario queda por comprobar.
 
 ## UI-06 · 27 de noviembre de 2026
 
