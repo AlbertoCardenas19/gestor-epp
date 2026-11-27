@@ -1,25 +1,26 @@
 # Sistema visual de gestor-epp basado en Punto Aparte
 
-Fecha: 27 de noviembre de 2026. Versión 4.
+Fecha: 27 de noviembre de 2026. Versión 5.
 
 ## Decisiones vigentes
 
-UI-06 implementó el espaciado de DataTables, los controles de búsqueda, el encabezado claro, la tarjeta Facturas y el área de acciones de Inicio, y retiró los filtros adicionales visibles de las tablas. UI-07 sustituyó Calibri por la familia de Punto Aparte y restauró la identidad original de Gestor EPP en el sidebar. UI-08 ajustó la densidad del sidebar y las tablas, la distribución adaptable de los controles oficiales de DataTables y la posición de Descripción en Inventario. El resto del plan de adopción queda pendiente. Las decisiones siguientes reemplazan cualquier indicación distinta en el análisis histórico de este documento:
+UI-06 implementó el espaciado de DataTables, los controles de búsqueda, el encabezado claro, la tarjeta Facturas y el área de acciones de Inicio, y retiró los filtros adicionales visibles de las tablas. UI-07 sustituyó Calibri por la familia de Punto Aparte y restauró la identidad original de Gestor EPP en el sidebar. UI-08 ajustó la densidad del sidebar y las tablas, la distribución adaptable de los controles oficiales de DataTables y la posición de Descripción en Inventario. UI-09 ajustó la paleta principal, los encabezados de tabla y el espacio de navegación. El resto del plan de adopción queda pendiente. Las decisiones siguientes reemplazan cualquier indicación distinta en el análisis histórico de este documento:
 
 - El buscador oficial de DataTables permanece **dentro** de la tarjeta, en la fila superior junto a «Mostrar X filas». Tiene etiqueta visible «Buscar», placeholder con los criterios reales sin «Buscar por» ni puntos suspensivos y búsqueda automática. Proyectos y los selectores de elementos no cambian.
 - Los dos grupos de controles permanecen en una fila mientras caben; el campo Buscar se encoge antes del salto. Cuando ya no caben, «Mostrar X filas» va arriba y Buscar debajo, ambos a la izquierda y con 12px entre filas. La etiqueta Buscar permanece junto al campo, que aprovecha el ancho libre sin superposiciones.
-- La tabla tiene 1rem de separación entre controles superiores y tabla, y entre tabla y controles inferiores, ajustable en móvil. El encabezado usa el token compartido `#EAF4FB` con texto oscuro, incluso al ordenar. Las filas permanecen blancas con hover gris.
+- La tabla tiene 1rem de separación entre controles superiores y tabla, y entre tabla y controles inferiores, ajustable en móvil. El encabezado usa el token compartido `#E7EEF4` con texto oscuro, incluso al ordenar. Las filas permanecen blancas con hover gris.
 - Los encabezados de tabla usan `.84rem` y las celdas `.91rem`, también en el detalle Responsive expandido. Estos tamaños no se aplican a búsqueda, tamaño de página ni paginación. En Inventario general, Descripción es la última columna y sigue disponible en los detalles Responsive; no se añade al inventario de proyectos.
 - Inicio incluye una tarjeta Facturas hacia el listado existente. Todas sus tarjetas usan título, descripción y área de acciones con borde superior y botón alineado abajo mediante flex.
 - Se retiran temporalmente los filtros adicionales de las tablas: categoría de Inventario, proyecto del historial de movimientos y estado de Entregas. Buscar, tamaño de página, orden y paginación permanecen. Entregas muestra todos los estados con su identificación; el alcance de proyecto y elemento se mantiene. No se dejan filtros implícitos por URL o persistencia.
 - La fuente global de texto y controles es `system-ui, -apple-system, "Segoe UI", sans-serif`. Esta decisión reemplaza Calibri; UI-07 no cambia tamaños, pesos ni espaciados del texto.
-- El sidebar conserva la identidad original «E» y «Gestor EPP» por encima de los grupos. En escritorio el primer encabezado de grupo comienza a la altura del título principal mediante medidas compartidas del encabezado y contenido. En móvil la navegación conserva un espacio cómodo bajo la identidad, sin forzar esa alineación. La identidad queda oculta dentro de la franja contraída.
-- En el sidebar, las opciones consecutivas tienen 4px adicionales de separación vertical, los encabezados de grupo miden `.7rem` y siguen en mayúsculas y negrita, y el texto de las opciones es blanco también en hover y activo. Se conservan los fondos de estos estados y el botón circular compartido.
+- El sidebar conserva la identidad original «E» y «Gestor EPP» por encima de los grupos. En escritorio la navegación comienza 8px más abajo que en UI-08 mediante medidas compartidas; ya no se exige que coincida exactamente con el título principal. En móvil la navegación conserva un espacio cómodo bajo la identidad, sin forzar esa alineación. La identidad queda oculta dentro de la franja contraída.
+- El azul principal es el fondo actual del sidebar `#183450`, compartido por títulos de página y sección, botones principales y texto e indicador de pestañas seleccionadas. El foco de teclado permanece visible. Los colores semánticos se conservan.
+- En el sidebar, las opciones consecutivas tienen 8px adicionales de separación vertical, los encabezados de grupo miden `.7rem` y siguen en mayúsculas y negrita, y el texto de las opciones es blanco también en hover y activo. Se conservan los fondos de estos estados y el botón circular compartido.
 
 
 ## Estado y alcance
 
-Este documento reúne el análisis original de código, decisiones confirmadas y una especificación de adaptación. El análisis original no ejecutó las aplicaciones ni midió estilos computados; su evidencia visual directa fue la captura del sidebar aportada por el usuario. UI-06 a UI-08 implementan solo las decisiones vigentes enumeradas arriba y registran su verificación en `docs/ITERACIONES.md`. El resto del plan de adaptación queda pendiente. No se auditó formalmente contraste, lector de pantalla ni interacción táctil.
+Este documento reúne el análisis original de código, decisiones confirmadas y una especificación de adaptación. El análisis original no ejecutó las aplicaciones ni midió estilos computados; su evidencia visual directa fue la captura del sidebar aportada por el usuario. UI-06 a UI-09 implementan solo las decisiones vigentes enumeradas arriba y registran su verificación en `docs/ITERACIONES.md`. El resto del plan de adaptación queda pendiente. No se auditó formalmente contraste, lector de pantalla ni interacción táctil.
 
 Fuentes fijadas para evitar cambios silenciosos:
 - Punto Aparte, rama work, commit `9f359ac45a5caf38c2321b6e79b7ec989ff06cbc`.
@@ -84,20 +85,20 @@ La hoja general contiene reglas iniciales de sidebar blanco que luego se sobresc
 
 | Aspecto | Punto Aparte | Gestor EPP revisado | Adaptación objetivo |
 |---|---|---|---|
-| Azul primario | #17324d | #1d4d85 | Unificar en #17324d |
-| Sidebar | #17324d | #183450 | Igualar a referencia |
+| Azul primario | #17324d | #183450 | Conservar el azul del sidebar |
+| Sidebar | #17324d | #183450 | Conservar #183450 |
 | Fondo | #f1f4f8 | #F1F5F9 | Igualar a referencia |
 | Texto | #1b2d48 | #0F172A | Igualar a referencia |
 | Bordes | #d9e1eb | #CBD5E1 | Borde más suave |
 | Radio tarjeta | 1.25rem | 12px | Adoptar 1.25rem |
 | Botones | Altura mínima 2.75rem | Fuente .82rem | Variante normal legible |
-| Encabezado tabla | Claro y texto oscuro | Azul y texto blanco | Adoptar encabezado claro |
+| Encabezado tabla | Claro y texto oscuro | #E7EEF4 y texto oscuro | Conservar el token compartido |
 | Formulario | Tarjeta centrada | form-shell sin límite | Conservar estructura Nuevo elemento; ajustar tokens compartidos |
 | Fuente | system-ui | Calibri primero antes de UI-07 | Usar `system-ui, -apple-system, "Segoe UI", sans-serif` |
 | Sidebar contraído | 4.5rem | 28px | Conservar franja 28px de EPP |
 | Motor de tablas | HTML con DataTables | serverSide | Conservar serverSide |
 
-Los valores nuevos de esta tabla son especificaciones propuestas para cumplir el parecido solicitado, no cambios ya aplicados ni decisiones históricas del usuario.
+Los valores de las filas no actualizadas siguen siendo propuestas de adaptación; las decisiones vigentes al inicio del documento prevalecen.
 
 La documentación docs/09-componentes-y-datatables.md mezcla resultados históricos (encabezado grafito y franjas), reglas posteriores sin franjas y dos agrupaciones distintas para Proyectos. Debe dividirse en estado vigente e historial. AGENTS.md conserva una instrucción antigua de no tratar Django/PostgreSQL como decisiones cerradas junto con otra posterior de mantenerlos: señalar expresamente que la decisión posterior prevalece.
 
@@ -109,15 +110,15 @@ Una única fuente de valores en app.css o un archivo de tokens importado una vez
 
 | Función | Valor objetivo |
 |---|---|
-| Primario y sidebar | #17324d |
-| Hover primario | #294e70 |
-| Activo navegación | #304b68 |
+| Primario y sidebar | #183450 |
+| Hover primario | #304c6b |
+| Activo navegación | #304c6b |
 | Texto principal | #1b2d48 |
 | Texto secundario | #566b86 |
 | Fondo página | #f1f4f8 |
 | Superficie | #ffffff |
 | Borde | #d9e1eb |
-| Encabezado tabla | #EAF4FB |
+| Encabezado tabla | #E7EEF4 |
 | Hover fila | #f1f4f8 |
 | Acción destructiva | #ad2431 |
 | Foco | #6f91b5 |
@@ -136,8 +137,8 @@ Contenedores flex/grid deben permitir encogimiento mediante min-width:0. Tablas 
 
 ### Sidebar
 
-Mantener 255px expandido y franja 28px contraída. Fondo institucional; grupos de `.7rem` en mayúsculas/negrita; títulos y opciones alineados al mismo eje izquierdo; sin iconos de navegación. Las opciones consecutivas tienen 4px adicionales de separación vertical. Separadores solo entre grupos. Conservar opciones y permisos EPP. Texto de opciones blanco en estado normal, hover y activo, con sus fondos distintivos. Botón centrado sobre borde derecho, círculo visual aproximadamente 28–30px y área interactiva 44px. Fuera de cualquier recorte y alcanzable con teclado. El contenido oculto no recibe foco. Un único controlador CoreUI con integración de aplicación; nunca dos manejadores de toggle.
-La identidad original «E» / «Gestor EPP» permanece encima de los grupos. En escritorio el primer título de grupo se alinea en altura con el título principal usando espaciados compartidos del encabezado y del contenido. En móvil se prioriza la navegación; en la franja contraída se ocultan identidad y enlaces.
+Mantener 255px expandido y franja 28px contraída. Fondo institucional; grupos de `.7rem` en mayúsculas/negrita; títulos y opciones alineados al mismo eje izquierdo; sin iconos de navegación. Las opciones consecutivas tienen 8px adicionales de separación vertical. Separadores solo entre grupos. Conservar opciones y permisos EPP. Texto de opciones blanco en estado normal, hover y activo, con sus fondos distintivos. Botón centrado sobre borde derecho, círculo visual aproximadamente 28–30px y área interactiva 44px. Fuera de cualquier recorte y alcanzable con teclado. El contenido oculto no recibe foco. Un único controlador CoreUI con integración de aplicación; nunca dos manejadores de toggle.
+La identidad original «E» / «Gestor EPP» permanece encima de los grupos. En escritorio el primer título de grupo comienza 8px más abajo que en UI-08 usando espaciados compartidos, sin exigir coincidencia exacta con el título principal. En móvil se prioriza la navegación; en la franja contraída se ocultan identidad y enlaces.
 
 ### Tarjetas y botones
 

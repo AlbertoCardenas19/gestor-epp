@@ -250,7 +250,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         expect(self.rows()).to_have_count(10)
         payload = self.order('name')
         self.assertEqual(payload['data'][0]['name'], 'Elemento 39')
-        self.assertEqual(self.page.locator('thead th[data-column="name"]').evaluate('(e) => getComputedStyle(e).backgroundColor'), 'rgb(234, 244, 251)')
+        self.assertEqual(self.page.locator('thead th[data-column="name"]').evaluate('(e) => getComputedStyle(e).backgroundColor'), 'rgb(231, 238, 244)')
         self.table_action(lambda: self.page.locator('.dt-length select').select_option('25'))
         expect(self.rows()).to_have_count(25)
         self.page.evaluate('EppTables.init(); EppTables.init(); EppComponents.init()')
@@ -313,7 +313,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
             self.assertGreaterEqual(metrics['topGap'], 10, metrics)
             self.assertGreaterEqual(metrics['bottomGap'], 10, metrics)
             self.assertGreaterEqual(metrics['tableWidth'] + 2, metrics['available'], metrics)
-            self.assertEqual(metrics['header'], 'rgb(234, 244, 251)')
+            self.assertEqual(metrics['header'], 'rgb(231, 238, 244)')
             self.assertEqual(metrics['headerSize'], '13.44px')
             self.assertEqual(metrics['cellSize'], '14.56px')
             self.assertEqual(metrics['label'], 'Buscar')
@@ -560,7 +560,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
                 self.page.wait_for_timeout(300)
             self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
             header = self.page.locator('table.dataTable thead th').first
-            self.assertEqual(header.evaluate('(e)=>getComputedStyle(e).backgroundColor'), 'rgb(234, 244, 251)')
+            self.assertEqual(header.evaluate('(e)=>getComputedStyle(e).backgroundColor'), 'rgb(231, 238, 244)')
             self.assertEqual(header.evaluate('(e)=>getComputedStyle(e).color'), 'rgb(15, 23, 42)')
             self.page.mouse.move(0, 0)
             cell = self.rows().first.locator('td').first
@@ -929,7 +929,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
               buttonFont: getComputedStyle(document.querySelector('.sidebar-toggle')).fontFamily,
               overflow: document.documentElement.scrollWidth > innerWidth
             })''')
-            self.assertAlmostEqual(alignment['navigation'], alignment['title'], delta=3, msg=alignment)
+            self.assertAlmostEqual(alignment['navigation'] - alignment['title'], 8, delta=3, msg=alignment)
             self.assertEqual(alignment['font'], expected_font)
             self.assertEqual(alignment['buttonFont'], expected_font)
             self.assertFalse(alignment['overflow'])
@@ -952,7 +952,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.page.set_viewport_size({'width': 1440, 'height': 850})
         self.page.wait_for_timeout(300)
         self.assertAlmostEqual(self.page.locator('.sidebar-group-title').first.bounding_box()['y'],
-                               self.page.locator('main h1').bounding_box()['y'], delta=3)
+                               self.page.locator('main h1').bounding_box()['y'] + 8, delta=3)
 
     def test_sidebar_edge_control_and_single_labels(self):
         labels = ['Inicio', 'Proyectos', 'Inventario', 'Categorías', 'Facturas', 'Proveedores']
@@ -996,10 +996,10 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
             self.assertEqual(values['border'], 'rgba(255, 255, 255, 0.4)')
             self.assertEqual(values['activeColor'], 'rgb(255, 255, 255)')
             self.assertEqual(values['inactiveColor'], 'rgb(255, 255, 255)')
-            self.assertEqual(values['optionGap'], '4px')
+            self.assertEqual(values['optionGap'], '8px')
             self.assertLess(values['heading'], values['link'])
             self.assertAlmostEqual(values['heading'], 11.2, delta=.1)
-            self.assertEqual(values['weight'], '700')
+            self.assertEqual(values['weight'], '800')
             self.assertEqual(values['icon'], 'none')
             self.assertEqual(values['circle'], values['background'])
             self.assertEqual(values['radius'], '50%')

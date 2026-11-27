@@ -104,7 +104,7 @@ Estas convenciones se establecen en la solicitud actual, no en acuerdos históri
 - En tablas, el buscador oficial permanece dentro de la tarjeta junto a «Mostrar X
   filas», con etiqueta visible «Buscar». El placeholder refleja solo criterios reales,
   sin «Buscar por» ni puntos suspensivos. No se añade otro motor ni botón de envío.
-- Usar un token común `#EAF4FB` para encabezados de tabla con texto oscuro, y 1rem
+- Usar un token común `#E7EEF4` para encabezados de tabla con texto oscuro, y 1rem
   de separación entre controles superiores, tabla y controles inferiores. Mantener
   filas blancas y hover gris claro.
 - No mostrar filtros adicionales en los listados de tablas por ahora. Conservar el
@@ -113,9 +113,10 @@ Estas convenciones se establecen en la solicitud actual, no en acuerdos históri
 - Inicio usa tarjetas compartidas con área de acciones separada por línea y alineada
   abajo. Facturas enlaza al listado existente.
 - Conservar la identidad original «E» / «Gestor EPP» encima de la navegación del
-  sidebar. En escritorio, alinear el primer título de grupo con el inicio vertical
-  del título principal usando espaciados compartidos; en móvil priorizar navegación
-  utilizable. Ocultar identidad y navegación al contraer a la franja de 28 px.
+  sidebar. En escritorio, iniciar la navegación 8px más abajo que en UI-08 mediante espaciados
+  compartidos, sin exigir alineación exacta con el título principal; en móvil
+  priorizar navegación utilizable. Ocultar identidad y navegación al contraer
+  a la franja de 28 px.
 - Comparar visualmente las pantallas afectadas, teclado y anchos estrechos, incluido
   redimensionamiento de ida y vuelta. Retirar reglas sustituidas, actualizar la guía
   vigente y registrar cada iteración. Justificar y verificar toda excepción.

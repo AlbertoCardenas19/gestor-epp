@@ -2,16 +2,27 @@
 
 ## Estado actual
 
-UI-01 a UI-08 publicadas. UI-08 verificada en Chromium; falta comprobarla en Firefox en la PC del usuario.
+UI-01 a UI-09 publicadas. UI-09 verificada en Chromium; falta comprobarla en Firefox en la PC del usuario.
 
 ## Pendientes
 
 - Decisiones funcionales abiertas de [docs/04-pendientes.md](04-pendientes.md), en particular el cálculo automático de IVA (P-07), aprobación de compras, devoluciones y reposiciones.
 - Confirmar en la PC del usuario el recorrido visual y funcional con sus datos locales tras actualizar desde `origin/main`.
+- Para la siguiente iteración, quitar «Volver a proyectos» de Nuevo proyecto y el enlace equivalente de Nuevo elemento; separar título y formulario; dar a las tarjetas de proyectos un título un paso mayor, fecha debajo en gris y estado más separado, sin descripción y conservando «Ver proyecto»; ordenar proyectos por fecha de forma predeterminada y añadir junto al buscador un selector fecha/nombre; definir primero la distribución de Información en proyectos y elementos antes de añadirla como primera pestaña y destino inicial del proyecto. No se implementa en UI-09.
 
 ## Próximo paso
 
-Actualizar la copia Ubuntu desde `origin/main` y comprobar el recorrido visual de UI-08 en Firefox con los datos locales. El plan restante de `diseno-gestor-epp.md` requiere iteraciones posteriores.
+Actualizar la copia Ubuntu desde `origin/main` y comprobar el recorrido visual de UI-09 en Firefox con los datos locales. Definir la distribución de Información antes de la siguiente iteración visual.
+
+## UI-09 · 27 de noviembre de 2026
+
+**Objetivo y alcance.** Cambiar solo el celeste de los encabezados de tabla, el espacio vertical del sidebar y la referencia compartida del azul principal (RF-03 y RF-04). Se conserva la negrita de los encabezados de grupo solicitada después de UI-08. Los pendientes de formularios, tarjetas, ordenación y pestaña Información no se implementan.
+
+**Cambios.** `--app-table-heading` pasa de `#EAF4FB` a `#E7EEF4`, con texto oscuro e indicadores de ordenación. Las opciones consecutivas del sidebar pasan de 4 a 8px de separación adicional y la navegación comienza 8px más abajo que antes en escritorio y móvil. La identidad y el botón circular no se desplazan. `--app-primary` toma su valor de `--app-sidebar` (`#183450`), de modo que títulos de página y sección, botones principales y texto e indicador de pestañas seleccionadas comparten la misma referencia. Se mantienen texto blanco en botones principales y colores semánticos.
+
+**Verificación visual.** En Chromium se revisaron Inicio, Inventario, Proyectos y una ficha de proyecto con pestañas a 1440 y 390px. El sidebar calculó `rgb(24, 52, 80)` y 255px expandido; títulos, botones principales y pestañas seleccionadas calcularon el mismo azul. Los botones principales conservaron texto blanco; la cabecera de Inventario y la tabla de la ficha calcularon `rgb(231, 238, 244)`. El bloque de navegación comenzó en y=108px en escritorio y y=84px en móvil, con identidad en y=16px; la separación adicional entre opciones fue 8px. La última opción quedó dentro del sidebar, el botón siguió recibiendo el clic en ambos tamaños y no hubo desbordamiento horizontal ni errores de página. El foco de teclado conserva su contorno visible.
+
+**Comprobaciones y límite.** Pasaron 185 pruebas Django, 16 pruebas Chromium, `manage.py check`, `makemigrations --check --dry-run` y `git diff --check`. La primera ejecución Chromium tuvo una carrera en la prueba del indicador de carga; esa prueba pasó aislada y luego pasó la suite completa. Firefox no está instalado aquí; la apariencia en Firefox Ubuntu del usuario queda pendiente.
 
 ## UI-08 · 27 de noviembre de 2026
 
