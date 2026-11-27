@@ -42,7 +42,7 @@ class CatalogFlowTests(TestCase):
         item = Item.objects.get()
         self.assertRedirects(response, item.get_absolute_url())
         self.assertEqual(item.description, '')
-        self.assertContains(self.client.get(item.get_absolute_url()), 'Este elemento aún no tiene descripción.')
+        self.assertContains(self.client.get(item.get_absolute_url()), 'Sin descripción')
 
     def test_empty_and_whitespace_name_are_rejected_without_losing_other_fields(self):
         category = Category.objects.get(name='Señaléticas')

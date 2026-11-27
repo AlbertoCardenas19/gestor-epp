@@ -2,16 +2,27 @@
 
 ## Estado actual
 
-UI-01 a UI-11 publicadas. UI-11 verificada en Chromium; falta comprobarla en Firefox en la PC del usuario.
+UI-01 a UI-12 publicadas. UI-12 es un piloto visual de Información del elemento, pendiente de revisión del usuario. Firefox en Ubuntu sigue pendiente de comprobación.
 
 ## Pendientes
 
 - Decisiones funcionales abiertas de [docs/04-pendientes.md](04-pendientes.md), en particular el cálculo automático de IVA (P-07), aprobación de compras, devoluciones y reposiciones.
+- Revisar visualmente el piloto UI-12 antes de extenderlo a otras fichas.
 - Confirmar en la PC del usuario el recorrido visual y funcional con sus datos locales tras actualizar desde `origin/main`.
 
 ## Próximo paso
 
-Actualizar la copia Ubuntu desde `origin/main` y comprobar el recorrido visual de UI-11 en Firefox con los datos locales.
+Actualizar la copia Ubuntu desde `origin/main`, revisar el piloto UI-12 y comprobarlo en Firefox con los datos locales.
+
+## UI-12 · 27 de noviembre de 2026 · piloto pendiente de revisión visual
+
+**Objetivo y alcance.** Probar una ficha de Información más compacta solo en el elemento (RF-03, RF-04 y RF-05). Esta variante no reemplaza el patrón vigente de proyectos, proveedores ni facturas ni establece una norma global.
+
+**Cambios.** La card del elemento conserva altura según contenido, con padding de 24px en escritorio y 16px hasta 767px. Categorías y Stock comparten la primera fila a la izquierda, separados 32px, con envoltura flexible. Descripción aparece 24px debajo, ocupa el ancho disponible y muestra «Sin descripción» si está vacía. Se retiraron los separadores entre datos, la línea inferior y la cabecera vacía. El título del elemento permanece únicamente arriba de las pestañas. El menú CoreUI reutilizado recibe solo en esta ficha una variante de botón secundario «Acciones» con indicador; enlaces, permisos, destinos y confirmaciones no se modificaron. Historial de movimientos y Proyectos permanecen en sus pestañas.
+
+**Verificación visual.** En Chromium, con datos de prueba aislados, se comprobaron un elemento de una categoría, stock 0 y sin descripción y otro de dos categorías, nombre y descripción extensos y stock 1234 a 1440, 390 y 320px. La card no desbordó horizontalmente. El menú quedó dentro del viewport, mostró Registrar entrada y Editar elemento, abrió con Enter y cerró con Escape devolviendo el foco. Las pestañas Historial y Proyectos siguieron abriendo. Capturas: [vacío 1440](capturas/ui12-elemento-vacio-1440.png), [vacío 390](capturas/ui12-elemento-vacio-390.png), [vacío 320](capturas/ui12-elemento-vacio-320.png), [extenso 1440](capturas/ui12-elemento-largo-1440.png), [extenso 390](capturas/ui12-elemento-largo-390.png) y [extenso 320](capturas/ui12-elemento-largo-320.png).
+
+**Comprobaciones y límite.** Pasaron 185 pruebas Django, las 18 pruebas Chromium, `manage.py check`, `makemigrations --check --dry-run` y `git diff --check`. La primera pasada completa descubrió que la prueba nueva dependía de categorías precargadas; se corrigió su preparación aislada. Una prueba preexistente de carga de Inventario falló intermitentemente al no interceptar la primera petición; pasó en la segunda pasada completa, sin cambios en componentes de carga ni inicialización de tablas. El resultado visual está pendiente de revisión del usuario antes de aplicarlo a otras fichas. Firefox no está instalado aquí; la apariencia en Firefox Ubuntu queda por comprobar.
 
 ## UI-11 · 27 de noviembre de 2026
 

@@ -15,11 +15,13 @@
 <div class="tab-content">
   <section class="tab-pane fade show active" id="item-info" role="tabpanel" aria-labelledby="item-info-tab" tabindex="0">
     <h2 class="visually-hidden">Información</h2>
-    <div class="card info-card"><div class="card-body p-4 p-md-5"><div class="info-card-toolbar">{% include 'projects/info_actions.html' %}</div><div class="info-section">
-      <div class="info-meta"><div class="info-field"><span class="info-label">Categorías</span><span class="info-value text-break">{{ item.categories.all|join:", "|default:"Sin categorías" }}</span></div></div>
-      <div class="info-description"><h3 class="info-label">Descripción</h3>{% if item.description %}<p class="info-reading text-break">{{ item.description|linebreaksbr }}</p>{% else %}<p class="info-reading text-body-secondary">Este elemento aún no tiene descripción.</p>{% endif %}</div>
-      <div class="info-meta"><div class="info-field"><span class="info-label">Stock</span><span class="info-value">{{ balance }}</span></div></div>
-    </div></div></div>
+    <div class="card info-card item-info-card"><div class="card-body item-info-body">
+      <div class="item-info-top"><div class="item-info-facts">
+        <div class="info-field"><span class="info-label">Categorías</span><span class="info-value text-break">{{ item.categories.all|join:", "|default:"Sin categorías" }}</span></div>
+        <div class="info-field"><span class="info-label">Stock</span><span class="info-value">{{ balance }}</span></div>
+      </div><div class="item-info-actions">{% include 'projects/info_actions.html' with trigger_style='button' %}</div></div>
+      <div class="item-info-description"><h3 class="info-label">Descripción</h3>{% if item.description %}<p class="info-reading text-break">{{ item.description|linebreaksbr }}</p>{% else %}<p class="info-reading text-body-secondary">Sin descripción</p>{% endif %}</div>
+    </div></div>
   </section>
   <section class="tab-pane fade" id="item-history" role="tabpanel" aria-labelledby="item-history-tab" tabindex="0">
     <h2 class="visually-hidden">Historial de movimientos</h2>

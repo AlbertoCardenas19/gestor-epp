@@ -30,6 +30,65 @@ def data(quantity, **extra):
 
 
 class LibraryBrowserChecks(StaticLiveServerTestCase):
+    def test_item_information_pilot_layout(self):
+        def seed():
+            epp, _ = Category.objects.get_or_create(name='EPP')
+            senaleticas, _ = Category.objects.get_or_create(name='Señaléticas')
+            single = Item.objects.create(name='Guantes', description='')
+            single.categories.add(epp)
+            long = Item.objects.create(
+                name='Protección respiratoria de uso prolongado para trabajos en altura',
+                description=('Descripción extensa que debe envolver sin recortes y mantener todas las palabras visibles. ' * 6).strip(),
+            )
+            long.categories.add(epp, senaleticas)
+            receive_common_stock(long, data(1234))
+            return single, long
+
+        single, long = self.db(seed)
+        for item, widths in [(single, (1440, 390, 320)), (long, (1440, 390, 320))]:
+            for width in widths:
+                with self.subTest(item=item.name, width=width):
+                    self.page.set_viewport_size({'width': width, 'height': 900})
+                    self.page.goto(self.live_server_url + item.get_absolute_url())
+                    card = self.page.locator('.item-info-card')
+                    expect(card).to_be_visible()
+                    self.assertEqual(card.locator('.info-section, .info-card-toolbar').count(), 0)
+                    self.assertEqual(self.page.locator('#item-info h1').count(), 0)
+                    self.assertEqual(self.page.locator('.item-info-body').evaluate(
+                        'e => parseInt(getComputedStyle(e).paddingLeft)'), 24 if width == 1440 else 16)
+                    self.assertLessEqual(self.page.evaluate('document.documentElement.scrollWidth'), width)
+                    if not item.description:
+                        expect(card).to_contain_text('Sin descripción')
+                        expect(card.locator('.item-info-facts')).to_contain_text('0')
+                    else:
+                        expect(card.locator('.item-info-description')).to_contain_text(item.description)
+                        expect(card.locator('.item-info-facts')).to_contain_text('1234')
+                    self.assertGreaterEqual(card.locator('.item-info-description').bounding_box()['y'] -
+                                            card.locator('.item-info-top').bounding_box()['y'] -
+                                            card.locator('.item-info-top').bounding_box()['height'], 22)
+                    trigger = card.get_by_role('button', name=f'Acciones de {item.name}')
+                    expect(trigger).to_contain_text('Acciones')
+                    trigger.focus()
+                    self.page.keyboard.press('Enter')
+                    menu = card.locator('.dropdown-menu')
+                    expect(menu).to_be_visible()
+                    self.assertGreaterEqual(menu.bounding_box()['x'], 0)
+                    self.assertLessEqual(menu.bounding_box()['x'] + menu.bounding_box()['width'], width + 1)
+                    expect(menu.get_by_role('link', name='Registrar entrada')).to_be_visible()
+                    expect(menu.get_by_role('link', name='Editar elemento')).to_be_visible()
+                    self.page.keyboard.press('Escape')
+                    expect(menu).to_be_hidden()
+                    expect(trigger).to_be_focused()
+                    if os.environ.get('UI_ARTIFACT_DIR'):
+                        trigger.evaluate('e => e.blur()')
+                        path = Path(os.environ['UI_ARTIFACT_DIR']) / f'ui12-elemento-{"vacio" if item == single else "largo"}-{width}.png'
+                        path.parent.mkdir(parents=True, exist_ok=True)
+                        self.page.screenshot(path=str(path), full_page=True)
+                    self.page.get_by_role('tab', name='Historial de movimientos').click()
+                    expect(self.page.locator('#item-history')).to_be_visible()
+                    self.page.get_by_role('tab', name='Proyectos', exact=True).click()
+                    expect(self.page.locator('#item-projects')).to_be_visible()
+
     def test_project_cards_information_and_form_layout(self):
         def seed():
             projects = [Project.objects.create(

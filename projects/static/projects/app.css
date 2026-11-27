@@ -112,6 +112,14 @@ h2,h3 { letter-spacing: -.02em; }
 .info-card-toolbar { display: flex; justify-content: flex-end; margin-bottom: .5rem; }
 .info-actions-trigger { display: inline-grid; place-items: center; width: 2.5rem; height: 2.5rem; border: 1px solid var(--app-border); border-radius: 8px; background: var(--app-surface); color: var(--app-primary); font-size: 1.5rem; line-height: 1; }
 .info-actions-trigger:hover { background: var(--app-background); }
+.info-actions-trigger-button { display: inline-flex; align-items: center; gap: .5rem; width: auto; min-height: 2.5rem; padding: .5rem .75rem; font-size: .82rem; font-weight: 600; }
+.item-info-body { padding: 24px; }
+.item-info-top { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px 24px; }
+.item-info-facts { display: flex; flex: 1 1 auto; flex-wrap: wrap; align-items: flex-start; gap: 16px 32px; min-width: 0; }
+.item-info-facts .info-field:first-child { flex: 0 1 auto; max-width: min(32rem, 100%); }
+.item-info-actions { flex: 0 0 auto; margin-left: auto; }
+.item-info-description { margin-top: 24px; }
+@media (max-width: 767px) { .item-info-body { padding: 16px; } }
 .info-section { border-top: 1px solid var(--app-border); border-bottom: 1px solid var(--app-border); padding-block: 1.5rem; }
 .info-section > * + * { border-top: 1px solid var(--app-border); margin-top: 1.5rem; padding-top: 1.5rem; }
 .info-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: 1rem 2rem; }
