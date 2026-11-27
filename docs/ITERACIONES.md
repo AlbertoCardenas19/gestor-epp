@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-UI-01 a UI-04 publicadas. UI-04 implementada y verificada localmente; falta comprobarla en Firefox en la PC del usuario.
+UI-01 a UI-04 publicadas. UI-05 implementada y verificada localmente; falta comprobarla en Firefox en la PC del usuario.
 
 ## Pendientes
 
@@ -12,6 +12,14 @@ UI-01 a UI-04 publicadas. UI-04 implementada y verificada localmente; falta comp
 ## Próximo paso
 
 Actualizar la copia Ubuntu desde `origin/main`, aplicar la migración de proyectos y comprobar el recorrido visual en Firefox con los datos locales.
+
+## UI-05 · 26 de noviembre de 2026
+
+**Objetivo y alcance.** Alinear los elementos del sidebar y acercar su presentación a la imagen de Punto Aparte (RF-03), sin cambiar destinos, interacciones ni reglas de negocio.
+
+**Cambios.** Los enlaces Inicio y Proyectos quedan bajo General; se mantienen Elementos y Compras con sus enlaces previos. Se retira la marca superior del sidebar para que el primer título comience junto al borde superior, como en la referencia. Títulos y texto de enlaces comparten la coordenada horizontal de 28 px. Los separadores quedan entre grupos, de 28 a 221 px. El ancho expandido es 255 px; el estado activo usa azul más claro, texto blanco y una barra clara a la izquierda. La franja contraída de 28 px y el botón circular centrado en su borde se conservan.
+
+**Verificación.** En Chromium a 1440 × 850 px, títulos y enlaces midieron x = 28 px; el sidebar midió 255 px expandido y 28 px contraído. El control midió 44 × 44 px como área de clic con círculo visible de 30 px, centrado en x = 255 o 28 px y a media altura. Se inspeccionaron las capturas [expandido](capturas/ui05-sidebar-expandido.png) y [contraído](capturas/ui05-sidebar-contraido.png). Pasaron 185 pruebas Django, 14 pruebas Chromium, la prueba ampliada de alineación, `manage.py check`, `makemigrations --check --dry-run` y `git diff --check`. Firefox sigue pendiente de comprobación en la PC del usuario.
 
 ## UI-04 · 26 de noviembre de 2026
 

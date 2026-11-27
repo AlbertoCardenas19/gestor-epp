@@ -4,8 +4,10 @@ from django.urls import reverse
 register = template.Library()
 
 GROUPS = (
-    (None, (('projects:home', 'Inicio'),)),
-    (None, (('projects:list', 'Proyectos'),)),
+    ('General', (
+        ('projects:home', 'Inicio'),
+        ('projects:list', 'Proyectos'),
+    )),
     ('Elementos', (
         ('stock:list', 'Inventario'),
         ('catalog:categories', 'Categorías'),

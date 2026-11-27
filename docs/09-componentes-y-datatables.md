@@ -152,6 +152,9 @@ su nombre accesible y guarda la preferencia en `localStorage`. El CSS conserva
 una franja estrecha de 28 píxeles sin iconos; el botón circular queda sobre su
 borde derecho y no depende del recorte del sidebar. Se conserva expansión,
 transición y respeto por `prefers-reduced-motion`.
+Los grupos General, Elementos y Compras alinean sus títulos y enlaces a 28 px
+del borde izquierdo. Los separadores quedan entre grupos; Inicio y Proyectos
+pertenecen a General. El ancho expandido es 255 px.
 
 ## Sustituciones y código conservado
 

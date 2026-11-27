@@ -813,7 +813,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
     def test_grouped_sidebar_and_category_pages_with_keyboard(self):
         self.page.goto(self.live_server_url + reverse('stock:list'))
         nav = self.page.get_by_role('navigation', name='Principal')
-        expect(nav.get_by_role('heading')).to_have_text(['Elementos', 'Compras'])
+        expect(nav.get_by_role('heading')).to_have_text(['General', 'Elementos', 'Compras'])
         expected = [('Inicio', 'projects:home'), ('Proyectos', 'projects:list'),
                     ('Inventario', 'stock:list'), ('Categorías', 'catalog:categories'),
                     ('Facturas', 'purchases:list'), ('Proveedores', 'purchases:suppliers')]
@@ -860,7 +860,11 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
               const group = document.querySelector('.sidebar-group + .sidebar-group');
               const center = button.getBoundingClientRect();
               return {background: getComputedStyle(sidebar).backgroundColor,
-                border: getComputedStyle(group).borderTopColor,
+                border: getComputedStyle(group, '::before').borderTopColor,
+                headingX: heading.getBoundingClientRect().x,
+                linkX: link.querySelector('.sidebar-link-label').getBoundingClientRect().x,
+                separatorX: group.getBoundingClientRect().x + 12,
+                activeBackground: getComputedStyle(document.querySelector('#sidebar .nav-link.active')).backgroundColor,
                 heading: parseFloat(getComputedStyle(heading).fontSize),
                 weight: getComputedStyle(heading).fontWeight,
                 link: parseFloat(getComputedStyle(link).fontSize),
@@ -870,7 +874,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
                 hit: document.elementFromPoint(center.x + center.width / 2,
                   center.y + center.height / 2) === button};
             }''')
-            self.assertEqual(values['background'], 'rgb(20, 44, 75)')
+            self.assertEqual(values['background'], 'rgb(24, 52, 80)')
             self.assertEqual(values['border'], 'rgba(255, 255, 255, 0.4)')
             self.assertLess(values['heading'], values['link'])
             self.assertEqual(values['weight'], '700')
@@ -878,8 +882,11 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
             self.assertEqual(values['circle'], values['background'])
             self.assertEqual(values['radius'], '50%')
             self.assertEqual(values['circleWidth'], '30px')
-            self.assertEqual(values['width'], 236 if expanded else 28)
+            self.assertEqual(values['width'], 255 if expanded else 28)
             self.assertTrue(values['hit'])
+            if expanded:
+                self.assertEqual((values['headingX'], values['linkX'], values['separatorX']), (28, 28, 28))
+                self.assertEqual(values['activeBackground'], 'rgb(48, 76, 107)')
 
         def check_edge():
             sidebar_box, button_box = sidebar.bounding_box(), toggle.bounding_box()
@@ -896,7 +903,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
                     link.getBoundingClientRect().right <= toggle.left);
                 }'''))
             self.assertEqual(sidebar.locator('nav .sidebar-group').evaluate_all('''groups => groups.map(group =>
-                getComputedStyle(group).borderTopWidth)'''), ['0px', '1px', '1px', '1px'])
+                getComputedStyle(group, '::before').borderTopWidth)'''), ['0px', '1px', '1px'])
 
         for width in (1440, 320, 390):
             self.page.set_viewport_size({'width': width, 'height': 650})

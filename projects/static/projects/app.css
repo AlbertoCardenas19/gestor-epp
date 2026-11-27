@@ -1,7 +1,7 @@
 :root {
   --app-primary: #1d4d85;
-  --app-sidebar: #142c4b;
-  --app-sidebar-hover: #25496f;
+  --app-sidebar: #183450;
+  --app-sidebar-hover: #304c6b;
   --app-secondary: #64748B;
   --app-background: #F1F5F9;
   --app-surface: #FFFFFF;
@@ -13,23 +13,21 @@
   --cui-border-color: var(--app-border); --cui-link-color: var(--app-primary);
   --cui-link-color-rgb: 29,77,133; --cui-link-hover-color-rgb: 15,23,42;
   --cui-link-hover-color: var(--app-text); --cui-light-rgb: 241,245,249;
-  --sidebar-width: 236px;
+  --sidebar-width: 255px;
   --sidebar-narrow-width: 28px;
 }
 body, button, input, select, textarea, table { font-family: Calibri, 'Segoe UI', Arial, sans-serif; }
 body { min-height: 100vh; }
 a { text-underline-offset: .2em; }
-.app-sidebar { --cui-is-mobile: initial; --cui-sidebar-width: var(--sidebar-width); --cui-sidebar-narrow-width: var(--sidebar-narrow-width); width: var(--sidebar-width); position: fixed; inset: 0 auto 0 0; padding: 28px 30px 28px 16px; background: var(--app-sidebar); color: var(--app-surface); display: flex; flex-direction: column; z-index: 10; overflow-y: auto; transition: width .24s ease; }
-.brand { display: flex; align-items: center; gap: 12px; color: var(--app-surface); text-decoration: none; font-size: 1.2rem; font-weight: 700; white-space: nowrap; }
-.brand:hover { color: var(--app-surface); }
-.brand-mark { display: inline-grid; place-items: center; flex-shrink: 0; width: 40px; height: 40px; border-radius: 10px; background: var(--app-surface); color: var(--app-primary); font-size: 1.5rem; }
-.app-sidebar nav { display: grid; margin-top: 36px; text-align: left; }
-.sidebar-group + .sidebar-group { border-top: 1px solid #ffffff66; margin-top: 10px; padding-top: 10px; }
-.sidebar-group-title { margin: 0 0 6px; color: #e2e8f0; font-size: .76rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.app-sidebar { --cui-is-mobile: initial; --cui-sidebar-width: var(--sidebar-width); --cui-sidebar-narrow-width: var(--sidebar-narrow-width); width: var(--sidebar-width); position: fixed; inset: 0 auto 0 0; padding: 16px 22px 28px 16px; background: var(--app-sidebar); color: var(--app-surface); display: flex; flex-direction: column; z-index: 10; overflow-y: auto; transition: width .24s ease; }
+.app-sidebar nav { display: grid; text-align: left; }
+.sidebar-group + .sidebar-group { margin-top: 16px; }
+.sidebar-group + .sidebar-group::before { content: ''; display: block; margin: 0 12px 18px; border-top: 1px solid #ffffff66; }
+.sidebar-group-title { margin: 0 12px 8px; color: #e2e8f0; font-size: .76rem; font-weight: 700; letter-spacing: .06em; line-height: 1.5; text-transform: uppercase; }
 .sidebar-link-label { white-space: normal; }
-.app-sidebar .nav-link { display: flex; align-items: center; height: auto; min-height: 48px; padding: 10px 12px; color: var(--app-border); border-radius: 8px; text-decoration: none; font-size: .9rem; font-weight: 500; white-space: nowrap; text-align: left; }
+.app-sidebar .nav-link { display: flex; align-items: center; height: auto; min-height: 48px; padding: 10px 9px; border-left: 3px solid transparent; color: #f0f5fa; border-radius: 10px; text-decoration: none; font-size: 1rem; font-weight: 400; white-space: nowrap; text-align: left; }
 .app-sidebar .nav-link:hover { color: var(--app-surface); background: var(--app-sidebar-hover); }
-.app-sidebar .nav-link.active { background: var(--app-surface); color: var(--app-primary); font-weight: 650; }
+.app-sidebar .nav-link.active { background: var(--app-sidebar-hover); border-left-color: #e5f4ff; color: var(--app-surface); font-weight: 600; }
 .sidebar-toggle {
   position: fixed;
   z-index: 11;
@@ -165,7 +163,7 @@ h2,h3 { letter-spacing: -.02em; }
 /* CoreUI narrow state keeps an empty rail on every viewport. */
 .sidebar.app-sidebar:not(.sidebar-end):not(.hide) { margin-inline-start: 0; }
 .sidebar.app-sidebar.sidebar-narrow { width: var(--sidebar-narrow-width); padding: 0; overflow: hidden; }
-.sidebar-narrow .brand, .sidebar-narrow nav { visibility: hidden; pointer-events: none; }
+.sidebar-narrow nav { visibility: hidden; pointer-events: none; }
 .sidebar-narrow ~ .app-workspace { margin-left: var(--sidebar-narrow-width); }
 .sidebar-toggle svg { pointer-events: none; }
 @media (max-width: 767px) { .app-sidebar.sidebar-narrow ~ .app-workspace { margin-left: var(--sidebar-narrow-width); } }
