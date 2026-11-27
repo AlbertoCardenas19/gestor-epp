@@ -43,6 +43,9 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         expect(self.page.locator('table.dataTable tbody tr.child')).to_have_count(1)
         expect(self.rows().first.locator('.row-expand')).to_have_attribute('aria-expanded', 'true')
         expect(self.page.locator('table.dataTable tbody tr.child')).to_contain_text('Descripción')
+        details = self.page.locator('table.dataTable tbody tr.child .dtr-details')
+        self.assertEqual(details.evaluate('e => getComputedStyle(e).fontSize'), '14.56px')
+        self.assertEqual(details.locator('li').last.locator('.dtr-title').inner_text(), 'Descripción')
         self.assertEqual(self.page.url, self.live_server_url + reverse('stock:list'))
         self.search('Casco 14')
         expect(self.rows()).to_have_count(1)
@@ -284,7 +287,8 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         search = self.page.get_by_label('Buscar', exact=True)
         expect(search).to_have_attribute('placeholder', 'Nombre, categoría, descripción')
         self.assertEqual(self.page.locator('.dt-search').count(), 1)
-        for width in (1440, 390, 320, 1440):
+        input_widths = {}
+        for width in (1440, 1000, 800, 700, 500, 470, 460, 390, 320, 1440):
             self.page.set_viewport_size({'width': width, 'height': 850})
             self.page.wait_for_timeout(350)
             metrics = self.page.locator('.dt-container').evaluate('''container => {
@@ -293,22 +297,37 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
               const after = tableRow.nextElementSibling;
               const length = container.querySelector('.dt-length').getBoundingClientRect();
               const search = container.querySelector('.dt-search').getBoundingClientRect();
+              const input = container.querySelector('.dt-search input').getBoundingClientRect();
               const table = container.querySelector('table.dataTable').getBoundingClientRect();
               return {topGap: tableRow.getBoundingClientRect().top - before.getBoundingClientRect().bottom,
                 bottomGap: after.getBoundingClientRect().top - tableRow.getBoundingClientRect().bottom,
                 sameRow: Math.abs(length.top - search.top) < 4,
+                rowGap: search.top - length.bottom, searchX: search.left, lengthX: length.left,
+                inputWidth: input.width, searchEnd: search.right, containerEnd: container.getBoundingClientRect().right,
                 tableWidth: table.width, available: container.getBoundingClientRect().width,
                 header: getComputedStyle(container.querySelector('thead th')).backgroundColor,
+                headerSize: getComputedStyle(container.querySelector('thead th')).fontSize,
+                cellSize: getComputedStyle(container.querySelector('tbody td')).fontSize,
                 label: container.querySelector('.dt-search label').textContent.trim()};
             }''')
             self.assertGreaterEqual(metrics['topGap'], 10, metrics)
             self.assertGreaterEqual(metrics['bottomGap'], 10, metrics)
             self.assertGreaterEqual(metrics['tableWidth'] + 2, metrics['available'], metrics)
             self.assertEqual(metrics['header'], 'rgb(234, 244, 251)')
+            self.assertEqual(metrics['headerSize'], '13.44px')
+            self.assertEqual(metrics['cellSize'], '14.56px')
             self.assertEqual(metrics['label'], 'Buscar')
-            if width == 1440:
+            self.assertLessEqual(metrics['searchEnd'], metrics['containerEnd'] + 2, metrics)
+            input_widths[width] = metrics['inputWidth']
+            if width >= 470:
                 self.assertTrue(metrics['sameRow'], metrics)
+            else:
+                self.assertFalse(metrics['sameRow'], metrics)
+                self.assertGreaterEqual(metrics['rowGap'], 11, metrics)
+                self.assertAlmostEqual(metrics['searchX'], metrics['lengthX'], delta=2, msg=metrics)
             self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+        self.assertGreater(input_widths[1440], input_widths[1000])
+        self.assertGreater(input_widths[500], input_widths[470])
         self.visit_table(reverse('stock:list') + '?category=999999')
         self.assertEqual(self.page.evaluate('DataTable.tables({api:true}).page.info().recordsTotal'), 1)
 
@@ -380,7 +399,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         north, item, delivery = self.db(self.seed_common_stock)
         self.visit_table(reverse('stock:list'))
         expect(self.rows().nth(1).locator('td').nth(1)).to_have_text('EPP')
-        expect(self.rows().nth(1).locator('td').nth(3)).to_have_text('0')
+        expect(self.rows().nth(1).locator('td').nth(2)).to_have_text('0')
         result = self.search('Casco')
         self.assertEqual(result['data'][0]['quantity'], '14')
         self.rows().get_by_role('link', name='Casco', exact=True).click()
@@ -436,8 +455,8 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
     def inventory_counts(self, available, delivered):
         self.visit_table(reverse('stock:list'))
         self.search('Casco')
-        expect(self.rows().first.locator('td').nth(3)).to_have_text(str(available))
-        expect(self.rows().first.locator('td').nth(4)).to_have_text(str(delivered))
+        expect(self.rows().first.locator('td').nth(2)).to_have_text(str(available))
+        expect(self.rows().first.locator('td').nth(3)).to_have_text(str(delivered))
 
     def test_unified_inventory_reserve_confirm_purchase_reduce_and_clear_search(self):
         north, item = self.db(self.seed_request_flow)
@@ -461,6 +480,9 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.inventory_counts(0, 2)
         expect(self.page.locator('nav[aria-label="Principal"]').get_by_role('link', name='Catálogo', exact=True)).to_have_count(0)
         expect(self.page.locator('table.dataTable thead th[data-column="description"]')).to_have_count(1)
+        self.assertEqual(self.page.locator('table.dataTable thead th[data-column]').evaluate_all(
+            'headers => headers.map(header => header.dataset.column)'),
+            ['name', 'type', 'quantity', 'delivered', 'description'])
         self.assertNotIn('data-column="description"', self.page.request.get(
             self.live_server_url + reverse('requests:list', args=[north.pk])).text())
         self.table_action(lambda: self.page.get_by_role('button', name='Limpiar búsqueda', exact=True).click())
@@ -958,6 +980,9 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
                 linkX: link.querySelector('.sidebar-link-label').getBoundingClientRect().x,
                 separatorX: group.getBoundingClientRect().x + 12,
                 activeBackground: getComputedStyle(document.querySelector('#sidebar .nav-link.active')).backgroundColor,
+                activeColor: getComputedStyle(document.querySelector('#sidebar .nav-link.active')).color,
+                inactiveColor: getComputedStyle(document.querySelector('#sidebar .nav-link:not(.active)')).color,
+                optionGap: getComputedStyle(document.querySelector('.sidebar-group .nav-item + .nav-item')).marginTop,
                 heading: parseFloat(getComputedStyle(heading).fontSize),
                 weight: getComputedStyle(heading).fontWeight,
                 link: parseFloat(getComputedStyle(link).fontSize),
@@ -969,7 +994,11 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
             }''')
             self.assertEqual(values['background'], 'rgb(24, 52, 80)')
             self.assertEqual(values['border'], 'rgba(255, 255, 255, 0.4)')
+            self.assertEqual(values['activeColor'], 'rgb(255, 255, 255)')
+            self.assertEqual(values['inactiveColor'], 'rgb(255, 255, 255)')
+            self.assertEqual(values['optionGap'], '4px')
             self.assertLess(values['heading'], values['link'])
+            self.assertAlmostEqual(values['heading'], 11.2, delta=.1)
             self.assertEqual(values['weight'], '700')
             self.assertEqual(values['icon'], 'none')
             self.assertEqual(values['circle'], values['background'])

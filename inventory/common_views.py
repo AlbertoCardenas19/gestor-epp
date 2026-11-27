@@ -31,7 +31,7 @@ class CommonInventoryView(TemplateView):
 
 
 class CommonInventoryDataView(DataTableView):
-    order_columns = ('name', 'category_label', None, 'total', 'delivered_total')
+    order_columns = ('name', 'category_label', 'total', 'delivered_total', None)
     search_fields = ('name', 'category_label', 'description')
     default_order = ('name', 'pk')
 
@@ -43,7 +43,7 @@ class CommonInventoryDataView(DataTableView):
             column = self.request.GET.get(f'order[{index}][column]')
             if column is None:
                 break
-            if column in {'3', '4'} and self.request.GET.get(f'order[{index}][dir]') in {'asc', 'desc'}:
+            if column in {'2', '3'} and self.request.GET.get(f'order[{index}][dir]') in {'asc', 'desc'}:
                 queryset = common_items()
                 break
         category = self.request.GET.get('category', '')

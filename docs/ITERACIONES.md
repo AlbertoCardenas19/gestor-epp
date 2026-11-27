@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-UI-01 a UI-07 publicadas. UI-07 verificada en Chromium; falta comprobarla en Firefox en la PC del usuario.
+UI-01 a UI-08 publicadas. UI-08 verificada en Chromium; falta comprobarla en Firefox en la PC del usuario.
 
 ## Pendientes
 
@@ -11,7 +11,19 @@ UI-01 a UI-07 publicadas. UI-07 verificada en Chromium; falta comprobarla en Fir
 
 ## Próximo paso
 
-Actualizar la copia Ubuntu desde `origin/main` y comprobar el recorrido visual de UI-07 en Firefox con los datos locales. El plan restante de `diseno-gestor-epp.md` requiere iteraciones posteriores.
+Actualizar la copia Ubuntu desde `origin/main` y comprobar el recorrido visual de UI-08 en Firefox con los datos locales. El plan restante de `diseno-gestor-epp.md` requiere iteraciones posteriores.
+
+## UI-08 · 27 de noviembre de 2026
+
+**Objetivo y alcance.** Ajustar la densidad del sidebar y de las tablas, hacer flexible la fila superior de DataTables y situar Descripción al final de Inventario general. Se conservan identidad, navegación, franja contraída, botón circular, búsqueda de Proyectos, selector de elementos y reglas de negocio.
+
+**Cambios.** Los enlaces consecutivos del sidebar tienen 4px adicionales de separación; los títulos de grupo bajan de `.76rem` a `.7rem`, conservan mayúsculas y negrita, y las opciones muestran texto blanco en normal, hover y activo. Las tablas comparten encabezados de `.84rem` (antes `.78rem`) y celdas de `.91rem` (antes `.85rem`); los detalles Responsive expandidos usan `.91rem`. Los controles de búsqueda y paginación conservan sus tamaños. La fila oficial de DataTables usa flex con un campo Buscar encogible; cuando los grupos ya no caben, quedan en dos filas a la izquierda con 12px de separación. Descripción pasó a la última columna de Inventario general; los índices de ordenación numérica y la configuración del servidor coinciden con el encabezado. El inventario de cada proyecto no cambió.
+
+**Verificación visual y funcional.** En Chromium, el encabezado calculó 13,44px, las celdas y el detalle expandido 14,56px, y el título del sidebar 11,2px. Las opciones normal y activa calcularon blanco; el margen adicional fue 4px. Al recorrer 1440, 1000, 800, 700, 500, 470, 460, 390, 320 y volver a 1440px sin recargar, Buscar permaneció a la derecha hasta 470px y su campo se redujo de aproximadamente 461px a 111px. A 460px pasó a la segunda fila, alineada a la izquierda con 12px de separación y un campo de aproximadamente 307px. No hubo superposición ni desbordamiento horizontal. Al volver a escritorio, tabla y contenedor midieron ambos 1290px. Descripción figura última también en el detalle Responsive. Se comprobaron sidebar abierto/cerrado, pestañas de tabla, foco y activación por teclado, búsqueda, ordenación, paginación y expansión de filas; no hubo errores de consola en el recorrido manual.
+
+**Capturas.** [Escritorio con sidebar expandido](capturas/ui08-inventario-escritorio-expandido.png), [escritorio tras volver desde móvil](capturas/ui08-inventario-1440.png), [campo reducido a 470px](capturas/ui08-inventario-470.png), [dos filas a 460px](capturas/ui08-inventario-460.png), [móvil a 390px](capturas/ui08-inventario-390.png), [móvil a 320px](capturas/ui08-inventario-320.png), [detalle expandido](capturas/ui08-inventario-detalle-movil.png) y [sidebar móvil expandido](capturas/ui08-inventario-movil-expandido.png).
+
+**Comprobaciones y límite.** Pasaron 185 pruebas Django, 16 pruebas Chromium, `manage.py check`, `makemigrations --check --dry-run` y `git diff --check`. La suite Chromium comprueba anchos intermedios, recuperación de ancho, controles únicos, detalles y orden de columnas. Firefox no está instalado en este entorno; queda por verificar la apariencia en Firefox Ubuntu del usuario.
 
 ## UI-07 · 27 de noviembre de 2026
 

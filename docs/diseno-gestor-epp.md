@@ -1,22 +1,25 @@
 # Sistema visual de gestor-epp basado en Punto Aparte
 
-Fecha: 27 de noviembre de 2026. Versión 3.
+Fecha: 27 de noviembre de 2026. Versión 4.
 
 ## Decisiones vigentes
 
-UI-06 implementó el espaciado de DataTables, los controles de búsqueda, el encabezado claro, la tarjeta Facturas y el área de acciones de Inicio, y retiró los filtros adicionales visibles de las tablas. UI-07 sustituyó Calibri por la familia de Punto Aparte y restauró la identidad original de Gestor EPP en el sidebar. El resto del plan de adopción queda pendiente. Las decisiones siguientes reemplazan cualquier indicación distinta en el análisis histórico de este documento:
+UI-06 implementó el espaciado de DataTables, los controles de búsqueda, el encabezado claro, la tarjeta Facturas y el área de acciones de Inicio, y retiró los filtros adicionales visibles de las tablas. UI-07 sustituyó Calibri por la familia de Punto Aparte y restauró la identidad original de Gestor EPP en el sidebar. UI-08 ajustó la densidad del sidebar y las tablas, la distribución adaptable de los controles oficiales de DataTables y la posición de Descripción en Inventario. El resto del plan de adopción queda pendiente. Las decisiones siguientes reemplazan cualquier indicación distinta en el análisis histórico de este documento:
 
 - El buscador oficial de DataTables permanece **dentro** de la tarjeta, en la fila superior junto a «Mostrar X filas». Tiene etiqueta visible «Buscar», placeholder con los criterios reales sin «Buscar por» ni puntos suspensivos y búsqueda automática. Proyectos y los selectores de elementos no cambian.
+- Los dos grupos de controles permanecen en una fila mientras caben; el campo Buscar se encoge antes del salto. Cuando ya no caben, «Mostrar X filas» va arriba y Buscar debajo, ambos a la izquierda y con 12px entre filas. La etiqueta Buscar permanece junto al campo, que aprovecha el ancho libre sin superposiciones.
 - La tabla tiene 1rem de separación entre controles superiores y tabla, y entre tabla y controles inferiores, ajustable en móvil. El encabezado usa el token compartido `#EAF4FB` con texto oscuro, incluso al ordenar. Las filas permanecen blancas con hover gris.
+- Los encabezados de tabla usan `.84rem` y las celdas `.91rem`, también en el detalle Responsive expandido. Estos tamaños no se aplican a búsqueda, tamaño de página ni paginación. En Inventario general, Descripción es la última columna y sigue disponible en los detalles Responsive; no se añade al inventario de proyectos.
 - Inicio incluye una tarjeta Facturas hacia el listado existente. Todas sus tarjetas usan título, descripción y área de acciones con borde superior y botón alineado abajo mediante flex.
 - Se retiran temporalmente los filtros adicionales de las tablas: categoría de Inventario, proyecto del historial de movimientos y estado de Entregas. Buscar, tamaño de página, orden y paginación permanecen. Entregas muestra todos los estados con su identificación; el alcance de proyecto y elemento se mantiene. No se dejan filtros implícitos por URL o persistencia.
 - La fuente global de texto y controles es `system-ui, -apple-system, "Segoe UI", sans-serif`. Esta decisión reemplaza Calibri; UI-07 no cambia tamaños, pesos ni espaciados del texto.
 - El sidebar conserva la identidad original «E» y «Gestor EPP» por encima de los grupos. En escritorio el primer encabezado de grupo comienza a la altura del título principal mediante medidas compartidas del encabezado y contenido. En móvil la navegación conserva un espacio cómodo bajo la identidad, sin forzar esa alineación. La identidad queda oculta dentro de la franja contraída.
+- En el sidebar, las opciones consecutivas tienen 4px adicionales de separación vertical, los encabezados de grupo miden `.7rem` y siguen en mayúsculas y negrita, y el texto de las opciones es blanco también en hover y activo. Se conservan los fondos de estos estados y el botón circular compartido.
 
 
 ## Estado y alcance
 
-Este documento reúne el análisis original de código, decisiones confirmadas y una especificación de adaptación. El análisis original no ejecutó las aplicaciones ni midió estilos computados; su evidencia visual directa fue la captura del sidebar aportada por el usuario. UI-06 y UI-07 implementan solo las decisiones vigentes enumeradas arriba y registran su verificación en `docs/ITERACIONES.md`. El resto del plan de adaptación queda pendiente. No se auditó formalmente contraste, lector de pantalla ni interacción táctil.
+Este documento reúne el análisis original de código, decisiones confirmadas y una especificación de adaptación. El análisis original no ejecutó las aplicaciones ni midió estilos computados; su evidencia visual directa fue la captura del sidebar aportada por el usuario. UI-06 a UI-08 implementan solo las decisiones vigentes enumeradas arriba y registran su verificación en `docs/ITERACIONES.md`. El resto del plan de adaptación queda pendiente. No se auditó formalmente contraste, lector de pantalla ni interacción táctil.
 
 Fuentes fijadas para evitar cambios silenciosos:
 - Punto Aparte, rama work, commit `9f359ac45a5caf38c2321b6e79b7ec989ff06cbc`.
@@ -123,7 +126,7 @@ Una única fuente de valores en app.css o un archivo de tokens importado una vez
 | Radio etiqueta | .5rem |
 | Separaciones | .25, .5, .75, 1, 1.25, 1.5, 2, 3rem |
 
-La familia vigente es `system-ui, -apple-system, "Segoe UI", sans-serif`, aplicada globalmente a texto y controles. UI-07 no modifica tamaños, pesos ni espaciados tipográficos. Los tamaños objetivo de una adaptación futura siguen pendientes de decisión e implementación: cuerpo y botones normales 1rem; etiquetas .9375rem; ayudas y encabezados de tabla .875rem; títulos de grupo .72rem; h1 adaptable entre 1.65 y 2rem. Interlineado general 1.6. No reducir texto para resolver problemas de ancho.
+La familia vigente es `system-ui, -apple-system, "Segoe UI", sans-serif`, aplicada globalmente a texto y controles. UI-08 fija encabezados de tabla en `.84rem`, celdas y detalles Responsive en `.91rem`, y títulos de grupo del sidebar en `.7rem`; UI-07 no había modificado tamaños, pesos ni espaciados tipográficos. Los demás tamaños objetivo de una adaptación futura siguen pendientes de decisión e implementación: cuerpo y botones normales 1rem; etiquetas .9375rem; ayudas .875rem; h1 adaptable entre 1.65 y 2rem. Interlineado general 1.6. No reducir texto para resolver problemas de ancho.
 
 ### Estructura de página
 
@@ -133,7 +136,7 @@ Contenedores flex/grid deben permitir encogimiento mediante min-width:0. Tablas 
 
 ### Sidebar
 
-Mantener 255px expandido y franja 28px contraída. Fondo institucional; grupos pequeños en mayúsculas/negrita; títulos y opciones alineados al mismo eje izquierdo; sin iconos de navegación. Separadores solo entre grupos. Conservar opciones y permisos EPP. Marca activa y hover como referencia. Botón centrado sobre borde derecho, círculo visual aproximadamente 28–30px y área interactiva 44px. Fuera de cualquier recorte y alcanzable con teclado. El contenido oculto no recibe foco. Un único controlador CoreUI con integración de aplicación; nunca dos manejadores de toggle.
+Mantener 255px expandido y franja 28px contraída. Fondo institucional; grupos de `.7rem` en mayúsculas/negrita; títulos y opciones alineados al mismo eje izquierdo; sin iconos de navegación. Las opciones consecutivas tienen 4px adicionales de separación vertical. Separadores solo entre grupos. Conservar opciones y permisos EPP. Texto de opciones blanco en estado normal, hover y activo, con sus fondos distintivos. Botón centrado sobre borde derecho, círculo visual aproximadamente 28–30px y área interactiva 44px. Fuera de cualquier recorte y alcanzable con teclado. El contenido oculto no recibe foco. Un único controlador CoreUI con integración de aplicación; nunca dos manejadores de toggle.
 La identidad original «E» / «Gestor EPP» permanece encima de los grupos. En escritorio el primer título de grupo se alinea en altura con el título principal usando espaciados compartidos del encabezado y del contenido. En móvil se prioriza la navegación; en la franja contraída se ocultan identidad y enlaces.
 
 ### Tarjetas y botones
@@ -148,11 +151,11 @@ Nuevo elemento es la referencia estructural confirmada. Compartir renderizado de
 
 ### Tablas, búsqueda y navegación
 
-Encabezado claro, filas blancas y hover gris suave. Sin striped ni sombreado permanente de columna ordenada. Descripción solo en Inventario general; inventario del proyecto conserva sus datos. Texto puede envolver; cifras deben mantener legibilidad. Acciones compactas solo donde todavía sean necesarias.
+Encabezado claro, filas blancas y hover gris suave. Sin striped ni sombreado permanente de columna ordenada. Encabezados `.84rem`; celdas y detalles Responsive `.91rem`. Descripción ocupa la última columna de Inventario general y el último detalle cuando está oculta; inventario del proyecto conserva sus datos. Texto puede envolver; cifras deben mantener legibilidad. Acciones compactas solo donde todavía sean necesarias.
 
 DataTables Responsive muestra detalles mediante botón explícito; debe conservar identificación de elemento y acceso a los datos ocultos. Expandir nunca navega a la ficha. Mantener enlace semántico del nombre sin subrayado permanente, foco reconocible y clic de fila existente. No interceptar selección de texto, botones, controles o enlaces auxiliares.
 
-Buscador oficial dentro de la tarjeta, con rótulo visible «Buscar» a la izquierda y sin botón de envío. Placeholder enumera únicamente campos realmente buscados, sin prefijo ni puntos suspensivos. Un solo buscador por listado. Conservar ordenación/búsqueda global en servidor, debounce y cancelación de peticiones obsoletas. Paginación común visualmente, sin reemplazar el motor de tarjetas por DataTables. Ocultarla cuando solo haya una página conservando recuento.
+Buscador oficial dentro de la tarjeta, con rótulo visible «Buscar» a la izquierda del campo y sin botón de envío. El selector «Mostrar X filas» queda a la izquierda y Buscar a la derecha mientras caben; el campo se encoge antes de saltar a la segunda fila. Cuando no caben, ambos grupos se alinean a la izquierda, separados verticalmente 12px, y el campo ocupa el ancho libre. Placeholder enumera únicamente campos realmente buscados, sin prefijo ni puntos suspensivos. Un solo buscador por listado. Conservar ordenación/búsqueda global en servidor, debounce y cancelación de peticiones obsoletas. Paginación común visualmente, sin reemplazar el motor de tarjetas por DataTables. Ocultarla cuando solo haya una página conservando recuento.
 
 Reajustar columnas y Responsive al finalizar cambios relevantes de contenedor/sidebar y al mostrar pestañas. No reinicializar tablas ni emitir consultas de datos solo para corregir ancho. Pendiente aparece antes de la cantidad entregada y no se transforma en una entrega real.
 

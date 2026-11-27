@@ -134,6 +134,11 @@ class IterationRequestAndDetailTests(TestCase):
         deliver_request(other_request, data(3, worker_full_name='Ana Pérez'))
         rows = self.client.get(reverse('stock:data'), {'order[0][column]': 3, 'order[0][dir]': 'desc'}).json()['data']
         self.assertEqual([(row['name'], row['delivered']) for row in rows], [('Guantes', '3'), ('Casco <seguro>', '0')])
+        rows = self.client.get(reverse('stock:data'), {'order[0][column]': 2, 'order[0][dir]': 'asc'}).json()['data']
+        self.assertEqual([(row['name'], row['quantity']) for row in rows], [('Casco <seguro>', '5'), ('Guantes', '7')])
+        self.assertEqual(self.client.get(reverse('stock:data'), {'search[value]': 'Descripción existente'}).json()['recordsFiltered'], 1)
+        rows = self.client.get(reverse('stock:data'), {'order[0][column]': 4, 'order[0][dir]': 'desc'}).json()['data']
+        self.assertEqual([row['name'] for row in rows], ['Casco <seguro>', 'Guantes'])
         rows = self.client.get(reverse('requests:data', args=[self.north.pk]),
             {'order[0][column]': 3, 'order[0][dir]': 'desc'}).json()['data']
         self.assertEqual([(row['item'], row['delivered']) for row in rows], [('Guantes', '3'), ('Casco <seguro>', '0')])
