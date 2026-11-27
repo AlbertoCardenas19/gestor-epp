@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-UI-01 a UI-10 publicadas. UI-10 verificada en Chromium; falta comprobarla en Firefox en la PC del usuario.
+UI-01 a UI-11 publicadas. UI-11 verificada en Chromium; falta comprobarla en Firefox en la PC del usuario.
 
 ## Pendientes
 
@@ -11,7 +11,19 @@ UI-01 a UI-10 publicadas. UI-10 verificada en Chromium; falta comprobarla en Fir
 
 ## Próximo paso
 
-Actualizar la copia Ubuntu desde `origin/main` y comprobar el recorrido visual de UI-10 en Firefox con los datos locales.
+Actualizar la copia Ubuntu desde `origin/main` y comprobar el recorrido visual de UI-11 en Firefox con los datos locales.
+
+## UI-11 · 27 de noviembre de 2026
+
+**Objetivo y alcance.** Unificar los formularios a partir de Nuevo elemento, Información de fichas a partir del elemento y etiquetas de estado (RF-03, RF-04, RF-05), sin cambiar datos ni reglas de negocio. Antes de modificar las referencias se capturaron en Chromium Nuevo elemento, Información de elemento y de proyecto en `/tmp/ui11-antes-*.png`.
+
+**Patrones y pantallas.** Proyecto, elemento, categoría, proveedor y factura comparten `form-page-heading`, `form-actions`, campos y card; factura conserva selector y líneas repetibles. Información de elemento, proyecto, proveedor y factura usa una card y `projects/info_actions.html` para Dropdown CoreUI en su esquina superior derecha. Se preservan Registrar entrada, Editar elemento/proyecto/proveedor y las acciones de factura con sus condiciones originales, incluida Anular. Categorías no tiene ficha individual. El menú no absorbe Guardar/Cancelar ni acciones de tablas. `state-badge` y variantes semánticas comparten tamaño, radio y paleta en tarjetas, fichas y tablas; el adaptador DataTables añade la etiqueta solo para visualización, sin alterar búsqueda ni ordenación. Pendiente sigue antes de la cantidad entregada. Títulos usan `--app-primary`; los del sidebar conservan el contraste claro.
+
+**Conflictos documentales resueltos.** La guía visual ahora es la fuente vigente; AGENTS.md obliga a identificar y reutilizar el patrón sin duplicar valores. `docs/09-componentes-y-datatables.md` documenta la implementación y marca el valor de cabecera de UI-06 como histórico, sustituido por el de UI-09. La decisión de UI-10 de Información sin card queda histórica: UI-11 incorpora una card única por sección. Se conservaron todas las entradas anteriores.
+
+**Verificación visual.** En Chromium se abrieron menús de elemento, proyecto, proveedor y factura a 1440 y 390px. Los menús quedaron dentro del viewport, sin desbordamiento; un hit test confirmó que el enlace del menú recibe el clic. Enter abre, Escape cierra y devuelve el foco. La tabla de facturas mostró «Pendiente» y «Por recibir» en etiquetas `state-warning`, con texto explícito; no hubo errores de consola. Capturas: [elemento móvil](capturas/ui11-elemento-390.png), [proyecto móvil](capturas/ui11-proyecto-390.png), [proveedor móvil](capturas/ui11-proveedor-390.png), [factura móvil](capturas/ui11-factura-390.png), [Nuevo elemento](capturas/ui11-form-elemento-390.png), [Nueva categoría](capturas/ui11-form-categoria-390.png), [Nuevo proveedor](capturas/ui11-form-proveedor-390.png) y [Nueva factura](capturas/ui11-form-factura-390.png); también hay versiones de las cuatro fichas a 1440px.
+
+**Comprobaciones y límite.** Pasaron 185 pruebas Django y 17 Chromium, además de `manage.py check`, `makemigrations --check --dry-run`, `node --check` y `git diff --check`. Firefox no está instalado aquí; la apariencia en Firefox Ubuntu del usuario sigue pendiente.
 
 ## UI-10 · 27 de noviembre de 2026
 

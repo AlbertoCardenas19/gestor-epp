@@ -3,11 +3,12 @@
 {% block content %}
 <a class="back-link" href="{% url 'catalog:categories' %}">← Volver a categorías</a>
 <div class="form-shell mt-4">
-  <h1>Nueva categoría</h1>
+  <div class="form-page-heading"><h1>Nueva categoría</h1></div>
   <form method="post" class="card card-body p-4 p-md-5" novalidate>
     {% csrf_token %}
+    {% if form.non_field_errors %}<div class="text-danger small" role="alert">{{ form.non_field_errors }}</div>{% endif %}
     {% include 'projects/form_fields.html' with fields=form %}
-    <div class="d-flex flex-column flex-sm-row gap-2 pt-2">
+    <div class="form-actions">
       <button class="btn btn-primary" type="submit">Guardar categoría</button>
       <a class="btn btn-outline-secondary" href="{% url 'catalog:categories' %}">Cancelar</a>
     </div>

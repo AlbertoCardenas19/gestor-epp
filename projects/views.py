@@ -2,6 +2,7 @@ from datetime import datetime
 
 from django.db.models import Case, CharField, Exists, F, OuterRef, Value, When, Q
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django.views.generic import CreateView, DetailView, ListView, TemplateView, UpdateView
 from django.template.loader import render_to_string
 
@@ -52,6 +53,12 @@ class ProjectInfoView(DetailView):
     model = Project
     template_name = 'projects/info.html'
     context_object_name = 'project'
+
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(
+            info_actions=[{'label': 'Editar proyecto', 'url': reverse('projects:update', args=[self.object.pk])}],
+            action_key=f'project-{self.object.pk}', action_label=self.object.name, **kwargs,
+        )
 
 
 class DeliveryQuerysetMixin:

@@ -1,6 +1,6 @@
 from django.views.generic import CreateView, DetailView, TemplateView, UpdateView
 from django.db import transaction
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 import uuid
 
@@ -36,7 +36,12 @@ class ItemDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         from inventory.availability import available_quantity
-        return super().get_context_data(balance=available_quantity(self.object.pk), **kwargs)
+        actions = [
+            {'label': 'Registrar entrada', 'url': reverse('stock:receive', args=[self.object.pk])},
+            {'label': 'Editar elemento', 'url': reverse('catalog:update', args=[self.object.pk])},
+        ]
+        return super().get_context_data(balance=available_quantity(self.object.pk), info_actions=actions,
+            action_key=f'item-{self.object.pk}', action_label=self.object.name, **kwargs)
 
 
 class CategoryListView(TemplateView):

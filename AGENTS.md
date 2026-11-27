@@ -93,30 +93,18 @@ Estas convenciones se establecen en la solicitud actual, no en acuerdos históri
 
 ## Sistema visual permanente — 27 de noviembre de 2026
 
-- Leer `docs/diseno-gestor-epp.md` antes de modificar la interfaz. Usar Punto Aparte
-  `work` en `9f359ac` como referencia visual, conservando las decisiones propias de EPP.
-- Reutilizar tokens y componentes compartidos; no inventar variantes de botones,
-  campos, tarjetas, tablas, navegación o carga por pantalla.
+- Leer `docs/diseno-gestor-epp.md` como fuente única de normas visuales vigentes
+  antes de modificar la interfaz; `docs/09-componentes-y-datatables.md` documenta
+  la implementación y reutilización técnica. El historial está en `docs/ITERACIONES.md`.
+- Antes de crear una pantalla o componente, identificar el patrón existente que
+  corresponde y reutilizarlo. Si hace falta una variante, justificarla y documentarla
+  dentro del sistema compartido. No crear estilos independientes para resolver una
+  necesidad ya cubierta.
 - Mantener CoreUI, DataTables y `serverSide` existentes, sin copiar dependencias ni
-  lógica de negocio de Punto Aparte. Usar globalmente
-  `system-ui, -apple-system, "Segoe UI", sans-serif` para texto y controles;
-  reemplaza la preferencia anterior por Calibri.
-- En tablas, el buscador oficial permanece dentro de la tarjeta junto a «Mostrar X
-  filas», con etiqueta visible «Buscar». El placeholder refleja solo criterios reales,
-  sin «Buscar por» ni puntos suspensivos. No se añade otro motor ni botón de envío.
-- Usar un token común `#E7EEF4` para encabezados de tabla con texto oscuro, y 1rem
-  de separación entre controles superiores, tabla y controles inferiores. Mantener
-  filas blancas y hover gris claro.
-- No mostrar filtros adicionales en los listados de tablas por ahora. Conservar el
-  alcance de cada pantalla y mostrar los estados consultables con identificación clara.
-  Proyectos y los selectores de elementos quedan fuera de este cambio de búsqueda.
-- Inicio usa tarjetas compartidas con área de acciones separada por línea y alineada
-  abajo. Facturas enlaza al listado existente.
-- Conservar la identidad original «E» / «Gestor EPP» encima de la navegación del
-  sidebar. En escritorio, iniciar la navegación 8px más abajo que en UI-08 mediante espaciados
-  compartidos, sin exigir alineación exacta con el título principal; en móvil
-  priorizar navegación utilizable. Ocultar identidad y navegación al contraer
-  a la franja de 28 px.
+  lógica de negocio de Punto Aparte. La guía visual fija tipografía, tokens, tablas,
+  formularios, fichas, estados y sidebar; no duplicar sus valores aquí.
+- Las fichas equivalentes usan Información en card y el menú compartido de acciones
+  con Dropdown CoreUI. Formularios y tablas conservan sus acciones propias.
 - Comparar visualmente las pantallas afectadas, teclado y anchos estrechos, incluido
   redimensionamiento de ida y vuelta. Retirar reglas sustituidas, actualizar la guía
   vigente y registrar cada iteración. Justificar y verificar toda excepción.

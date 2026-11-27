@@ -3,6 +3,7 @@ from django.core.paginator import Paginator
 from django.db.models import Case, Exists, OuterRef, Q, Value, When
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
@@ -53,6 +54,11 @@ class SupplierDetail(DetailView):
     model = Supplier
     context_object_name = 'supplier'
     template_name = 'purchases/supplier.html'
+
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(info_actions=[
+            {'label': 'Editar proveedor', 'url': reverse('purchases:supplier-edit', args=[self.object.pk])},
+        ], action_key=f'supplier-{self.object.pk}', action_label=self.object.name, **kwargs)
 
 
 class PriceData(DataTableView):
@@ -133,6 +139,21 @@ class InvoiceDetail(DetailView):
         return Invoice.objects.select_related('supplier').prefetch_related(
             'lines__item', 'lines__allocations__project', 'events', 'movements__position__item', 'movements__replacement',
         )
+
+    def get_context_data(self, **kwargs):
+        invoice = self.object
+        actions = []
+        if not invoice.cancelled_at:
+            if not invoice.received_at:
+                actions.append({'label': 'Confirmar recepción completa', 'url': reverse('purchases:receive', args=[invoice.pk])})
+            if not invoice.paid_on:
+                actions.append({'label': 'Marcar como pagada', 'url': reverse('purchases:pay', args=[invoice.pk])})
+            actions.extend([
+                {'label': 'Corregir', 'url': reverse('purchases:correct', args=[invoice.pk])},
+                {'label': 'Anular', 'url': reverse('purchases:cancel', args=[invoice.pk]), 'danger': True},
+            ])
+        return super().get_context_data(info_actions=actions, action_key=f'invoice-{invoice.pk}',
+            action_label=f'factura {invoice.number}', **kwargs)
 
 
 @require_http_methods(['GET', 'POST'])

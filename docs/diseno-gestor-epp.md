@@ -1,10 +1,10 @@
 # Sistema visual de gestor-epp basado en Punto Aparte
 
-Fecha: 27 de noviembre de 2026. Versión 6.
+Fecha: 27 de noviembre de 2026. Versión 8.
 
 ## Decisiones vigentes
 
-UI-06 implementó el espaciado de DataTables, los controles de búsqueda, el encabezado claro, la tarjeta Facturas y el área de acciones de Inicio, y retiró los filtros adicionales visibles de las tablas. UI-07 sustituyó Calibri por la familia de Punto Aparte y restauró la identidad original de Gestor EPP en el sidebar. UI-08 ajustó la densidad del sidebar y las tablas, la distribución adaptable de los controles oficiales de DataTables y la posición de Descripción en Inventario. UI-09 ajustó la paleta principal, los encabezados de tabla y el espacio de navegación. UI-10 ordena las tarjetas de proyectos y establece un patrón compartido de Información. El resto del plan de adopción queda pendiente. Las decisiones siguientes reemplazan cualquier indicación distinta en el análisis histórico de este documento:
+UI-06 implementó el espaciado de DataTables, los controles de búsqueda, el encabezado claro, la tarjeta Facturas y el área de acciones de Inicio, y retiró los filtros adicionales visibles de las tablas. UI-07 sustituyó Calibri por la familia de Punto Aparte y restauró la identidad original de Gestor EPP en el sidebar. UI-08 ajustó la densidad del sidebar y las tablas, la distribución adaptable de los controles oficiales de DataTables y la posición de Descripción en Inventario. UI-09 ajustó la paleta principal, los encabezados de tabla y el espacio de navegación. UI-10 ordena las tarjetas de proyectos y establece un patrón compartido de Información. UI-11 fija Nuevo elemento como referencia para formularios y presenta Información en una card con menú compartido de acciones. El resto del plan de adopción queda pendiente. Las decisiones siguientes reemplazan cualquier indicación distinta en el análisis histórico de este documento:
 
 - El buscador oficial de DataTables permanece **dentro** de la tarjeta, en la fila superior junto a «Mostrar X filas». Tiene etiqueta visible «Buscar», placeholder con los criterios reales sin «Buscar por» ni puntos suspensivos y búsqueda automática. Proyectos y los selectores de elementos no cambian.
 - Los dos grupos de controles permanecen en una fila mientras caben; el campo Buscar se encoge antes del salto. Cuando ya no caben, «Mostrar X filas» va arriba y Buscar debajo, ambos a la izquierda y con 12px entre filas. La etiqueta Buscar permanece junto al campo, que aprovecha el ancho libre sin superposiciones.
@@ -18,12 +18,13 @@ UI-06 implementó el espaciado de DataTables, los controles de búsqueda, el enc
 - En el sidebar, las opciones consecutivas tienen 8px adicionales de separación vertical, los encabezados de grupo miden `.7rem` y siguen en mayúsculas y negrita, y el texto de las opciones es blanco también en hover y activo. Se conservan los fondos de estos estados y el botón circular compartido.
 - Nuevo proyecto y Nuevo elemento conservan Cancelar y omiten el enlace de regreso redundante. El encabezado de formulario deja 1.5rem antes de la tarjeta mediante una clase compartida.
 - Las tarjetas de proyectos muestran nombre, fecha gris debajo, estado separado y «Ver proyecto» alineado abajo. La descripción se lee en Información. El listado muestra seis por página; fecha descendente con fechas ausentes al final es el orden inicial, y el selector junto al buscador permite nombre A–Z. Búsqueda y orden se aplican antes de paginar.
-- Información es la primera sección y el destino de «Ver proyecto». Entregas conserva `/proyectos/<id>/` e Inventario su ruta. Proyecto y elemento usan el mismo patrón de metadatos, etiqueta/valor, descripción, separadores y cuadrícula adaptable. No se repite el nombre dentro de Información; las acciones existentes permanecen.
+- Información es la primera sección y el destino de «Ver proyecto». Entregas conserva `/proyectos/<id>/` e Inventario su ruta. Proyecto y elemento usan el mismo patrón de metadatos, etiqueta/valor, descripción, separadores y cuadrícula adaptable. No se repite el nombre dentro de Información. Información de elemento, proyecto, proveedor y factura va dentro de una card y agrupa sus acciones en un menú de tres puntos CoreUI en su esquina superior derecha; no se trasladan Guardar/Cancelar ni controles de tablas.
+- La familia, tamaños y color de títulos siguen los tokens compartidos; los encabezados del sidebar conservan contraste. Los estados usan `.badge` y variantes semánticas compartidas con texto explícito; «Pendiente» permanece a la izquierda de la cantidad entregada.
 
 
 ## Estado y alcance
 
-Este documento reúne el análisis original de código, decisiones confirmadas y una especificación de adaptación. El análisis original no ejecutó las aplicaciones ni midió estilos computados; su evidencia visual directa fue la captura del sidebar aportada por el usuario. UI-06 a UI-10 implementan solo las decisiones vigentes enumeradas arriba y registran su verificación en `docs/ITERACIONES.md`. El resto del plan de adaptación queda pendiente. No se auditó formalmente contraste, lector de pantalla ni interacción táctil.
+Este documento reúne el análisis original de código, decisiones confirmadas y una especificación de adaptación. El análisis original no ejecutó las aplicaciones ni midió estilos computados; su evidencia visual directa fue la captura del sidebar aportada por el usuario. UI-06 a UI-11 implementan solo las decisiones vigentes enumeradas arriba y registran su verificación en `docs/ITERACIONES.md`. El resto del plan de adaptación queda pendiente. No se auditó formalmente contraste, lector de pantalla ni interacción táctil.
 
 Fuentes fijadas para evitar cambios silenciosos:
 - Punto Aparte, rama work, commit `9f359ac45a5caf38c2321b6e79b7ec989ff06cbc`.
@@ -151,7 +152,7 @@ Primario azul sólido: Agregar/Guardar/Confirmar. Secundario blanco con borde: C
 
 ### Formularios
 
-Nuevo elemento es la referencia estructural confirmada. Compartir renderizado de campo, ayuda, error y acciones; no copiar HTML por formulario. En Nuevo proyecto y Nuevo elemento, la separación compartida del encabezado a la tarjeta es 1.5rem, sin margen adicional duplicado y sin enlace de regreso redundante. Etiqueta siempre asociada al control; (opcional) solo si realmente corresponde, con obligaciones condicionales respetadas. Fondo blanco incluso al enfocar, foco visible y error asociado. Guardar primero y Cancelar después, orden consistente. Cancelar no modifica datos ni lleva al catálogo retirado. Formularios complejos de factura pueden agrupar líneas y totales sin inventar otro estilo.
+Nuevo elemento es la referencia estructural confirmada. Proyecto, elemento, categoría, proveedor y factura reutilizan `.form-shell`, `.form-page-heading`, `form_fields.html` (el alias de compras solo lo incluye) y `.form-actions` para estructura, etiquetas, ayudas, errores y Guardar/Cancelar. La separación compartida del encabezado a la tarjeta es 1.5rem, sin margen adicional duplicado. Etiqueta siempre asociada al control; (opcional) solo si realmente corresponde, con obligaciones condicionales respetadas. Fondo blanco incluso al enfocar, foco visible y error asociado. Guardar primero y Cancelar después, orden consistente. Cancelar no modifica datos ni lleva al catálogo retirado. Factura conserva su selector, líneas repetibles y distribución por proyecto como variante funcional, con los mismos campos y acciones visuales.
 
 ### Tablas, búsqueda y navegación
 
@@ -167,9 +168,19 @@ Reajustar columnas y Responsive al finalizar cambios relevantes de contenedor/si
 
 ### Información de proyectos y elementos
 
-El nombre aparece una sola vez como título principal. La sección compartida `.info-section` usa separadores suaves y espacios de 1.5rem, sin una tarjeta para cada dato. `.info-meta` distribuye pares `.info-label` / `.info-value` en columnas adaptables; en móvil pasa a una columna. `.info-description` muestra texto de lectura con saltos y cortes de línea, o el vacío explícito. Las acciones siguen accesibles en `.info-actions` cuando corresponden.
+El nombre aparece una sola vez como título principal. La información se encierra en una única `.info-card`, con separadores suaves y espacios de 1.5rem en `.info-section`. `.info-meta` distribuye pares `.info-label` / `.info-value` en columnas adaptables; en móvil pasa a una columna. `.info-description` muestra texto de lectura con saltos y cortes de línea, o el vacío explícito. La barra `.info-card-toolbar` coloca `info_actions.html` en la esquina superior derecha; el Dropdown CoreUI conserva accesibilidad, Escape, teclado y acciones permitidas.
 
 Información de proyecto muestra fecha de creación en `DD/MM/AAAA` o «Sin fecha registrada», estado informativo y descripción o «Sin descripción». Es la primera pestaña y el destino de «Ver proyecto». La ruta anterior de Entregas sigue abriendo Entregas; Inventario conserva su ruta y tabla. Información de elemento muestra categorías, descripción, stock y las acciones Registrar entrada y Editar elemento; Historial de movimientos y Proyectos mantienen sus tablas y ajuste al hacerse visibles. No se agregan datos calculados.
+
+### Patrones compartidos vigentes
+
+| Patrón y uso | Implementación | Variantes permitidas | No duplicar y verificación |
+|---|---|---|---|
+| Formularios de elemento, proyecto, categoría, proveedor y factura | `form-shell`, `form-page-heading`, `form-actions`, `projects/form_fields.html`; compras incluye esa plantilla desde `purchases/form_fields.html` | Líneas y selectores de factura; número de campos según entidad | No crear campos, colores o botones por pantalla. Comprobar etiquetas, ayuda, errores, Guardar/Cancelar y separación en escritorio y móvil. |
+| Información de elemento, proyecto, proveedor y factura | Una `info-card` con `info-section`, `info-meta`, `info-field`, `info-description` y `info-card-toolbar` | Datos y secciones adicionales de cada entidad; factura conserva tablas e historial fuera de la card | No repetir el título ni crear cards por dato. Comparar columnas y lectura en móvil. |
+| Acciones de fichas equivalentes | `projects/info_actions.html`, contexto `info_actions`, Dropdown CoreUI y `.info-actions-trigger` | Acciones según entidad y estado; Anular conserva clase de peligro | No trasladar Guardar/Cancelar ni controles de tabla. Verificar destinos, condiciones, teclado, Escape y ausencia de recorte. |
+| Estados de tarjetas, tablas y fichas | `.badge`, `.state-badge` y variantes `state-warning`, `state-success`, `state-danger`, `state-muted`; `datatables.js` aplica la variante solo en presentación | Texto y significado existentes; Pendiente junto a Entregados | No inferir reglas de negocio por color. Comparar tamaños, etiquetas explícitas y búsqueda/ordenación originales. |
+| Títulos de página, sección y tarjeta | Token `--app-primary` en `app.css` | Texto sobre fondo oscuro del sidebar conserva su color claro | No fijar colores por plantilla. Verificar contraste y foco visible. |
 
 ### Pestañas, menús, carga y accesibilidad
 

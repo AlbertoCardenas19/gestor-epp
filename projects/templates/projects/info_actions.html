@@ -1,0 +1,6 @@
+{% if info_actions %}<div class="dropdown info-actions-menu">
+  <button id="info-actions-{{ action_key }}" class="info-actions-trigger" type="button" data-coreui-toggle="dropdown" aria-expanded="false" aria-label="Acciones de {{ action_label }}" title="Acciones">⋯</button>
+  <ul class="dropdown-menu dropdown-menu-end action-menu" aria-labelledby="info-actions-{{ action_key }}">
+    {% for action in info_actions %}<li><a class="dropdown-item{% if action.danger %} action-danger{% endif %}" href="{{ action.url }}">{{ action.label }}</a></li>{% endfor %}
+  </ul>
+</div>{% endif %}

@@ -36,6 +36,10 @@
       // The shared loader owns this status instead of a second visible error/control.
       if (error) error.hidden = false;
       const text = DataTable.render.text();
+      const stateStyle = value => /^(Pendiente|Por recibir)/.test(value) ? 'state-warning'
+        : /^(Anulad[ao]|Cancelad[ao])/.test(value) ? 'state-danger'
+        : /^(Pagada|Recibida|Terminado|Vigente)$/.test(value) ? 'state-success'
+        : /^(Histórico|Sustituido)$/.test(value) ? 'state-muted' : '';
       const columns = [...element.tHead.rows[0].cells].map((header, index) => {
         const actions = header.hasAttribute('data-actions');
         return {
@@ -51,7 +55,9 @@
             cell.prepend(button);
           } : undefined,
           render: actions ? undefined : header.dataset.format === 'pending-delivery'
-            ? (value, type, row) => type === 'display' ? (row.pending ? '<span class="badge pending-delivery">Pendiente</span> ' : '') + text.display(value) : value
+            ? (value, type, row) => type === 'display' ? (row.pending ? '<span class="badge state-badge state-warning pending-delivery">Pendiente</span> ' : '') + text.display(value) : value
+            : header.dataset.format === 'status'
+            ? (value, type) => type === 'display' ? `<span class="badge state-badge ${stateStyle(value)}">${text.display(value)}</span>` : value
             : header.dataset.format === 'excerpt'
             ? (value, type) => type === 'display' ? text.display(value.length > 100 ? value.slice(0, 97) + '…' : value) : value
             : header.dataset.link ? (value, type, row) => {

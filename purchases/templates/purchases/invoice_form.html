@@ -7,11 +7,11 @@
 {% endblock %}
 {% block content %}
 <div class="form-shell">
-  <h1>{% if invoice %}Corregir factura{% else %}Registrar factura{% endif %}</h1>
-  <p>Por ahora, copia el total con IVA del documento. El cálculo automático de IVA y total está pendiente.</p>
+  <div class="form-page-heading"><h1>{% if invoice %}Corregir factura{% else %}Registrar factura{% endif %}</h1>
+  <p>Por ahora, copia el total con IVA del documento. El cálculo automático de IVA y total está pendiente.</p></div>
   <form method="post" class="card card-body p-4 p-md-5" novalidate>
     {% csrf_token %}
-    {{ form.non_field_errors }}
+    {% if form.non_field_errors %}<div class="text-danger small" role="alert">{{ form.non_field_errors }}</div>{% endif %}
     {% include 'purchases/picker.html' with picker=supplier_picker %}
     {% include 'purchases/form_fields.html' with fields=form.visible_fields %}
     {% for field in form.hidden_fields %}{% if field.name != 'supplier' %}{{ field }}{{ field.errors }}{% endif %}{% endfor %}
@@ -21,7 +21,7 @@
       <template data-form-template>{% include 'purchases/invoice_line.html' with row=editor.empty_row %}</template>
       <button type="button" class="btn btn-outline-secondary" data-form-add>Agregar línea</button>
     </div>
-    <div class="d-flex flex-wrap gap-2">
+    <div class="form-actions">
       <button type="submit" class="btn btn-primary">Guardar factura</button>
       <a class="btn btn-outline-secondary" href="{% if invoice %}{{ invoice.get_absolute_url }}{% else %}{% url 'purchases:list' %}{% endif %}">Cancelar</a>
     </div>

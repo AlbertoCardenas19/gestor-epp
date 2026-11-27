@@ -3,26 +3,19 @@
 {% block content %}
 <a class="back-link" href="{% url 'purchases:list' %}">← Volver a facturas</a>
 <h1 class="my-4 text-break">Factura {{ invoice.number }}</h1>
-<div class="card card-body mb-4">
+<div class="card info-card mb-4"><div class="card-body p-4 p-md-5">
+  <div class="info-card-toolbar">{% include 'projects/info_actions.html' %}</div>
   <dl class="row mb-2">
     <dt class="col-sm-5">Proveedor</dt><dd class="col-sm-7"><a href="{{ invoice.supplier.get_absolute_url }}">{{ invoice.supplier }}</a></dd>
     <dt class="col-sm-5">Fecha de emisión</dt><dd class="col-sm-7">{{ invoice.issued_on|date:'d/m/Y' }}</dd>
     <dt class="col-sm-5">Fecha de vencimiento</dt><dd class="col-sm-7">{{ invoice.due_on|date:'d/m/Y' }}</dd>
     <dt class="col-sm-5">Total con IVA (CLP)</dt><dd class="col-sm-7">{{ invoice.total }}</dd>
-    <dt class="col-sm-5">Estado de pago</dt><dd class="col-sm-7">{{ invoice.get_payment_status_display }}{% if invoice.paid_on %} · {{ invoice.paid_on|date:'d/m/Y' }}{% endif %}</dd>
+    <dt class="col-sm-5">Estado de pago</dt><dd class="col-sm-7"><span class="badge state-badge {% if invoice.paid_on %}state-success{% else %}state-warning{% endif %}">{{ invoice.get_payment_status_display }}</span>{% if invoice.paid_on %} · {{ invoice.paid_on|date:'d/m/Y' }}{% endif %}</dd>
     <dt class="col-sm-5">Orden de compra</dt><dd class="col-sm-7">{{ invoice.purchase_order|default:"Sin orden de compra" }}</dd>
     <dt class="col-sm-5">Recepción</dt><dd class="col-sm-7">{% if invoice.received_at %}{{ invoice.received_at|date:'d/m/Y H:i T' }}{% else %}Por recibir{% endif %}</dd>
     {% if invoice.cancelled_at %}<dt class="col-sm-5">Anulación</dt><dd class="col-sm-7">{{ invoice.cancelled_at|date:'d/m/Y H:i T' }}</dd>{% endif %}
   </dl>
-  {% if not invoice.cancelled_at %}
-  <div class="d-flex flex-wrap gap-2">
-    {% if not invoice.received_at %}<a class="btn btn-primary" href="{% url 'purchases:receive' invoice.pk %}">Confirmar recepción completa</a>{% endif %}
-    {% if not invoice.paid_on %}<a class="btn btn-outline-primary" href="{% url 'purchases:pay' invoice.pk %}">Marcar como pagada</a>{% endif %}
-    <a class="btn btn-outline-primary" href="{% url 'purchases:correct' invoice.pk %}">Corregir</a>
-    <a class="btn btn-outline-danger" href="{% url 'purchases:cancel' invoice.pk %}">Anular</a>
-  </div>
-  {% endif %}
-</div>
+</div></div>
 <section class="mb-4">
   <h2 class="h4">Detalle de compra</h2>
   <div class="table-responsive">

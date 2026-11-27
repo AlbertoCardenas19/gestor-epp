@@ -2,7 +2,7 @@
 
 Decisión actual del usuario, registrada el 12 de noviembre de 2026 (S20).
 Aplica a RF-03, RF-05, RF-08 y RF-09. No es una reinterpretación de acuerdos
-históricos. Las instrucciones permanentes están en [AGENTS.md](../AGENTS.md).
+históricos. La fuente de normas visuales vigentes es [diseno-gestor-epp.md](diseno-gestor-epp.md); [AGENTS.md](../AGENTS.md) exige reutilizarla. Los valores de iteraciones anteriores descritos abajo son históricos.
 
 ## Decisiones y estado implementado
 
@@ -49,6 +49,14 @@ Las páginas con tablas incluyen una vez `datatables_styles.html` y
 `datatables_scripts.html`: jQuery → DataTables → adaptador Bootstrap 5 →
 `datatables.js`. `app.css` se carga después de los CSS de bibliotecas para adaptar
 paleta y espaciado. Proyectos carga solo `cards.js`, sin DataTables ni jQuery.
+
+## Reutilización técnica de formularios, fichas y estados
+
+`projects/form_fields.html` dibuja etiquetas, ayudas y errores para proyecto, elemento, categoría, proveedor y factura; `purchases/form_fields.html` es un alias que lo incluye. `form-shell`, `form-page-heading` y `form-actions` fijan envoltura y acciones. La factura conserva selector y líneas repetibles. Al crear un formulario, comprobar Guardar, Cancelar, validación y disposición móvil; no copiar campos ni botones con estilos propios.
+
+`projects/info_actions.html` recibe `info_actions` desde la vista y crea el menú de tres puntos con Dropdown CoreUI. Lo usan Información de elemento, proyecto, proveedor y factura; el contexto condiciona las acciones existentes. `info-card` permite que Popper sitúe el menú sin recorte; `info-card-toolbar` lo coloca en la esquina superior derecha. `info-section` y `info-meta` comparten datos y separadores. No mover Guardar/Cancelar ni controles DataTables al menú. Comprobar nombre accesible, Enter, Escape, destinos y hit test en móvil.
+
+Las columnas de estado usan `data-format="status"`; `datatables.js` conserva el valor original para búsqueda y ordenación, y dibuja `state-badge` solo en pantalla. `pending-delivery` sigue antes de la cantidad. Las variantes semánticas se definen en `app.css`; no crear estados ni cambiar etiquetas. Comparar tablas, tarjetas y fichas en escritorio y móvil.
 
 Comprobar archivos locales, sin red ni instalaciones:
 
@@ -341,14 +349,14 @@ automática y estado En curso. La migración deja fecha nula en proyectos antigu
 sin fuente fiable y asigna En curso como estado inicial. Terminado es informativo.
 `/catalogo/` redirige a Inventario y `/catalogo/datos/` ya no es una vista.
 
-## Presentación vigente de tablas e Inicio — UI-06
+## Historial de presentación de tablas e Inicio — UI-06
 
 La guía visual permanente es [diseno-gestor-epp.md](diseno-gestor-epp.md).
 DataTables genera una sola barra superior dentro de `.datatable-shell`, con
 «Mostrar X filas» a la izquierda y «Buscar» visible a la derecha. La etiqueta
 está asociada al campo; el placeholder describe solo `search_fields` reales.
 El espacio entre controles y tabla y entre tabla e información/paginación es
-1rem, adaptable a móvil. El token `--app-table-heading` vale `#EAF4FB`;
+1rem, adaptable a móvil. En UI-06 el token `--app-table-heading` valía `#EAF4FB` (sustituido en UI-09 por `#E7EEF4`);
 encabezados ordenados conservan texto oscuro e indicador. Las filas son blancas
 con hover gris claro. No hay filtros adicionales de Categoría, Proyecto ni Estado
 en los listados; la consulta mantiene su alcance de negocio y permite buscar y
