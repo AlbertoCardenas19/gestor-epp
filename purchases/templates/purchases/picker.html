@@ -1,9 +1,9 @@
 <fieldset class="mb-3" data-item-picker data-picker-lazy data-source="{{ picker.source }}">
   <legend class="h6">{{ picker.field.label }}</legend>
   {{ picker.field }}
-  <label class="form-label" for="{{ picker.field.id_for_label }}_query">Buscar {{ picker.field.label|lower }}</label>
+  <label class="visually-hidden" for="{{ picker.field.id_for_label }}_query">Buscar {{ picker.field.label|lower }}</label>
   <div class="search-with-clear mb-2">
-    <input class="form-control" type="search" autocomplete="off" id="{{ picker.field.id_for_label }}_query" data-picker-search>
+    <input class="form-control" type="search" autocomplete="off" id="{{ picker.field.id_for_label }}_query" data-picker-search placeholder="{% if picker.kind == 'supplier' %}Buscar por nombre o RUT…{% else %}Buscar por nombre o categoría…{% endif %}">
     <button type="button" class="search-clear" data-picker-clear aria-label="Limpiar búsqueda" hidden>×</button>
   </div>
   <div class="d-flex flex-wrap align-items-center gap-2 mb-2">

@@ -2,7 +2,7 @@ from datetime import datetime
 
 from django.db.models import Case, CharField, Exists, OuterRef, Value, When, Q
 from django.shortcuts import get_object_or_404
-from django.views.generic import CreateView, ListView, TemplateView
+from django.views.generic import CreateView, ListView, TemplateView, UpdateView
 from django.template.loader import render_to_string
 
 from inventory.models import StockRecord
@@ -39,6 +39,12 @@ class ProjectListView(CardsViewMixin, ListView):
 
 
 class ProjectCreateView(CreateView):
+    model = Project
+    form_class = ProjectForm
+    template_name = 'projects/form.html'
+
+
+class ProjectUpdateView(UpdateView):
     model = Project
     form_class = ProjectForm
     template_name = 'projects/form.html'

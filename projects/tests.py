@@ -5,6 +5,8 @@ from django.contrib.staticfiles import finders
 from django.db import connection
 from django.test import Client, TestCase
 from django.urls import reverse
+from django.utils import timezone
+from zoneinfo import ZoneInfo
 
 from .models import Project
 
@@ -55,6 +57,26 @@ class ProjectFlowTests(TestCase):
         self.assertEqual(project.description, '')
         self.assertRedirects(response, project.get_absolute_url())
         self.assertContains(self.client.get(project.get_absolute_url()), 'No hay entregas para esta consulta.')
+
+    def test_creation_date_and_informational_status(self):
+        response = self.client.post(reverse('projects:create'), {'name': 'Obra nueva'})
+        project = Project.objects.get(name='Obra nueva')
+        self.assertRedirects(response, project.get_absolute_url())
+        self.assertEqual(project.created_on, timezone.localdate(timezone=ZoneInfo('America/Santiago')))
+        self.assertEqual(project.status, Project.Status.IN_PROGRESS)
+        self.assertNotContains(self.client.get(reverse('projects:create')), 'id_status')
+        self.assertNotContains(self.client.get(reverse('projects:update', args=[project.pk])), 'id_created_on')
+        self.assertContains(self.client.get(reverse('projects:list')), project.created_on.strftime('%d/%m/%Y'))
+        response = self.client.post(reverse('projects:update', args=[project.pk]),
+                                    {'name': project.name, 'description': '', 'status': Project.Status.FINISHED})
+        self.assertRedirects(response, project.get_absolute_url())
+        project.refresh_from_db()
+        self.assertEqual(project.status, Project.Status.FINISHED)
+        self.assertEqual(project.created_on, timezone.localdate(timezone=ZoneInfo('America/Santiago')))
+        self.assertContains(self.client.get(reverse('projects:list')), 'Terminado')
+        old = Project.objects.create(name='Obra sin fecha', created_on=None)
+        self.assertContains(self.client.get(reverse('projects:list')), 'Sin fecha registrada')
+        self.assertEqual(old.status, Project.Status.IN_PROGRESS)
 
     def test_empty_or_whitespace_name_is_rejected_without_losing_description(self):
         for name in ['', '   ']:

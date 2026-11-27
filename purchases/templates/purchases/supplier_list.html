@@ -3,12 +3,11 @@
 {% block extra_styles %}{% include 'projects/datatables_styles.html' %}{% endblock %}
 {% block extra_scripts %}{% include 'projects/datatables_scripts.html' %}{% endblock %}
 {% block content %}
-<h1 class="mb-4">Proveedores</h1>
-<div class="list-controls mb-3"><a class="btn btn-primary" href="{% url 'purchases:supplier-create' %}">Nuevo proveedor</a></div>
+{% include 'projects/page_heading.html' with heading='Proveedores' create_url='purchases:supplier-create' create_label='Agregar proveedor' %}
 <section data-datatable-panel>
   <p data-datatable-error role="alert" class="text-danger" hidden></p>
   <div class="card datatable-shell"><div class="card-body">
-    <table class="table mb-0 align-middle w-100" data-datatable data-source="{% url 'purchases:supplier-data' %}" data-order='[[0,"asc"]]'>
+    <table class="table mb-0 align-middle w-100" data-datatable data-search-placeholder="Buscar por nombre, RUT, contacto, teléfono o correo…" data-source="{% url 'purchases:supplier-data' %}" data-order='[[0,"asc"]]'>
       <caption class="visually-hidden">Proveedores</caption>
       <thead><tr>
         <th scope="col" data-column="name" data-link="url">Nombre o razón social</th>

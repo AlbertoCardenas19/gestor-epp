@@ -57,7 +57,7 @@
         if (focusCards) results.querySelector('[data-results-focus]').focus({ preventScroll: true });
       } catch (error) {
         if (current !== revision || error.name === 'AbortError') return;
-        loading.finish('No se pudo actualizar el listado. Se mantienen los resultados anteriores. Pulsa Aplicar para reintentar.');
+        loading.finish('No se pudo actualizar el listado. Se mantienen los resultados anteriores. Cambia la búsqueda para reintentar.');
       } finally {
         if (current === revision) results.setAttribute('aria-busy', 'false');
       }

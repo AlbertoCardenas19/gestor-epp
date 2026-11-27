@@ -8,7 +8,7 @@ históricos. Las instrucciones permanentes están en [AGENTS.md](../AGENTS.md).
 
 - DataTables gestiona búsqueda, ordenación, filas por página y paginación de las
   tablas que lo necesiten. Configuración y textos en español compartidos.
-- Catálogo y Entregas usan DataTables con `serverSide: true`. La consulta SQL ya
+- Inventario y Entregas usan DataTables con `serverSide: true`. La consulta SQL ya
   estaba paginada y no hay un límite de crecimiento acordado: se mantiene la
   paginación en PostgreSQL y solo se envía la página solicitada. Nunca se ordena
   ni filtra únicamente el fragmento de HTML inicial de Django.
@@ -32,6 +32,8 @@ o anulación. Stock común y solicitudes (S16/S19) siguen fuera de esta entrega.
 | `jquery` | 3.7.1 | Dependencia de DataTables y su transporte Ajax; versión completa |
 | `datatables.net` | 2.3.5 | Biblioteca DataTables |
 | `datatables.net-bs5` | 2.3.5 | Adaptador JS y estilos de DataTables para Bootstrap 5 |
+| `datatables.net-responsive` | 3.0.8 | Columnas adaptativas y detalle por fila |
+| `datatables.net-responsive-bs5` | 3.0.8 | Adaptador y estilos Responsive para Bootstrap 5 |
 
 CoreUI ya proporciona la base Bootstrap 5. **No cargar Bootstrap CSS ni Bootstrap
 JS además de CoreUI.** Los estilos `dataTables.bootstrap5.min.css` son la adaptación
@@ -66,10 +68,11 @@ integridad y volver a ejecutar las comprobaciones; no editar un archivo minifica
 ## Reutilizar una tabla
 
 1. Incluir los estilos y scripts compartidos desde los bloques `extra_styles` y
-   `extra_scripts`, como hacen Catálogo y Entregas. No copiar una inicialización.
+   `extra_scripts`, como hacen Inventario y Entregas. No copiar una inicialización.
 2. Encerrar filtros, mensaje de error y tabla en un contenedor
    `data-datatable-panel` para que cada instancia tenga su propio contexto.
-3. Marcar la tabla con `data-datatable`, `data-source` y el orden inicial JSON:
+3. Marcar la tabla con `data-datatable`, `data-source`, un `data-search-placeholder`
+   que refleje `search_fields` y el orden inicial JSON:
 
 ```html
 <table data-datatable data-source="/ruta/datos/" data-order='[[0,"asc"]]'>
@@ -116,7 +119,8 @@ columnas, siempre dentro de la lista permitida. Todo es GET, sin escrituras.
 
 Endpoints actuales:
 
-- `/catalogo/datos/` — `catalog:data`.
+- `/inventario/datos/` — `stock:data`.
+- `/catalogo/categorias/datos/` — `catalog:category-data`.
 - `/proyectos/<pk>/entregas/datos/` — `projects:delivery-data`.
 
 Entregas restringe primero al proyecto y al estado elegido. `recordsTotal` refleja
@@ -143,12 +147,11 @@ Las pestañas interactivas usan `coreui.Tab`. `components.js` escucha el evento 
 debe copiar esta integración. Los enlaces de secciones que navegan entre rutas, como
 las pestañas del proyecto, comparten la misma presentación sin fingir un panel local.
 
-El sidebar usa `coreui.Sidebar` y su método `toggleNarrow()`. La app únicamente
-sincroniza su nombre accesible y guarda la preferencia en `localStorage`. El CSS
-mantiene el rail de iconos en móvil: anula el modo off-canvas automático mediante
-`--cui-is-mobile: initial` y adapta la clase oficial `sidebar-narrow` a 76 píxeles.
-Se conserva expansión, transición suave, altura fija del botón, paleta y respeto
-por `prefers-reduced-motion`. No se oculta completamente el menú móvil elegido.
+El sidebar usa `coreui.Sidebar` y su método `toggleNarrow()`. La app sincroniza
+su nombre accesible y guarda la preferencia en `localStorage`. El CSS conserva
+una franja estrecha de 28 píxeles sin iconos; el botón circular queda sobre su
+borde derecho y no depende del recorte del sidebar. Se conserva expansión,
+transición y respeto por `prefers-reduced-motion`.
 
 ## Sustituciones y código conservado
 
@@ -170,7 +173,7 @@ Para ejecutar la app, usar el entorno y `.env` ya configurados. No se requieren
 nuevas dependencias Python de aplicación ni Node/npm. Reiniciar el servidor y
 recargar el navegador con Ctrl+Shift+R para renovar CSS/JS locales.
 
-1. Catálogo: probar vacío, un elemento y más de 10. Buscar un nombre fuera de la
+1. Inventario: probar vacío, un elemento y más de 10. Buscar un nombre fuera de la
    primera página; ordenar cada columna, cambiar filas y página. Abrir Acciones.
 2. Proyecto: comprobar las tarjetas y su búsqueda/páginas; abrir Entregas.
 3. Entregas: ordenar fechas y cantidades, buscar un trabajador y cambiar estado.
@@ -220,7 +223,7 @@ y usa una base PostgreSQL temporal, sin modificar registros de la aplicación.
 - La revisión visual detectó y corrigió un conflicto entre `--bs-table-*` y
   `--cui-table-*`. Hay un puente de variables limitado a las tablas en `app.css` y
   comprobaciones automáticas del encabezado grafito, texto blanco y franjas.
-- Integridad de los cuatro paquetes verificada con el manifest. `check`,
+- Integridad de los paquetes verificada con el manifest. `check`,
   `makemigrations --check --dry-run`, `migrate --check` y `git diff --check` pasan.
   No hay referencias operativas a los seis archivos retirados.
 
@@ -289,10 +292,10 @@ No se añaden bibliotecas ni versiones.
 
 - **General** agrupa Inicio. **Proyectos** agrupa el listado de proyectos. Las
   pantallas de cada proyecto se alcanzan desde su ficha y sus pestañas.
-- **Inventario** agrupa Inventario general, Catálogo de elementos y Categorías.
+- **Elementos** agrupa Inventario y Categorías; el listado del catálogo fue retirado.
   **Compras** agrupa Facturas y Proveedores.
-- Los grupos permanecen visibles en ambos anchos del sidebar. En el ancho
-  contraído se conservan los iconos y los nombres accesibles completos. El botón circular
+- Los grupos permanecen visibles en el ancho expandido. En el ancho
+  contraído se conserva la franja de 28 píxeles sin iconos. El botón circular
   queda centrado sobre el borde derecho en ambos anchos. CoreUI gestiona la contracción y las páginas móviles abren el
   sidebar contraído. Las opciones se recorren con Tab y se activan con Enter.
 - El destino actual lleva `aria-current="page"`. Un formulario o una ficha
@@ -303,5 +306,30 @@ No se añaden bibliotecas ni versiones.
   al listado de Categorías y abre su formulario propio. Cancelar o guardar
   vuelve al listado. Las pantallas de elementos, incluso al crear uno desde
   una factura, conservan la selección múltiple de categorías.
-- Categorías y Catálogo reutilizan DataTables compartido en modo `serverSide`.
+- Categorías e Inventario reutilizan DataTables compartido en modo `serverSide`.
   Búsqueda, orden y paginación se aplican a todos los registros de cada listado.
+
+## Presentación y datos de UI-04
+
+Los buscadores automáticos mantienen una etiqueta para lectores de pantalla y
+un placeholder ajustado a los `search_fields` del endpoint. El buscador que
+genera DataTables se mueve fuera de la tarjeta; conserva el mismo motor y su
+única inicialización. Los filtros de negocio permanecen junto a la búsqueda.
+La búsqueda de tarjetas de Proyectos sigue en `cards.js`, sin botón Aplicar.
+
+Responsive 3.0.8 se carga tras DataTables y su adaptador BS5, y antes de
+`datatables.js`. Al disminuir el ancho, las columnas ocultas se muestran mediante
+el botón explícito `row-expand` de la primera celda. Es un botón nativo para
+teclado; la expansión no dispara `data-row-link`. El ajuste común llama a
+`columns.adjust()` y `responsive.recalc()` tras redimensionar, cambiar sidebar o
+mostrar una pestaña. Se mantiene `serverSide: true` para búsqueda, orden y páginas.
+La tabla de Inventario añade Descripción con extracto de 100 caracteres; el texto
+completo permanece en la ficha. El inventario de proyecto no recibe esa columna.
+
+El formulario compartido marca únicamente campos opcionales incondicionales;
+`paid_on` mantiene su obligación según estado de pago. Los botones Agregar se
+colocan con el título principal. Calibri encabeza la pila de fuentes, sin
+distribuir archivos de esa tipografía. Los proyectos nuevos reciben fecha
+automática y estado En curso. La migración deja fecha nula en proyectos antiguos
+sin fuente fiable y asigna En curso como estado inicial. Terminado es informativo.
+`/catalogo/` redirige a Inventario y `/catalogo/datos/` ya no es una vista.

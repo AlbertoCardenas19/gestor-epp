@@ -9,7 +9,7 @@
   {% if can_record %}
     <p class="text-body-secondary">{% if is_opening %}Indica cuántas unidades hay al comenzar el registro, incluido cero si no hay existencias.{% elif is_delivery %}Registra la entrega directa al trabajador. La cantidad se descontará del saldo de este proyecto.{% else %}Indica cuántas unidades nuevas recibió este proyecto.{% endif %}</p>
     {% if is_delivery %}<p class="fw-semibold">Saldo registrado actual: {{ position.balance }}</p>{% endif %}
-    <div class="card"><div class="card-body p-4"><form method="post" novalidate>
+    <div class="card"><div class="card-body p-4 p-md-5"><form method="post" novalidate>
       {% include 'inventory/fields.html' %}
       <div class="d-flex flex-column flex-sm-row gap-2">
         <button class="btn btn-primary" type="submit">Guardar {% if is_opening %}apertura{% elif is_delivery %}entrega{% else %}entrada{% endif %}</button>

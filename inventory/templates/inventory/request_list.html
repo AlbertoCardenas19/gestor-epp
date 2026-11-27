@@ -5,11 +5,11 @@
 {% block content %}
 <h1 class="text-break mb-4">{{ project.name }}</h1>
 {% include 'projects/project_tabs.html' with active_tab='inventory' %}
-<div class="d-flex flex-column flex-sm-row justify-content-between gap-3 mb-4"><h2 class="h4">Inventario del proyecto</h2><a class="btn btn-primary" href="{% url 'requests:create' project.pk %}">Solicitar elemento</a></div>
+<div class="page-heading mb-4"><h2 class="h4 mb-0">Solicitudes del proyecto</h2><a class="btn btn-primary create-action" href="{% url 'requests:create' project.pk %}">Solicitar elemento</a></div>
 <section data-datatable-panel>
 <p class="small text-danger" role="alert" data-datatable-error hidden></p>
 <div class="card datatable-shell"><div class="card-body">
-<table class="table mb-0 align-middle" style="width:100%" data-datatable data-row-link="item_url" data-source="{% url 'requests:data' project.pk %}" data-order='[[0,"desc"]]'>
+<table class="table mb-0 align-middle" style="width:100%" data-datatable data-search-placeholder="Buscar por elemento, observación o estado…" data-row-link="item_url" data-source="{% url 'requests:data' project.pk %}" data-order='[[0,"desc"]]'>
 <caption class="visually-hidden">Solicitudes de {{ project.name }}</caption>
 <thead><tr><th data-column="date" data-format="date" scope="col">Fecha</th><th data-column="item" data-link="item_url" scope="col">Elemento</th><th data-column="quantity" scope="col">Solicitado</th><th data-column="delivered" data-format="pending-delivery" scope="col">Entregados</th><th data-column="purchase" scope="col">Necesidad de compra</th><th data-column="state" scope="col">Estado</th></tr></thead><tbody></tbody>
 </table></div></div></section>

@@ -80,5 +80,46 @@
         "sha256": "62b5fdd54371b4f6bd07a60dbc78b38814f49a8028213f540dc2733cad605382"
       }
     ]
+  },
+  {
+    "package": "datatables.net-responsive",
+    "version": "3.0.8",
+    "url": "https://registry.npmjs.org/datatables.net-responsive/-/datatables.net-responsive-3.0.8.tgz",
+    "integrity": "sha512-htslaX9g/9HFrJeyFQKEe/XJWpawPxpvy+M6vc/NkKQIrKhbxSoPc3phPqmlnZth6b9hgawqWDT0e0lwf5p+KA==",
+    "files": [
+      {
+        "source": "package/js/dataTables.responsive.min.js",
+        "path": "datatables.net-responsive/dataTables.responsive.min.js",
+        "sha256": "b9278ed91185c3fac4e9075dc03c54327966eaee9f32d7a97e13acd36a0e49d7"
+      },
+      {
+        "source": "package/License.txt",
+        "path": "datatables.net-responsive/License.txt",
+        "sha256": "62b5fdd54371b4f6bd07a60dbc78b38814f49a8028213f540dc2733cad605382"
+      }
+    ]
+  },
+  {
+    "package": "datatables.net-responsive-bs5",
+    "version": "3.0.8",
+    "url": "https://registry.npmjs.org/datatables.net-responsive-bs5/-/datatables.net-responsive-bs5-3.0.8.tgz",
+    "integrity": "sha512-f0YTxv/HKWKXkOdutwDe3MmRM3AWf4Lxw7FjrgVc3H5+62emUnHep6cA9VwUcAAMywNqMYVndaKPyhAoeKUCyQ==",
+    "files": [
+      {
+        "source": "package/js/responsive.bootstrap5.min.js",
+        "path": "datatables.net-responsive-bs5/responsive.bootstrap5.min.js",
+        "sha256": "80975e0be6f9699be165bdc8523e57ebbd20983dfc7cc8476a3f057542aed86e"
+      },
+      {
+        "source": "package/css/responsive.bootstrap5.min.css",
+        "path": "datatables.net-responsive-bs5/responsive.bootstrap5.min.css",
+        "sha256": "2e5894ae7eef4f43e3b1d3d67ec19c41d0cf308d1f69a50f5b354641a8599024"
+      },
+      {
+        "source": "package/License.txt",
+        "path": "datatables.net-responsive-bs5/License.txt",
+        "sha256": "62b5fdd54371b4f6bd07a60dbc78b38814f49a8028213f540dc2733cad605382"
+      }
+    ]
   }
 ]

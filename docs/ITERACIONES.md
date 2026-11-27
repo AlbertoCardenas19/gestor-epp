@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-Iteraciones UI-01 y UI-02 publicadas. UI-03 implementada y verificada localmente: el control del sidebar se muestra desde el HTML y los scripts compartidos usan URL ligada a su contenido.
+UI-01 a UI-04 publicadas. UI-04 implementada y verificada localmente; falta comprobarla en Firefox en la PC del usuario.
 
 ## Pendientes
 
@@ -11,7 +11,19 @@ Iteraciones UI-01 y UI-02 publicadas. UI-03 implementada y verificada localmente
 
 ## Próximo paso
 
-Actualizar la copia Ubuntu desde `origin/main` y comprobar las nuevas URL de `components.js` y `datatables.js`, el botón en ambos estados y el ancho de las tablas tras redimensionar.
+Actualizar la copia Ubuntu desde `origin/main`, aplicar la migración de proyectos y comprobar el recorrido visual en Firefox con los datos locales.
+
+## UI-04 · 26 de noviembre de 2026
+
+**Objetivo y alcance.** Aplicar la nueva dirección de búsquedas, formularios, títulos, tarjetas, tablas, inventario, sidebar y tipografía (RF-03, RF-04 y RF-05). Añadir fecha y estado informativo a proyectos. No cambiar cálculos de stock, compras, IVA ni entregas.
+
+**Cambios.** Los buscadores automáticos carecen de rótulo visible y botón Aplicar, mantienen etiqueta accesible y anuncian solo campos buscados por el backend. El buscador DataTables se mueve fuera de la tarjeta sin duplicar su motor. Los botones Agregar comparten componente visual y se sitúan junto al título principal. Los formularios comparten campos, errores, espacios y acciones; las etiquetas indican `(opcional)` donde corresponde y omiten ese marcador en fechas condicionadas por el estado de pago. Las tablas cargan DataTables Responsive 3.0.8 y su adaptador BS5 local: un botón nativo por fila revela las columnas ocultas y no activa la navegación. Inventario muestra un extracto de Descripción y el nombre enlazado sin subrayado; Entregados sitúa Pendiente antes de la cantidad. El sidebar conserva fondo, grupos y franja; títulos más pequeños en mayúsculas y opciones más separadas. Calibri es primera opción con respaldo sans-serif, sin distribuir archivos de la fuente. Inicio usa tarjetas sin iconos y con separador.
+
+**Proyectos y rutas.** Se añade `created_on` automático según la fecha local de Chile, no editable, y estado En curso/Terminado. Los antiguos sin fecha fiable conservan `NULL` y muestran «Sin fecha registrada»; la migración asigna En curso como estado inicial sin bloquear operaciones. La edición permite cambiar el estado. Inventario reemplaza el listado del catálogo: `/catalogo/` redirige allí y se elimina la vista, plantilla y endpoint exclusivos del listado, manteniendo fichas, formularios y categorías.
+
+**Verificación visual y automatizada.** En Chromium se comprobó 1440 → 390 → 320 → 1440 px sin recarga: la tabla volvió a medir lo mismo que su contenedor; a 320 px ocultó columnas y el control por fila mostró los datos restantes sin navegar. También se abrió una pestaña de tabla inicialmente oculta, cuyo contenedor y tabla midieron ambos 280 px en móvil. Capturas: [inicio](capturas/ui04-inicio.png), [proyectos](capturas/ui04-proyectos.png), [inventario escritorio](capturas/ui04-inventario-escritorio.png), [inventario móvil expandido](capturas/ui04-inventario-movil-expandido.png), [inventario tras volver a escritorio](capturas/ui04-inventario-vuelta-escritorio.png), [pestaña de proyectos móvil](capturas/ui04-pestana-proyectos-movil.png) y [edición de proyecto móvil](capturas/ui04-editar-proyecto-movil.png). No hubo errores de consola en ese recorrido. Pasaron 185 pruebas Django y 14 pruebas Chromium, además de `manage.py check`, `makemigrations --check --dry-run`, `node --check`, integridad de seis paquetes locales y `git diff --check`.
+
+**Limitaciones.** Firefox no está instalado aquí; la descarga del motor de Playwright devolvió HTTP 403. Calibri no está incorporada y solo se verá donde esté instalada. Falta confirmación visual en Firefox de la PC del usuario.
 
 ## UI-03 · 26 de noviembre de 2026
 

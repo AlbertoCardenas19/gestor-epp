@@ -20,6 +20,7 @@ from catalog.models import Category, Item
 from inventory.common import receive_common_stock
 from inventory.models import StockRecord, StockPosition, StockRequest
 from inventory.services import cancel_delivery, correct_record, deliver_stock, open_stock
+from purchases.models import Supplier
 from .models import Project
 
 
@@ -29,6 +30,31 @@ def data(quantity, **extra):
 
 
 class LibraryBrowserChecks(StaticLiveServerTestCase):
+    def test_responsive_row_expansion_search_order_and_pagination(self):
+        self.db(lambda: Item.objects.bulk_create([
+            Item(name=f'Casco {index:02d}', description='Descripción larga ' * 12)
+            for index in range(15)]))
+        self.page.set_viewport_size({'width': 320, 'height': 850})
+        self.visit_table(reverse('stock:list'))
+        self.assertTrue(self.page.locator('table.dataTable').evaluate('e => e.classList.contains("collapsed")'))
+        control = self.rows().first.get_by_role('button', name='Mostrar columnas adicionales')
+        control.focus()
+        self.page.keyboard.press('Enter')
+        expect(self.page.locator('table.dataTable tbody tr.child')).to_have_count(1)
+        expect(self.rows().first.locator('.row-expand')).to_have_attribute('aria-expanded', 'true')
+        expect(self.page.locator('table.dataTable tbody tr.child')).to_contain_text('Descripción')
+        self.assertEqual(self.page.url, self.live_server_url + reverse('stock:list'))
+        self.search('Casco 14')
+        expect(self.rows()).to_have_count(1)
+        self.search('')
+        expect(self.rows()).to_have_count(10)
+        self.page.wait_for_timeout(350)
+        self.table_action(lambda: self.page.locator('.dt-paging .next').click())
+        self.assertEqual(self.rows().count(), 5, self.page.evaluate('DataTable.tables({api:true}).page.info()'))
+        self.order('name')
+        expect(self.rows()).to_have_count(10)
+        self.assertEqual(self.page.url, self.live_server_url + reverse('stock:list'))
+
     def test_shared_table_expands_after_resize_sidebar_and_tabs(self):
         item = self.db(lambda: Item.objects.create(name='Casco para prueba de ancho'))
         self.page.set_viewport_size({'width': 390, 'height': 850})
@@ -43,7 +69,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
             widths = self.page.locator('.dt-container').first.evaluate('''container => {
               const width = selector => container.querySelector(selector).getBoundingClientRect().width;
               return {container: container.getBoundingClientRect().width,
-                header: width('.dt-scroll-head table'), body: width('.dt-scroll-body table')};
+                header: width('table.dataTable'), body: width('table.dataTable')};
             }''')
             self.assertGreaterEqual(widths['header'] + 2, widths['container'], widths)
             self.assertAlmostEqual(widths['header'], widths['body'], delta=2)
@@ -75,7 +101,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
             self.page.wait_for_timeout(350)
             widths = self.page.locator(f'#{panel_id} .dt-container').evaluate('''container => ({
               available: container.getBoundingClientRect().width,
-              table: container.querySelector('.dt-scroll-head table').getBoundingClientRect().width
+              table: container.querySelector('table.dataTable').getBoundingClientRect().width
             })''')
             self.assertGreaterEqual(widths['table'] + 2, widths['available'], widths)
 
@@ -96,27 +122,27 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
             self.capture(f'iteration-inventory-{width}')
         self.page.set_viewport_size({'width': 1440, 'height': 800})
         self.page.wait_for_timeout(350)
-        self.assertEqual(self.page.locator('.dt-layout-end .list-controls').count(), 1)
+        self.assertEqual(self.page.locator('section[data-datatable-panel] > .list-controls').count(), 1)
         for width in (390, 1440, 320, 1440):
             self.page.set_viewport_size({'width': width, 'height': 800})
             self.page.wait_for_timeout(350)
             self.wait_for_table_alignment()
             if width == 1440:
                 metrics = self.page.locator('.dt-container').evaluate('''container => ({
-                    table: container.querySelector('.dt-scroll-head table').getBoundingClientRect().width,
-                    space: container.querySelector('.dt-scroll-head').getBoundingClientRect().width
+                    table: container.querySelector('table.dataTable').getBoundingClientRect().width,
+                    space: container.getBoundingClientRect().width
                 })''')
                 self.assertGreaterEqual(metrics['table'] + 2, metrics['space'], metrics)
         self.page.set_viewport_size({'width': 1440, 'height': 800})
-        self.assertEqual(self.page.locator('.dt-scroll-head th[data-column]').count(), 4)
-        self.assertEqual(self.page.locator('.dt-scroll-body tbody tr').count(), 1)
-        self.assertEqual(self.page.locator('.dt-scroll-body tbody tr a[href="%s"]' % item.get_absolute_url()).count(), 1)
-        self.page.locator('.dt-scroll-body tbody tr td').nth(2).click()
+        self.assertEqual(self.page.locator('table.dataTable thead th[data-column]').count(), 5)
+        self.assertEqual(self.page.locator('table.dataTable tbody tr').count(), 1)
+        self.assertEqual(self.page.locator('table.dataTable tbody tr a[href="%s"]' % item.get_absolute_url()).count(), 1)
+        self.page.locator('table.dataTable tbody tr td').nth(2).click()
         expect(self.page.get_by_role('heading', name=item.name)).to_be_visible()
         self.visit_table(reverse('requests:list', args=[project.pk]))
-        expect(self.page.locator('.dt-scroll-body .pending-delivery')).to_have_text('Pendiente')
-        self.assertEqual(self.page.locator('.dt-scroll-head th[data-column]').count(), 6)
-        self.page.locator('.dt-scroll-body tbody tr td').nth(2).click()
+        expect(self.page.locator('table.dataTable .pending-delivery')).to_have_text('Pendiente')
+        self.assertEqual(self.page.locator('table.dataTable thead th[data-column]').count(), 6)
+        self.page.locator('table.dataTable tbody tr td').nth(2).click()
         expect(self.page.get_by_role('heading', name=item.name)).to_be_visible()
         self.assertEqual(self.page.url.split('?')[0], self.live_server_url + request.get_absolute_url())
 
@@ -179,7 +205,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         return payload
 
     def rows(self):
-        return self.page.locator('.dt-scroll-body tbody tr')
+        return self.page.locator('table.dataTable tbody tr:not(.child)')
 
     @staticmethod
     def pagination_style(locator):
@@ -189,8 +215,8 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.page.wait_for_timeout(300)
         metrics = self.page.evaluate('''(scope) => {
           const root = document.querySelector(scope);
-          const headers = [...root.querySelectorAll('.dt-scroll-head th[data-dt-column]')];
-          const cells = [...root.querySelectorAll('.dt-scroll-body tbody tr:first-child td')];
+          const headers = [...root.querySelectorAll('table.dataTable thead th[data-dt-column]')];
+          const cells = [...root.querySelectorAll('table.dataTable tbody tr:first-child td')];
           return {headers: headers.map(e=>e.getBoundingClientRect().width), cells: cells.map(e=>e.getBoundingClientRect().width)};
         }''', arg=scope)
         self.assertEqual(len(metrics['headers']), len(metrics['cells']), metrics)
@@ -200,28 +226,22 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         return self.table_action(lambda: self.page.locator('.dt-search input').fill(query))
 
     def order(self, column):
-        return self.table_action(lambda: self.page.locator(f'.dt-scroll-head th[data-column="{column}"] .dt-column-order').click())
+        return self.table_action(lambda: self.page.locator(f'table.dataTable thead th[data-column="{column}"] .dt-column-order').click())
 
     def test_catalog_empty_one_many_search_sort_and_reload_actions(self):
-        self.visit_table(reverse('catalog:list'))
+        self.visit_table(reverse('stock:list'))
         expect(self.page.locator('.dt-empty')).to_have_text('No hay registros disponibles.')
         item = self.db(lambda: Item.objects.create(name='Único casco'))
-        self.visit_table(reverse('catalog:list'))
+        self.visit_table(reverse('stock:list'))
         expect(self.rows()).to_have_count(1)
         self.db(lambda: Item.objects.bulk_create([Item(name=f'Elemento {i:02d}') for i in range(40)]))
-        self.visit_table(reverse('catalog:list'))
+        self.visit_table(reverse('stock:list'))
         expect(self.rows()).to_have_count(10)
         self.assertNotIn('Elemento 39', self.rows().all_text_contents())
         payload = self.search('Elemento 39')
         self.assertEqual(payload['recordsFiltered'], 1)
         expect(self.rows()).to_have_count(1)
         expect(self.page.locator('.dt-search input')).to_be_focused()
-        self.rows().get_by_role('button', name=re.compile('^Acciones de')).click()
-        expect(self.page.locator('.dropdown-menu.show')).to_be_visible()
-        self.page.keyboard.press('ArrowDown')
-        expect(self.page.locator('.dropdown-menu.show a').first).to_be_focused()
-        self.page.keyboard.press('Escape')
-        expect(self.page.locator('.dropdown-menu.show')).to_have_count(0)
         self.search('Elemento')
         self.table_action(lambda: self.page.locator('.dt-paging .next').click())
         expect(self.rows()).to_have_count(10)
@@ -234,16 +254,15 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         expect(self.page.locator('.dt-length')).to_have_count(1)
         expect(self.page.locator('.dt-info')).to_have_count(1)
         self.assertTrue(self.page.evaluate('DataTable.tables({api:true}).page.info().serverSide'))
-        self.rows().first.get_by_role('button', name=re.compile('^Acciones de')).click()
-        self.page.locator('.dropdown-menu.show').get_by_role('link', name='Ver elemento', exact=True).click()
+        self.rows().first.get_by_role('link', name='Elemento 39', exact=True).click()
         expect(self.page.get_by_role('heading', level=1)).to_have_text('Elemento 39')
         # A user-entered HTML name is rendered as text, never executed.
         item.name = '<img src=x onerror="window.uiInjected=true">'
         self.db(item.save)
-        self.visit_table(reverse('catalog:list'))
+        self.visit_table(reverse('stock:list'))
         self.search('onerror')
         expect(self.rows()).to_contain_text(item.name)
-        expect(self.page.locator('.dt-scroll-body tbody img')).to_have_count(0)
+        expect(self.page.locator('table.dataTable tbody img')).to_have_count(0)
         self.assertIsNone(self.page.evaluate('window.uiInjected'))
 
     def test_delivery_dates_quantities_states_and_inventory_actions(self):
@@ -313,7 +332,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         north, item, delivery = self.db(self.seed_common_stock)
         self.visit_table(reverse('stock:list'))
         expect(self.rows().nth(1).locator('td').nth(1)).to_have_text('EPP')
-        expect(self.rows().nth(1).locator('td').nth(2)).to_have_text('0')
+        expect(self.rows().nth(1).locator('td').nth(3)).to_have_text('0')
         result = self.search('Casco')
         self.assertEqual(result['data'][0]['quantity'], '14')
         self.rows().get_by_role('link', name='Casco', exact=True).click()
@@ -369,8 +388,8 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
     def inventory_counts(self, available, delivered):
         self.visit_table(reverse('stock:list'))
         self.search('Casco')
-        expect(self.rows().first.locator('td').nth(2)).to_have_text(str(available))
-        expect(self.rows().first.locator('td').nth(3)).to_have_text(str(delivered))
+        expect(self.rows().first.locator('td').nth(3)).to_have_text(str(available))
+        expect(self.rows().first.locator('td').nth(4)).to_have_text(str(delivered))
 
     def test_unified_inventory_reserve_confirm_purchase_reduce_and_clear_search(self):
         north, item = self.db(self.seed_request_flow)
@@ -393,7 +412,9 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         expect(self.page.locator('#id_quantity')).to_have_attribute('aria-invalid', 'true')
         self.inventory_counts(0, 2)
         expect(self.page.locator('nav[aria-label="Principal"]').get_by_role('link', name='Catálogo', exact=True)).to_have_count(0)
-        expect(self.page.locator('.dt-scroll-head th[data-column="description"]')).to_have_count(0)
+        expect(self.page.locator('table.dataTable thead th[data-column="description"]')).to_have_count(1)
+        self.assertNotIn('data-column="description"', self.page.request.get(
+            self.live_server_url + reverse('requests:list', args=[north.pk])).text())
         self.table_action(lambda: self.page.get_by_role('button', name='Limpiar búsqueda', exact=True).click())
         expect(self.page.locator('.dt-search input')).to_have_value('')
         expect(self.page.locator('.dt-search input')).to_be_focused()
@@ -450,9 +471,10 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
     def test_mobile_menu_clipping_sidebar_and_project_cards(self):
         projects = self.db(lambda: [Project.objects.create(name=f'Obra {i:02d}') for i in range(14)])
         self.db(lambda: Item.objects.bulk_create([Item(name=f'Elemento {i:02d}') for i in range(14)]))
+        self.db(lambda: Supplier.objects.create(name='Proveedor de prueba', rut='1-9'))
         for width in [320, 390, 1440]:
             self.page.set_viewport_size({'width': width, 'height': 900})
-            self.visit_table(reverse('catalog:list'))
+            self.visit_table(reverse('stock:list'))
             sidebar = self.page.locator('#sidebar')
             button = self.page.locator('.sidebar-toggle')
             if width < 768:
@@ -467,7 +489,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
                 button.click()
                 self.page.wait_for_timeout(300)
             self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
-            header = self.page.locator('.dt-scroll-head th').first
+            header = self.page.locator('table.dataTable thead th').first
             self.assertEqual(header.evaluate('(e)=>getComputedStyle(e).backgroundColor'), 'rgb(29, 77, 133)')
             self.assertEqual(header.evaluate('(e)=>getComputedStyle(e).color'), 'rgb(255, 255, 255)')
             self.page.mouse.move(0, 0)
@@ -476,11 +498,17 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
             cell.hover()
             self.assertEqual(cell.evaluate('(e)=>getComputedStyle(e).backgroundColor'), 'rgb(237, 242, 247)')
             datatable_page_style = self.pagination_style(self.page.locator('.dt-paging .page-item.active .page-link').first)
-            action_header = self.page.locator('.dt-scroll-head th[data-actions]')
+            self.visit_table(reverse('purchases:suppliers'))
+            action_header = self.page.locator('table.dataTable thead th[data-actions]')
             expect(action_header).to_have_class(re.compile('table-actions'))
-            self.assertLess(action_header.bounding_box()['width'], self.page.locator('.dt-scroll-head table').bounding_box()['width'] * .3)
+            if width >= 768:
+                self.assertLess(action_header.bounding_box()['width'], self.page.locator('table.dataTable').bounding_box()['width'] * .3)
 
-            self.rows().last.get_by_role('button', name=re.compile('^Acciones de')).click()
+            action_row = self.rows().last
+            if action_row.locator('.row-expand').is_visible():
+                action_row.locator('.row-expand').click()
+                action_row = self.page.locator('table.dataTable tbody tr.child').last
+            action_row.get_by_role('button', name=re.compile('^Acciones de')).click()
             menu = self.page.locator('.dropdown-menu.show')
             expect(menu).to_be_visible()
             rectangle = menu.bounding_box()
@@ -497,11 +525,11 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
             self.assertEqual(self.pagination_style(self.page.locator('.pagination .page-item.active .page-link').first), datatable_page_style)
             self.page.get_by_role('link', name='Siguiente', exact=True).click()
             expect(self.page.locator('.project-card')).to_have_count(6)
-            self.page.get_by_label('Buscar', exact=True).fill('Obra 13')
+            self.page.get_by_label('Buscar proyectos', exact=True).fill('Obra 13')
             expect(self.page.locator('.project-card')).to_have_count(1)
             self.page.get_by_role('button', name='Limpiar búsqueda', exact=True).click()
             expect(self.page.locator('.project-card')).to_have_count(6)
-            self.page.get_by_label('Buscar', exact=True).fill('Obra 13')
+            self.page.get_by_label('Buscar proyectos', exact=True).fill('Obra 13')
             expect(self.page.locator('.project-card')).to_have_count(1)
             self.page.get_by_role('link', name=re.compile('^Ver proyecto')).click()
             expect(self.page.get_by_role('heading', level=1)).to_have_text(projects[-1].name)
@@ -548,8 +576,9 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.visit_table(reverse('requests:list', args=[north.pk]))
         expect(self.rows().first.locator('td').nth(2)).to_have_text('5')
         delivered_cell = self.rows().first.locator('td').nth(3)
-        expect(delivered_cell).to_have_text('0 Pendiente')
-        expect(delivered_cell.get_by_text('Pendiente', exact=True)).to_be_visible()
+        expect(delivered_cell).to_have_text('Pendiente 0')
+        self.rows().first.locator('.row-expand').click()
+        expect(self.page.locator('table.dataTable tbody tr.child').get_by_text('Pendiente', exact=True)).to_be_visible()
         self.rows().first.get_by_role('link', name='Zeta Casco', exact=True).click()
         self.page.get_by_role('link', name='Confirmar entrega', exact=True).click()
         self.page.get_by_label('Nombre completo del trabajador', exact=False).fill('Ana Pérez')
@@ -670,7 +699,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         pending = []
         pattern = re.compile(r'/proyectos/\?')
         self.page.route(pattern, lambda route: pending.append(route))
-        self.page.get_by_label('Buscar', exact=True).fill('Fallará')
+        self.page.get_by_label('Buscar proyectos', exact=True).fill('Fallará')
         expect(self.page.locator('[data-cards-feedback]')).to_have_text('')
         self.page.wait_for_timeout(500)
         expect(self.page.locator('[data-cards-feedback]')).to_contain_text('Actualizando')
@@ -719,7 +748,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         north, south, other = self.db(seed)
         self.visit_table(reverse('purchases:list'))
         expect(self.rows().first).to_contain_text('No hay')
-        self.page.get_by_role('link', name='Registrar factura').click()
+        self.page.get_by_role('link', name='Agregar factura').click()
         expect(self.page.locator('[data-item-picker][data-picker-ready]').first).to_be_visible()
         self.page.get_by_label('Buscar proveedor').fill('Zeta')
         self.page.get_by_role('button', name='Zeta Seguridad').click()
@@ -843,8 +872,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
             }''')
             self.assertEqual(values['background'], 'rgb(20, 44, 75)')
             self.assertEqual(values['border'], 'rgba(255, 255, 255, 0.4)')
-            self.assertGreater(values['heading'], values['link'])
-            self.assertLess(values['heading'] - values['link'], 1)
+            self.assertLess(values['heading'], values['link'])
             self.assertEqual(values['weight'], '700')
             self.assertEqual(values['icon'], 'none')
             self.assertEqual(values['circle'], values['background'])

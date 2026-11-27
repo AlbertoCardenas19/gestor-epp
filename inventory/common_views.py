@@ -34,7 +34,7 @@ class CommonInventoryView(TemplateView):
 
 
 class CommonInventoryDataView(DataTableView):
-    order_columns = ('name', 'category_label', 'total', 'delivered_total')
+    order_columns = ('name', 'category_label', None, 'total', 'delivered_total')
     search_fields = ('name', 'category_label', 'description')
     default_order = ('name', 'pk')
 
@@ -46,7 +46,7 @@ class CommonInventoryDataView(DataTableView):
             column = self.request.GET.get(f'order[{index}][column]')
             if column is None:
                 break
-            if column in {'2', '3'} and self.request.GET.get(f'order[{index}][dir]') in {'asc', 'desc'}:
+            if column in {'3', '4'} and self.request.GET.get(f'order[{index}][dir]') in {'asc', 'desc'}:
                 queryset = common_items()
                 break
         category = self.request.GET.get('category', '')
@@ -60,7 +60,8 @@ class CommonInventoryDataView(DataTableView):
         return common_items_for_page(super().paginate_records(records, start, length))
 
     def serialize_record(self, item):
-        return {'name': item.name, 'type': item.category_label, 'quantity': str(item.total),
+        return {'name': item.name, 'type': item.category_label,
+                'description': item.description or 'Sin descripción.', 'quantity': str(item.total),
                 'delivered': str(item.delivered_total), 'item_url': item.get_absolute_url()}
 
 

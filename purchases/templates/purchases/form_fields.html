@@ -1,11 +1,1 @@
-{% for field in fields %}
-  {% if field.is_hidden %}
-    {{ field }}{{ field.errors }}
-  {% else %}
-    <div class="mb-3">
-      <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-      {{ field }}
-      {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
-    </div>
-  {% endif %}
-{% endfor %}
+{% include 'projects/form_fields.html' with fields=fields %}

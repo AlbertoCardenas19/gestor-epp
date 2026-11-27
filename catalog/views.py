@@ -7,31 +7,6 @@ import uuid
 from .forms import CategoryForm, ItemCatalogForm, ItemForm
 from .models import Category, Item
 from projects.datatables import DataTableView
-from django.template.loader import render_to_string
-
-
-class ItemQuerysetMixin:
-    def get_queryset(self):
-        return Item.objects.with_category_label().order_by('name', 'pk')
-
-
-class ItemListView(TemplateView):
-    template_name = 'catalog/list.html'
-
-
-class ItemDataView(ItemQuerysetMixin, DataTableView):
-    order_columns = ('name', 'category_label', 'description', None)
-    search_fields = ('name', 'category_label', 'description')
-    default_order = ('name', 'pk')
-
-    def serialize_record(self, item):
-        return {
-            'name': item.name, 'item_url': item.get_absolute_url(), 'type': item.category_label or 'Sin categorías', 'description': item.description or 'Sin descripción.',
-            'actions': render_to_string('projects/row_actions.html', {
-                'action_id': item.pk, 'action_label': item.name,
-                'detail_url': item.get_absolute_url(), 'detail_label': 'Ver elemento',
-            }),
-        }
 
 
 class ItemCreateView(CreateView):

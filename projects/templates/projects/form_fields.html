@@ -1,0 +1,9 @@
+{% for field in fields %}
+  {% if field.is_hidden %}{{ field }}{% if field.errors %}<div class="invalid-feedback d-block" role="alert">{{ field.errors }}</div>{% endif %}
+  {% else %}<div class="mb-4">
+    <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}{% if not field.field.required and field.name != 'paid_on' %} <span class="text-body-secondary fw-normal">(opcional)</span>{% endif %}</label>
+    {{ field }}
+    {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+    {% if field.errors %}<div id="{{ field.id_for_label }}_errors" class="invalid-feedback d-block" role="alert">{% for error in field.errors %}{{ error }}{% endfor %}</div>{% endif %}
+  </div>{% endif %}
+{% endfor %}

@@ -1,12 +1,13 @@
 {% extends 'projects/base.html' %}
 {% block title %}{% if object %}Editar elemento{% else %}Nuevo elemento{% endif %}{% endblock %}
 {% block content %}
-{% if request.resolver_match.namespace == 'stock' %}
+{% if object %}
+  <a class="back-link" href="{{ object.get_absolute_url }}">← Volver a la ficha</a>
+{% elif request.resolver_match.namespace == 'stock' %}
   {% url 'stock:list' as back_url %}
   <a class="back-link" href="{{ back_url }}">← Volver al inventario</a>
 {% else %}
-  {% url 'catalog:list' as back_url %}
-  <a class="back-link" href="{{ back_url }}">← Volver al catálogo</a>
+  <a class="back-link" href="{% url 'stock:list' %}">← Volver al inventario</a>
 {% endif %}
 <div class="form-shell mt-4">
 
@@ -16,16 +17,10 @@
     <form method="post" novalidate>
       {% csrf_token %}
       {% if form.non_field_errors %}<div class="text-danger small" role="alert">{{ form.non_field_errors }}</div>{% endif %}
-      {% for field in form %}
-      <div class="mb-4">
-        <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }} {% if field.field.required %}<span class="text-body-secondary fw-normal">(obligatorio)</span>{% else %}<span class="text-body-secondary fw-normal">(opcional)</span>{% endif %}</label>
-        {{ field }}
-        {% if field.errors %}<div id="{{ field.id_for_label }}_errors" class="invalid-feedback d-block">{% for error in field.errors %}{{ error }}{% endfor %}</div>{% endif %}
-      </div>
-      {% endfor %}
+      {% include 'projects/form_fields.html' with fields=form %}
       <div class="d-flex flex-column flex-sm-row gap-2 pt-2">
         <button class="btn btn-primary" type="submit">Guardar elemento</button>
-        <a class="btn btn-outline-secondary" href="{{ back_url }}">Cancelar</a>
+        <a class="btn btn-outline-secondary" href="{% if object %}{{ object.get_absolute_url }}{% else %}{% url 'stock:list' %}{% endif %}">Cancelar</a>
       </div>
     </form>
   </div></div>

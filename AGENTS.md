@@ -68,3 +68,25 @@ Estas convenciones se establecen en la solicitud actual, no en acuerdos históri
 - Las pestañas interactivas deben usar CoreUI y el ajuste compartido de DataTables al
   mostrar contenido oculto. Los cambios comunes deben aplicarse a todas sus instancias
   equivalentes, no copiarse en una pantalla concreta.
+
+## Convenciones de la iteración UI-04 — 26 de noviembre de 2026
+
+- Inventario reemplaza el listado del catálogo. `/catalogo/` redirige a Inventario;
+  creación, edición y ficha de elementos permanecen. Ningún Cancelar debe volver al
+  listado retirado.
+- Los buscadores automáticos no tienen rótulo visible ni botón Aplicar. Conservan
+  etiqueta accesible, placeholder limitado a los campos buscados y fondo blanco con foco visible.
+  El buscador de DataTables se sitúa fuera de la tarjeta de la tabla.
+- Los botones Agregar proyecto, elemento, categoría, factura y proveedor comparten
+  presentación y se sitúan junto al título principal, también en móvil.
+- Las tablas `serverSide` usan DataTables Responsive 3.0.8 y su adaptador BS5 local:
+  al estrecharse muestran las columnas que caben y un botón por fila permite consultar
+  las demás con teclado. El control no navega a la ficha. Buscar, ordenar y paginar
+  siguen operando sobre el conjunto del servidor.
+- Los formularios comparten etiquetas, errores, espaciado y acciones. Solo se indica
+  `(opcional)` donde el campo realmente lo es; se respetan obligaciones condicionales.
+- Calibri es la primera fuente solicitada, seguida de fuentes sans-serif. No se
+  distribuye Calibri: solo aparece si el equipo la tiene instalada.
+- Los proyectos nuevos reciben fecha de creación automática y estado En curso. La
+  edición permite pasar a Terminado sin bloquear operaciones; proyectos antiguos sin
+  fecha fiable muestran «Sin fecha registrada».

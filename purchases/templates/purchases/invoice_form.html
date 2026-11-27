@@ -9,7 +9,7 @@
 <div class="form-shell">
   <h1>{% if invoice %}Corregir factura{% else %}Registrar factura{% endif %}</h1>
   <p>Por ahora, copia el total con IVA del documento. El cálculo automático de IVA y total está pendiente.</p>
-  <form method="post" class="card card-body" novalidate>
+  <form method="post" class="card card-body p-4 p-md-5" novalidate>
     {% csrf_token %}
     {{ form.non_field_errors }}
     {% include 'purchases/picker.html' with picker=supplier_picker %}

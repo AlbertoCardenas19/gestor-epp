@@ -12,8 +12,9 @@ class CatalogFlowTests(TestCase):
     def test_database_is_postgresql(self):
         self.assertEqual(connection.vendor, 'postgresql')
 
-    def test_empty_catalog_offers_first_item(self):
-        self.assertContains(self.client.get(reverse('catalog:list'), follow=True), 'Nuevo elemento')
+    def test_old_catalog_url_redirects_to_inventory(self):
+        self.assertRedirects(self.client.get(reverse('catalog:list')), reverse('stock:list'))
+        self.assertContains(self.client.get(reverse('catalog:list'), follow=True), 'Agregar elemento')
 
     def test_create_list_and_consult_categories(self):
         for name, label in [
@@ -111,13 +112,13 @@ class CatalogFlowTests(TestCase):
         self.assertFalse(Item.objects.exists())
 
     def test_navigation_marks_current_section(self):
-        for route in ('stock:list', 'projects:list', 'catalog:list', 'catalog:categories',
+        for route in ('stock:list', 'projects:list', 'catalog:categories',
                       'purchases:list', 'purchases:suppliers', 'projects:home'):
             url = reverse(route)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertContains(response, f'href="{reverse("stock:list") if route == "catalog:list" else url}"')
-            self.assertContains(response, 'aria-current="location"' if route == 'catalog:list' else 'aria-current="page"', count=1)
+            self.assertContains(response, f'href="{url}"')
+            self.assertContains(response, 'aria-current="page"', count=1)
         response = self.client.get(reverse('catalog:category-create'))
         self.assertContains(response, 'aria-current="location"', count=1)
 
@@ -126,7 +127,7 @@ class CatalogFlowTests(TestCase):
         create = reverse('catalog:category-create')
         self.assertContains(self.client.get(listing), 'Agregar categoría')
         self.assertNotContains(self.client.get(reverse('stock:list')), f'href="{create}"')
-        self.assertNotContains(self.client.get(reverse('catalog:list')), f'href="{create}"')
+        self.assertNotContains(self.client.get(reverse('stock:list')), f'href="{create}"')
         self.assertContains(self.client.get(create), f'href="{listing}">Cancelar')
         empty = self.client.post(create, {'name': '  '})
         self.assertFormError(empty.context['form'], 'name', 'Escribe el nombre de la categoría.')
@@ -137,7 +138,7 @@ class CatalogFlowTests(TestCase):
         self.assertEqual(result['data'], [{'name': 'Herramientas'}])
 
 
-class CatalogTableTests(TestCase):
+class InventoryCatalogReplacementTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         Item.objects.bulk_create([Item(name=f'Casco {i:02d}') for i in range(12)])
@@ -145,71 +146,30 @@ class CatalogTableTests(TestCase):
         for item in Item.objects.all():
             item.categories.add(epp)
         Item.objects.create(name='Salida', description='Evacuación').categories.add(
-            Category.objects.get(name='Señaléticas'),
-        )
+            Category.objects.get(name='Señaléticas'))
 
     def data(self, **parameters):
-        response = self.client.get(reverse('catalog:data'), parameters)
+        response = self.client.get(reverse('stock:data'), parameters)
         self.assertEqual(response.status_code, 200)
         return response.json()
 
-    def test_pagination_and_search_by_name_type_and_description(self):
+    def test_inventory_paginates_and_searches_all_items_and_descriptions(self):
         result = self.data(draw=1)
-        self.assertEqual(result['draw'], 1)
         self.assertEqual(result['recordsTotal'], 13)
         self.assertEqual(len(result['data']), 10)
-        result = self.data(**{'search[value]': 'Casco', 'order[0][column]': 0, 'order[0][dir]': 'desc', 'start': 10})
+        result = self.data(**{'search[value]': 'Casco', 'order[0][column]': 0,
+                              'order[0][dir]': 'desc', 'start': 10})
         self.assertEqual([item['name'] for item in result['data']], ['Casco 01', 'Casco 00'])
-        self.assertEqual(result['recordsFiltered'], 12)
         for query in ['Señalética', 'Evacuación', 'Salida']:
-            result = self.data(**{'search[value]': query})
-            self.assertEqual([item['name'] for item in result['data']], ['Salida'])
-        result = self.data(**{'search[value]': 'Salida'})
-        self.assertEqual(result['recordsFiltered'], 1)
+            self.assertEqual([item['name'] for item in self.data(**{'search[value]': query})['data']], ['Salida'])
+        self.assertEqual(self.data(**{'search[value]': 'Salida'})['data'][0]['description'], 'Evacuación')
 
-    def test_invalid_parameters_are_bounded_and_actions_are_not_searched_or_ordered(self):
-        result = self.data(**{'draw': '<script>', 'length': -1, 'start': -1, 'order[0][column]': 3,
-                              'order[0][dir]': 'desc', 'columns[0][data]': 'untrusted__field'})
-        self.assertEqual(result['draw'], 0)
-        self.assertEqual(len(result['data']), 10)
-        self.assertEqual(result['data'][0]['name'], 'Casco 00')
-        for query in ['No existe', 'Ver elemento', '.*']:
-            result = self.data(**{'search[value]': query, 'search[regex]': 'true'})
-            self.assertEqual(result['recordsFiltered'], 0)
-            self.assertEqual(result['data'], [])
-
-    def test_descending_description_and_bootstrap_integration(self):
-        result = self.data(**{'order[0][column]': 2, 'order[0][dir]': 'desc'})
-        self.assertEqual(result['data'][0]['name'], 'Salida')
-        self.assertIn('data-coreui-toggle="dropdown"', result['data'][0]['actions'])
-        response = self.client.get(reverse('catalog:list'), follow=True)
-        for asset in ['dataTables.min.js', 'dataTables.bootstrap5.min.js', 'dataTables.bootstrap5.min.css',
-                      'jquery.min.js', 'coreui.bundle.min.js']:
+    def test_old_endpoint_is_removed_and_inventory_is_read_only(self):
+        self.assertEqual(self.client.get('/catalogo/datos/').status_code, 404)
+        self.assertEqual(self.client.post(reverse('stock:data'), {}).status_code, 405)
+        response = self.client.get(reverse('stock:list'))
+        for asset in ['dataTables.min.js', 'dataTables.responsive.min.js', 'responsive.bootstrap5.min.css']:
             self.assertContains(response, asset, count=1)
-        self.assertNotContains(response, 'data-live-cards')
-        self.assertNotContains(response, 'popovertarget')
-
-    def test_each_data_column_sorts_both_ways(self):
-        for column, key in [(0, 'name'), (1, 'type'), (2, 'description')]:
-            for direction in ['asc', 'desc']:
-                result = self.data(**{'length': 25, 'order[0][column]': column, 'order[0][dir]': direction})
-                values = [item[key] for item in result['data']]
-                # Empty descriptions are displayed as fallback text, so test the named field ordering separately.
-                if column != 2:
-                    self.assertEqual(values, sorted(values, reverse=direction == 'desc'))
-                else:
-                    self.assertEqual(result['data'][-1 if direction == 'asc' else 0]['name'], 'Salida')
-
-    def test_empty_one_row_and_read_only_endpoint(self):
-        Item.objects.all().delete()
-        self.assertEqual(self.data()['data'], [])
-        Item.objects.create(name='Único elemento')
-        result = self.data()
-        self.assertEqual(result['recordsTotal'], 1)
-        self.assertEqual(result['recordsFiltered'], 1)
-        self.assertEqual(len(result['data']), 1)
-        self.assertEqual(self.client.post(reverse('catalog:data'), {}).status_code, 405)
-        self.assertEqual(Item.objects.count(), 1)
 
 
 class InventoryElementCreationTests(TestCase):

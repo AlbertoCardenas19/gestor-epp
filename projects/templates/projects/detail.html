@@ -3,9 +3,8 @@
 {% block extra_styles %}{% include 'projects/datatables_styles.html' %}{% endblock %}
 {% block extra_scripts %}{% include 'projects/datatables_scripts.html' %}{% endblock %}
 {% block content %}
-<h1 class="text-break mb-4">{{ project.name }}</h1>
+<div class="page-heading mb-4"><h1 class="text-break mb-0">{{ project.name }}</h1><a class="btn btn-outline-primary" href="{% url 'projects:update' project.pk %}">Editar proyecto</a></div>
 {% include 'projects/project_tabs.html' with active_tab='deliveries' %}
-<h2 class="h4 mb-4">Entregas</h2>
 <section data-datatable-panel>
 <div class="mb-4 business-filters"><label class="form-label" for="delivery-state">Estado</label>
 <select class="form-select" id="delivery-state" name="state" data-datatable-state>
@@ -13,7 +12,7 @@
 </select></div>
 <p class="small text-danger" role="alert" data-datatable-error hidden></p>
 <div class="card datatable-shell"><div class="card-body">
-<table class="table mb-0 align-middle" style="width:100%" data-datatable data-source="{% url 'projects:delivery-data' project.pk %}" data-order='[[0,"desc"]]'>
+<table class="table mb-0 align-middle" style="width:100%" data-datatable data-search-placeholder="Buscar por fecha, elemento, trabajador, cantidad, estado u observación…" data-source="{% url 'projects:delivery-data' project.pk %}" data-order='[[0,"desc"]]'>
 <caption class="visually-hidden">Entregas de {{ project.name }}</caption>
 <thead><tr><th data-column="date" data-format="date" scope="col">Fecha</th><th data-column="item" scope="col">Elemento</th><th data-column="worker" scope="col">Trabajador</th><th data-column="quantity" scope="col">Cantidad</th><th data-column="state" scope="col">Estado</th><th data-column="actions" data-actions scope="col">Acciones</th></tr></thead><tbody>
 {% for delivery in deliveries %}<tr><td class="text-nowrap">{{ delivery.occurred_on|date:'d/m/Y' }}</td><td class="text-break">{{ delivery.position.item.name }}</td><td class="text-break">{{ delivery.worker_full_name }}</td><td>{{ delivery.quantity }}</td><td>{% if not delivery.voided_at %}<span class="badge text-bg-light border">Vigente</span>{% elif delivery.has_replacement %}<span class="badge text-bg-light border">Sustituido</span>{% else %}<span class="badge text-bg-light border">Anulado</span>{% endif %}</td><td>{% include 'projects/row_actions.html' with detail_url=delivery.get_absolute_url detail_label='Ver historial' action_label=delivery.worker_full_name action_id=delivery.pk record=delivery %}</td></tr>

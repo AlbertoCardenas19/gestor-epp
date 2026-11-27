@@ -18,7 +18,9 @@
     if (adjustmentFrame) cancelAnimationFrame(adjustmentFrame);
     adjustmentFrame = requestAnimationFrame(() => {
       adjustmentFrame = 0;
-      DataTable.tables({visible: true, api: true}).columns.adjust();
+      const tables = DataTable.tables({visible: true, api: true});
+      tables.columns.adjust();
+      tables.responsive.recalc();
     });
   }
   window.addEventListener('resize', adjust);
@@ -36,17 +38,28 @@
       // The shared loader owns this status instead of a second visible error/control.
       if (error) error.hidden = false;
       const text = DataTable.render.text();
-      const columns = [...element.tHead.rows[0].cells].map(header => {
+      const columns = [...element.tHead.rows[0].cells].map((header, index) => {
         const actions = header.hasAttribute('data-actions');
         return {
           data: header.dataset.column, orderable: !actions && header.dataset.orderable !== 'false', searchable: !actions,
-          className: actions ? 'table-actions' : '',
+          className: [actions ? 'table-actions' : '', index === 0 ? 'all' : ''].filter(Boolean).join(' '),
           width: actions ? '1%' : undefined,
+          createdCell: index === 0 ? cell => {
+            const button = document.createElement('button');
+            button.type = 'button'; button.className = 'row-expand';
+            button.setAttribute('aria-label', 'Mostrar columnas adicionales');
+            button.setAttribute('aria-expanded', 'false');
+            button.innerHTML = '<span aria-hidden="true">+</span>';
+            cell.prepend(button);
+          } : undefined,
           render: actions ? undefined : header.dataset.format === 'pending-delivery'
-            ? (value, type, row) => type === 'display' ? text.display(value) + (row.pending ? ' <span class="badge pending-delivery">Pendiente</span>' : '') : value
+            ? (value, type, row) => type === 'display' ? (row.pending ? '<span class="badge pending-delivery">Pendiente</span> ' : '') + text.display(value) : value
+            : header.dataset.format === 'excerpt'
+            ? (value, type) => type === 'display' ? text.display(value.length > 100 ? value.slice(0, 97) + '…' : value) : value
             : header.dataset.link ? (value, type, row) => {
               if (type !== 'display') return value;
               const link = document.createElement('a'); link.textContent = value; link.href = row[header.dataset.link];
+              link.className = 'table-name-link';
               return link.outerHTML;
             } : (header.dataset.format === 'date'
             ? (value, type) => type === 'display' && /^\d{4}-\d{2}-\d{2}$/.test(value)
@@ -55,7 +68,9 @@
         };
       });
       const table = new DataTable(element, {
-        serverSide: true, processing: false, scrollX: true, autoWidth: false, searchDelay: 300,
+        serverSide: true, processing: false, autoWidth: true, searchDelay: 300,
+        responsive: {details: {type: 'column', target: 'button.row-expand',
+          renderer: DataTable.Responsive.renderer.listHidden()}},
         pageLength: 10, lengthMenu: [10, 25, 50], language,
         search: { search: new URL(location.href).searchParams.get('q') || '' },
         order: JSON.parse(element.dataset.order || '[[0,"asc"]]'), columns,
@@ -91,11 +106,25 @@
           element.closest('.dt-container')?.querySelector('.dt-paging nav')?.setAttribute('aria-label', 'Páginas de la tabla');
         },
       });
-      const controls = panel?.querySelector('.list-controls') ||
-        (panel?.previousElementSibling?.matches('.list-controls') ? panel.previousElementSibling : null);
-      const end = element.closest('.dt-container')?.querySelector('.dt-layout-end');
-      if (controls && end) end.append(controls);
+      table.on('responsive-display', (_event, _api, row, shown) => {
+        const button = row.node()?.querySelector('.row-expand');
+        if (button) {
+          button.setAttribute('aria-expanded', String(shown));
+          button.setAttribute('aria-label', shown ? 'Ocultar columnas adicionales' : 'Mostrar columnas adicionales');
+        }
+        if (shown) window.EppComponents.init(element);
+      });
+      const search = element.closest('.dt-container')?.querySelector('.dt-search');
+      const searchInput = search?.querySelector('input');
       const shell = element.closest('.datatable-shell');
+      if (search && searchInput && panel && shell) {
+        search.querySelector('label')?.classList.add('visually-hidden');
+        searchInput.placeholder = element.dataset.searchPlaceholder || 'Buscar en la tabla…';
+        const searchRow = document.createElement('div');
+        searchRow.className = 'table-search-row';
+        searchRow.append(search);
+        panel.insertBefore(searchRow, shell);
+      }
       if (shell && window.ResizeObserver) {
         let lastWidth = shell.clientWidth;
         new ResizeObserver(() => {
@@ -122,7 +151,6 @@
           if (data?.[rowKey]) location.assign(data[rowKey]);
         });
       }
-      const searchInput = element.closest('.dt-container').querySelector('.dt-search input');
       if (searchInput && !searchInput.parentElement.querySelector('[data-search-clear]')) {
         const clear = document.createElement('button');
         clear.type = 'button'; clear.className = 'search-clear'; clear.dataset.searchClear = '';

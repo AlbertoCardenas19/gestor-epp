@@ -1,12 +1,12 @@
-from django.urls import path
+from django.urls import path, reverse_lazy
+from django.views.generic import RedirectView
 
 from .views import (CategoryCreateView, CategoryDataView, CategoryListView, ItemCreateView,
-                    ItemDataView, ItemDetailView, ItemListView, ItemUpdateView)
+                    ItemDetailView, ItemUpdateView)
 
 app_name = 'catalog'
 urlpatterns = [
-    path('', ItemListView.as_view(), name='list'),
-    path('datos/', ItemDataView.as_view(), name='data'),
+    path('', RedirectView.as_view(url=reverse_lazy('stock:list'), permanent=False), name='list'),
     path('nuevo/', ItemCreateView.as_view(), name='create'),
     path('categorias/', CategoryListView.as_view(), name='categories'),
     path('categorias/datos/', CategoryDataView.as_view(), name='category-data'),

@@ -1,12 +1,13 @@
 {% extends 'projects/base.html' %}
 {% block title %}Nueva categoría{% endblock %}
 {% block content %}
-<div class="form-shell">
+<a class="back-link" href="{% url 'catalog:categories' %}">← Volver a categorías</a>
+<div class="form-shell mt-4">
   <h1>Nueva categoría</h1>
-  <form method="post" class="card card-body" novalidate>
+  <form method="post" class="card card-body p-4 p-md-5" novalidate>
     {% csrf_token %}
-    {{ form.as_p }}
-    <div class="d-flex gap-2">
+    {% include 'projects/form_fields.html' with fields=form %}
+    <div class="d-flex flex-column flex-sm-row gap-2 pt-2">
       <button class="btn btn-primary" type="submit">Guardar categoría</button>
       <a class="btn btn-outline-secondary" href="{% url 'catalog:categories' %}">Cancelar</a>
     </div>

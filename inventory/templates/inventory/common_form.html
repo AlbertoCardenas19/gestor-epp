@@ -10,7 +10,7 @@
 <p class="text-danger">Este registro ya fue corregido. Abre el reemplazo vigente.</p>
 {% if record.is_replaced %}<a href="{{ record.replacement.get_absolute_url }}">Ver reemplazo</a>{% endif %}
 {% else %}
-<div class="card"><div class="card-body p-4"><form method="post" novalidate>
+<div class="card"><div class="card-body p-4 p-md-5"><form method="post" novalidate>
 {% include 'inventory/fields.html' %}
 <div class="d-flex flex-column flex-sm-row gap-2"><button class="btn btn-primary" type="submit">{% if is_correction %}Guardar corrección{% else %}Guardar entrada{% endif %}</button><a class="btn btn-outline-secondary" href="{% url 'stock:history' item.pk %}">Cancelar</a></div>
 </form></div></div>

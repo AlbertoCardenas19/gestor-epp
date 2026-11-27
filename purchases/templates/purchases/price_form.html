@@ -6,7 +6,7 @@
 <div class="form-shell">
   <h1>Registrar precio de referencia</h1>
   <p>{{ supplier }}</p>
-  <form class="card card-body" method="post">
+  <form class="card card-body p-4 p-md-5" method="post" novalidate>
     {% csrf_token %}
     {{ form.non_field_errors }}
     {% include 'purchases/picker.html' %}

@@ -3,12 +3,11 @@
 {% block extra_styles %}{% include 'projects/datatables_styles.html' %}{% endblock %}
 {% block extra_scripts %}{% include 'projects/datatables_scripts.html' %}{% endblock %}
 {% block content %}
-<h1 class="mb-4">Facturas de compra</h1>
-<div class="list-controls mb-3"><a class="btn btn-primary" href="{% url 'purchases:create' %}">Registrar factura</a></div>
+{% include 'projects/page_heading.html' with heading='Facturas de compra' create_url='purchases:create' create_label='Agregar factura' %}
 <section data-datatable-panel>
   <p data-datatable-error role="alert" class="text-danger" hidden></p>
   <div class="card datatable-shell"><div class="card-body">
-    <table class="table mb-0 align-middle w-100" data-datatable data-source="{% url 'purchases:data' %}" data-order='[[2,"desc"]]'>
+    <table class="table mb-0 align-middle w-100" data-datatable data-search-placeholder="Buscar por número, proveedor, RUT, orden de compra o estado…" data-source="{% url 'purchases:data' %}" data-order='[[2,"desc"]]'>
       <caption class="visually-hidden">Facturas recibidas de proveedores</caption>
       <thead><tr>
         <th scope="col" data-column="number" data-link="url">Factura</th>

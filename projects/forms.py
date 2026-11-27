@@ -6,15 +6,18 @@ from .models import Project
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
-        fields = ['name', 'description']
+        fields = ['name', 'description', 'status']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'autofocus': True}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
         }
         error_messages = {'name': {'required': 'Escribe el nombre del proyecto.'}}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if not self.instance.pk:
+            self.fields.pop('status')
         for name, field in self.fields.items():
             if self.is_bound and name in self.errors:
                 field.widget.attrs.update({
