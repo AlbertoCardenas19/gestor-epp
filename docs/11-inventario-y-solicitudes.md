@@ -1,6 +1,6 @@
 # Inventario único y solicitudes por proyecto
 
-Estado actual: S23 revisa la presentación de S22 y mantiene el stock común,
+Estado actual: UI-15 actualiza la navegación y gestión de S23 y mantiene el stock común,
 las necesidades de compra y las entregas directas RF-04/RF-05/RF-08/RF-09.
 La recepción de facturas alimenta el stock común. [Flujo de compras y recepción](06-desarrollo.md#categorías-proveedores-y-facturas-de-compra--26-de-noviembre-de-2026).
 
@@ -10,7 +10,7 @@ La recepción de facturas alimenta el stock común. [Flujo de compras y recepci�
   nuevas solicitudes y **Entregados**, que cuenta **solo entregas reales vigentes**.
   Las solicitudes ya no aparecen como entregas. Sustituye la presentación de S22.
 - En el inventario del proyecto, **Solicitado** muestra la cantidad original de la
-  solicitud; el detalle/historial conserva sus reducciones. **Entregados** muestra
+  solicitud; el modal Ver historial conserva sus reducciones. **Entregados** muestra
   solo lo efectivamente entregado. Una exclamación roja y accesible «Pendiente de
   entrega», situada antes de esa cantidad, indica que todavía queda pendiente,
   incluso de compra; desaparece al completar la entrega. «En proceso» conserva el estado.
@@ -19,18 +19,19 @@ La recepción de facturas alimenta el stock común. [Flujo de compras y recepci�
   más del stock no rechaza la solicitud. Se compromete lo disponible y se guarda
   el resto como necesidad de compra. Solo se rechazan entregas que superen lo
   comprometido pendiente. No se reservan unidades inexistentes.
-- Se mantiene el botón **Confirmar entrega** existente y sus entregas parciales,
+- Se mantiene **Registrar entrega** desde la fila de la solicitud y sus entregas parciales,
   con nombre completo del trabajador, cantidad, fecha y observación opcional.
   Confirmar no descuenta otra vez lo comprometido al solicitar.
 - La solicitud no pide fecha. El servidor establece `occurred_on` con
   `timezone.localdate()` y `created_at` conserva el momento automático de registro.
-  Se muestra la fecha y el momento en el detalle usando la zona configurada
+  Se muestra la fecha y el momento en el historial modal usando la zona configurada
   (actualmente UTC). No se cambia la zona, fechas antiguas ni fechas de movimientos.
   Correcciones, reducciones y reintentos no modifican esas fechas de solicitud.
 - Se mantienen reducciones/cancelaciones con motivo e historial: primero se reduce
   lo que falta comprar y después se liberan reservas, sin cambiar entregas reales.
-- Las entradas no se asignan automáticamente entre proyectos. «Reservar disponibles»
-  continúa completando manualmente una solicitud con compra pendiente.
+- Las entradas no se asignan automáticamente entre proyectos. En **Editar solicitud**
+  el usuario elige la solicitud concreta y la cantidad de stock disponible que
+  reservará para cubrir su necesidad de compra. Esta decisión manual fue confirmada en UI-15.
 
 ## Ejemplo obligatorio
 
@@ -46,7 +47,7 @@ las unidades a la misma solicitud pendiente; no se trata de una devolución fís
 
 Ejemplo de compra que se conserva: pedir 5 con stock 2 compromete 2 y deja 3 como
 necesidad de compra. Reducir su pendiente a 3 conserva las 2 y deja solo 1 por comprar.
-Confirmar más de las 2 comprometidas se rechaza. Tras una entrada, «Reservar disponibles» puede completar la solicitud.
+Confirmar más de las 2 comprometidas se rechaza. Tras una entrada, Editar solicitud permite reservar manualmente para esta solicitud concreta.
 
 ## Navegación y consulta
 
@@ -119,12 +120,11 @@ Crea solicitudes/eventos, agrega la FK nullable y restricciones. No actualiza ni
 elimina filas previas ni cambia sus cantidades; las entregas anteriores mantienen
 FK nula. La migración 0003 anterior permite posiciones comunes de empresa.
 
-El sidebar agrupa Inventario general, Catálogo de elementos y Categorías bajo
-Inventario. El catálogo usa su listado y endpoint de datos propios. Las fichas de
-elemento y las rutas de inventario conservan sus enlaces.
-La pestaña Inventario del proyecto muestra ahora solicitudes; Entregas sigue como
-pestaña inicial y muestra solo entregas reales, con filtro de estado. Los enlaces
-antiguos de historial/corrección/anulación siguen funcionando. Las rutas antiguas
+El sidebar muestra Inventario y Categorías. La ficha única de elemento es
+`stock:item`; las rutas antiguas de consulta redirigen a su pestaña Historial.
+La pestaña Inventario del proyecto muestra una fila por solicitud con modales de
+entrega, edición e historial; Entregas conserva su ruta y muestra entregas reales.
+Los enlaces de corrección/anulación siguen funcionando. Las rutas antiguas
 de apertura/entrada/entrega permanecen compatibles, pero no se ofrecen como el
 recorrido nuevo: no se requiere abrir stock por proyecto para solicitar elementos.
 

@@ -1,12 +1,12 @@
 {% extends 'projects/base.html' %}
 {% block title %}Registro de {{ item.name }}{% endblock %}
 {% block content %}
-<a class="back-link" href="{% url 'stock:history' item.pk %}">← Volver al historial de inventario</a>
+<a class="back-link" href="{{ item.get_absolute_url }}?tab=history">← Volver al historial de inventario</a>
 <h1 class="text-break mt-4 mb-4">{{ item.name }}</h1>
 <div class="card mb-4" id="registro-{{ record.pk }}"><div class="card-body p-4">
 <h2 class="h4">{{ record.get_operation_display }}</h2>
-<dl><dt>Cantidad</dt><dd>{{ record.quantity }}</dd><dt>Fecha del hecho</dt><dd>{{ record.occurred_on|date:'d/m/Y' }}</dd><dt>Origen</dt><dd>{{ record.origin_label }}</dd><dt>Estado</dt><dd>{{ record.state_label }}</dd></dl>
-{% if record.worker_full_name %}<p class="text-break"><strong>Trabajador:</strong> {{ record.worker_full_name }}</p>{% endif %}
+<dl><dt>Cantidad</dt><dd>{{ record.quantity }}</dd><dt>Fecha del hecho</dt><dd>{{ record.occurred_on|date:'d/m/Y' }}</dd><dt>Fecha de registro</dt><dd>{{ record.created_at|date:'d/m/Y H:i:s T' }}</dd><dt>Origen</dt><dd>{{ record.origin_label }}</dd><dt>Estado</dt><dd>{{ record.state_label }}</dd></dl>
+{% if record.worker_full_name %}<p class="text-break"><strong>Trabajador destinatario:</strong> {{ record.worker_full_name }}</p>{% endif %}
 {% if record.observation %}<p class="text-break"><strong>Observación:</strong> {{ record.observation|linebreaksbr }}</p>{% endif %}
 {% if record.voided_at %}<p class="text-break"><strong>Motivo:</strong> {{ record.void_reason }}</p><p>{{ record.state_label }} el {{ record.voided_at|date:'d/m/Y H:i:s T' }}.</p>{% endif %}
 {% if record.replaces_id %}<a href="{{ record.replaces.get_absolute_url }}">Ver registro anterior</a>{% endif %}
@@ -16,7 +16,8 @@
 <a href="{{ record.stock_request.get_absolute_url }}">Ver solicitud</a>
 {% if not record.voided_at %}<a href="{% url 'inventory:correct' record.stock_request.project_id item.pk record.pk %}">Corregir entrega</a><a href="{% url 'inventory:cancel' record.stock_request.project_id item.pk record.pk %}">Anular entrega</a>{% endif %}
 {% elif record.position.project_id %}
-<a href="{{ record.get_absolute_url }}">Ver historial del proyecto</a>
+<a href="{{ item.get_absolute_url }}?tab=history&amp;project={{ record.position.project_id }}">Ver historial del proyecto</a>
+{% if not record.voided_at %}<a href="{% url 'inventory:correct' record.position.project_id item.pk record.pk %}">Corregir registro</a>{% if record.operation == 'delivery' %}<a href="{% url 'inventory:cancel' record.position.project_id item.pk record.pk %}">Anular entrega</a>{% endif %}{% endif %}
 {% elif record.invoice_id %}
 <a href="{{ record.invoice.get_absolute_url }}">Ver factura de compra</a>
 {% elif not record.voided_at %}

@@ -83,7 +83,9 @@
           loading.begin(!loaded);
           const url = new URL(element.dataset.source, location.origin);
           // Preserve DataTables' bracket parameter protocol, including array order/search values.
-          url.search = jQuery.param(params);
+          const parameters = new URLSearchParams(url.search);
+          new URLSearchParams(jQuery.param(params)).forEach((value, key) => parameters.append(key, value));
+          url.search = parameters.toString();
           const activeController = controller;
           (async () => {
           try {

@@ -138,8 +138,8 @@ class DeliveryCorrectionTests(TestCase):
         self.assertContains(old, 'Ana Pérez')
         self.assertContains(new, self.original.get_absolute_url())
         self.assertContains(new, 'Luis Soto')
-        self.assertContains(new, 'data-testid="balance">5</p>')
-        self.assertContains(old, 'data-testid="balance">20</p>')
+        self.assertContains(new, 'data-testid="common-balance">5</span>')
+        self.assertContains(old, 'data-testid="common-balance">20</span>')
 
     def test_invalid_forms_keep_inputs_and_do_not_write(self):
         for extra, field in [({'quantity': '1.5'}, 'quantity'), ({'quantity': 0}, 'quantity'),

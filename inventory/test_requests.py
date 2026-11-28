@@ -198,14 +198,14 @@ class RequestFlowTests(TestCase):
         self.assertFalse(StockRequest.objects.exists())
         response = self.client.post(url, {**data(5), 'item': self.item.pk})
         request = StockRequest.objects.get()
-        self.assertRedirects(response, request.get_absolute_url())
-        self.assertContains(self.client.get(response.url), 'Necesidad de compra')
+        self.assertRedirects(response, reverse('requests:list', args=[self.north.pk]))
+        self.assertEqual(self.client.get(reverse('requests:data', args=[self.north.pk])).json()['data'][0]['purchase'], '3')
         self.assertEqual(self.client.get(reverse('requests:detail', args=[self.south.pk, request.pk])).status_code, 404)
         self.assertEqual(Client(enforce_csrf_checks=True).post(url, {**data(5), 'item': self.item.pk}).status_code, 403)
         result = self.client.get(reverse('requests:data', args=[self.north.pk])).json()
         self.assertEqual(result['data'][0]['purchase'], '3')
-        self.assertEqual(result['data'][0]['item_url'], request.get_absolute_url())
-        self.assertContains(self.client.get(request.get_absolute_url()), 'Confirmar entrega')
+        self.assertEqual(result['data'][0]['item_url'], request.item.get_absolute_url())
+        self.assertContains(self.client.get(request.get_absolute_url() + '?modal=1'), 'Entregas registradas')
         list_response = self.client.get(reverse('requests:list', args=[self.north.pk]))
         self.assertContains(list_response, 'data-column="delivered" data-format="pending-delivery"')
         self.assertNotContains(list_response, 'data-format="pending-state"')
@@ -231,11 +231,11 @@ class RequestFlowTests(TestCase):
 
         add_replaced_delivery(0)
         with CaptureQueriesContext(connection) as one_pair_queries:
-            self.client.get(request.get_absolute_url())
+            self.client.get(request.get_absolute_url() + '?modal=1')
         for index in range(1, 10):
             add_replaced_delivery(index)
         with CaptureQueriesContext(connection) as ten_pair_queries:
-            response = self.client.get(request.get_absolute_url())
+            response = self.client.get(request.get_absolute_url() + '?modal=1')
 
         self.assertEqual(len(ten_pair_queries), len(one_pair_queries))
         self.assertContains(response, 'Sustituido', count=10)
@@ -271,7 +271,7 @@ class RequestFlowTests(TestCase):
         result = self.client.get(url, {'search[value]': 'Pedido 11'}).json()
         self.assertEqual(result['recordsFiltered'], 1)
         self.assertEqual(result['data'][0]['quantity'], '12')
-        self.assertEqual(result['data'][0]['item_url'], StockRequest.objects.get(project=self.north, quantity=12).get_absolute_url())
+        self.assertEqual(result['data'][0]['item_url'], StockRequest.objects.get(project=self.north, quantity=12).item.get_absolute_url())
         self.assertEqual(self.client.get(url, {'search[value]': 'Pedido privado'}).json()['recordsFiltered'], 0)
 
     def test_database_constraints_for_allocations_and_ledger_links(self):

@@ -1,6 +1,6 @@
 # Sistema visual de gestor-epp basado en Punto Aparte
 
-Fecha: 27 de noviembre de 2026. Versión 10.
+Fecha: 27 de noviembre de 2026. Versión 11.
 
 ## Decisiones vigentes
 
@@ -18,13 +18,13 @@ UI-06 implementó el espaciado de DataTables, los controles de búsqueda, el enc
 - En el sidebar, las opciones consecutivas tienen 8px adicionales de separación vertical, los encabezados de grupo miden `.7rem` y siguen en mayúsculas y negrita, y el texto de las opciones es blanco también en hover y activo. Se conservan los fondos de estos estados y el botón circular compartido.
 - Nuevo proyecto y Nuevo elemento conservan Cancelar y omiten el enlace de regreso redundante. El encabezado de formulario deja 1.5rem antes de la tarjeta mediante una clase compartida.
 - Las tarjetas de proyectos muestran nombre, fecha gris debajo, estado separado y «Ver proyecto» alineado abajo. La descripción se lee en Información. El listado muestra seis por página; Más recientes primero es el orden inicial. El selector ofrece además Más antiguos primero, Nombre A–Z y Nombre Z–A; reserva espacio para la flecha. Búsqueda y orden se aplican antes de paginar, con fechas ausentes al final en ambos órdenes cronológicos.
-- Información es la primera sección y el destino de «Ver proyecto». Entregas conserva `/proyectos/<id>/` e Inventario su ruta. No se repite el nombre dentro de Información. Las fichas comparten card y menú CoreUI; el elemento prueba la variante UI-14 con dos filas de etiqueta y valor y un control ⋮ sin borde permanente. Proyecto, proveedor y factura conservan el botón de tres puntos horizontal. No se trasladan Guardar/Cancelar ni controles de tablas.
+- Información es la primera sección y el destino de «Ver proyecto». Entregas conserva `/proyectos/<id>/` e Inventario su ruta. No se repite el nombre dentro de Información. Elemento, proyecto, proveedor y factura comparten el panel compacto y menú ⋮ CoreUI sin franja vacía. Hay líneas sutiles entre bloques, nunca tras el último. Factura y proveedor tienen pestañas CoreUI con Información activa al abrir. No se trasladan Guardar/Cancelar ni controles de tablas.
 - La familia, tamaños y color de títulos siguen los tokens compartidos; los encabezados del sidebar conservan contraste. Los estados usan `.badge` y variantes semánticas compartidas con texto explícito; «Pendiente» permanece a la izquierda de la cantidad entregada.
 
 
 ## Estado y alcance
 
-Este documento reúne el análisis original de código, decisiones confirmadas y una especificación de adaptación. El análisis original no ejecutó las aplicaciones ni midió estilos computados; su evidencia visual directa fue la captura del sidebar aportada por el usuario. UI-06 a UI-14 implementan las decisiones vigentes enumeradas arriba y registran su verificación en `docs/ITERACIONES.md`; UI-14 es un piloto solo del elemento pendiente de validación visual. El resto del plan de adaptación queda pendiente. No se auditó formalmente contraste, lector de pantalla ni interacción táctil.
+Este documento reúne el análisis original de código, decisiones confirmadas y una especificación de adaptación. El análisis original no ejecutó las aplicaciones ni midió estilos computados; su evidencia visual directa fue la captura del sidebar aportada por el usuario. UI-06 a UI-15 implementan las decisiones vigentes enumeradas arriba y registran su verificación en `docs/ITERACIONES.md`; UI-15 extiende el panel compacto del piloto UI-14 a las otras tres fichas. El resto del plan de adaptación queda pendiente. No se auditó formalmente contraste, lector de pantalla ni interacción táctil.
 
 Fuentes fijadas para evitar cambios silenciosos:
 - Punto Aparte, rama work, commit `9f359ac45a5caf38c2321b6e79b7ec989ff06cbc`.
@@ -166,21 +166,21 @@ Buscador oficial dentro de la tarjeta, con rótulo visible «Buscar» a la izqui
 
 Reajustar columnas y Responsive al finalizar cambios relevantes de contenedor/sidebar y al mostrar pestañas. No reinicializar tablas ni emitir consultas de datos solo para corregir ancho. Pendiente aparece antes de la cantidad entregada y no se transforma en una entrega real.
 
-### Información de proyectos y elementos
+### Información de elemento, proyecto, proveedor y factura
 
-El nombre aparece una sola vez como título principal. La información se encierra en una única `.info-card`, con separadores suaves y espacios de 1.5rem en `.info-section`. `.info-meta` distribuye pares `.info-label` / `.info-value` en columnas adaptables; en móvil pasa a una columna. `.info-description` muestra texto de lectura con saltos y cortes de línea, o el vacío explícito. La barra `.info-card-toolbar` coloca `info_actions.html` en la esquina superior derecha; el Dropdown CoreUI conserva accesibilidad, Escape, teclado y acciones permitidas.
+El nombre aparece una sola vez como título principal. La información se encierra en una única `.info-card`, con padding de 24px en escritorio y 16px en móvil. `.info-panel-top` deja espacio al menú ⋮ de 44 × 44px sin crear cabecera vacía. `.info-panel-row` alinea etiqueta y valor en dos columnas y los apila a 320px. `.info-panel-block + .info-panel-block` añade una línea sutil y 24px entre bloques, sin línea al final. `.info-panel-description` limita la línea de lectura a 72ch y deja envolver el texto. El Dropdown CoreUI conserva accesibilidad, Escape, teclado y acciones permitidas.
 
-Información de proyecto muestra fecha de creación en `DD/MM/AAAA` o «Sin fecha registrada», estado informativo y descripción o «Sin descripción». Es la primera pestaña y el destino de «Ver proyecto». La ruta anterior de Entregas sigue abriendo Entregas; Inventario conserva su ruta y tabla. Información de elemento muestra categorías, descripción, stock y las acciones Registrar entrada y Editar elemento; Historial de movimientos y Proyectos mantienen sus tablas y ajuste al hacerse visibles. No se agregan datos calculados.
+Información de proyecto muestra fecha de creación en `DD/MM/AAAA` o «Sin fecha registrada», estado informativo y descripción o «Sin descripción». Es la primera pestaña y el destino de «Ver proyecto». La ruta anterior de Entregas sigue abriendo Entregas; Inventario conserva su ruta y tabla. Información de elemento muestra categorías, descripción, stock y las acciones Registrar entrada, Solicitar para un proyecto y Editar elemento; Historial de movimientos y Proyectos mantienen sus tablas y ajuste al hacerse visibles. Factura y proveedor presentan Información primero y mantienen sus datos y acciones previos distribuidos en las otras pestañas. No se agregan datos calculados.
 
-UI-12 probó solo en Información del elemento una variante compacta con Categorías y Stock juntos y el botón «Acciones». UI-14 la sustituyó en esa ficha por dos filas compactas de etiqueta a la izquierda y valor a la derecha, descripción debajo y ⋮ sin borde o fondo permanentes. En el ancho menor, etiqueta y valor se apilan. El resultado permanece pendiente de validación visual y no cambia el patrón de las otras fichas.
+UI-12 probó solo en Información del elemento una variante compacta con Categorías y Stock juntos y el botón «Acciones». UI-14 la sustituyó en esa ficha por dos filas compactas de etiqueta a la izquierda y valor a la derecha, descripción debajo y ⋮ sin borde o fondo permanentes. UI-15 la usa como patrón compartido y añade separadores entre bloques por decisión posterior del usuario.
 
 ### Patrones compartidos vigentes
 
 | Patrón y uso | Implementación | Variantes permitidas | No duplicar y verificación |
 |---|---|---|---|
 | Formularios de elemento, proyecto, categoría, proveedor y factura | `form-shell`, `form-page-heading`, `form-actions`, `projects/form_fields.html`; compras incluye esa plantilla desde `purchases/form_fields.html` | Encabezado de factura y gestión posterior de líneas; número de campos según entidad | No crear campos, colores o botones por pantalla. Comprobar etiquetas, ayuda, errores, Guardar/Cancelar y separación en escritorio y móvil. |
-| Información de elemento, proyecto, proveedor y factura | Una `info-card` y estilos compartidos de etiqueta, valor y descripción; proyecto, proveedor y factura conservan su estructura previa | El elemento usa `item-info-card` como piloto UI-14, sin separadores ni barra superior; factura conserva tablas e historial fuera de la card | No repetir el título ni crear cards por dato. Comparar columnas y lectura en móvil. |
-| Acciones de fichas equivalentes | `projects/info_actions.html`, contexto `info_actions`, Dropdown CoreUI y `.info-actions-trigger` | El elemento prueba ⋮ con nombre accesible y área 44 × 44 px; otras fichas conservan ⋯. Acciones según entidad y estado; Anular conserva clase de peligro | No trasladar Guardar/Cancelar ni controles de tabla. Verificar destinos, condiciones, teclado, Escape y ausencia de recorte. |
+| Información de elemento, proyecto, proveedor y factura | Una `info-card`, `.info-panel-body`, `.info-panel-top`, `.info-panel-row` y `.info-panel-block` compartidos | Los datos de cada entidad determinan filas y bloques; factura conserva sus detalles e historial en pestañas fuera del panel | No repetir el título ni crear cards por dato. Comparar columnas y lectura en móvil. |
+| Acciones de fichas equivalentes | `projects/info_actions.html`, contexto `info_actions`, Dropdown CoreUI y `.info-actions-trigger` | ⋮ con nombre accesible y área 44 × 44 px. Acciones según entidad y estado; Anular conserva clase de peligro | No trasladar Guardar/Cancelar ni controles de tabla. Verificar destinos, condiciones, teclado, Escape y ausencia de recorte. |
 | Estados de tarjetas, tablas y fichas | `.badge`, `.state-badge` y variantes `state-warning`, `state-success`, `state-danger`, `state-muted`; `datatables.js` aplica la variante solo en presentación | Texto y significado existentes; Pendiente junto a Entregados | No inferir reglas de negocio por color. Comparar tamaños, etiquetas explícitas y búsqueda/ordenación originales. |
 | Títulos de página, sección y tarjeta | Token `--app-primary` en `app.css` | Texto sobre fondo oscuro del sidebar conserva su color claro | No fijar colores por plantilla. Verificar contraste y foco visible. |
 

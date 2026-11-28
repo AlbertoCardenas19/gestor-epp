@@ -3,11 +3,11 @@
 {% block content %}
 <div class="page-heading mb-4"><h1 class="text-break mb-0">{{ project.name }}</h1></div>
 {% include 'projects/project_tabs.html' with active_tab='info' %}
-<div class="card info-card"><div class="card-body p-4 p-md-5"><div class="info-card-toolbar">{% include 'projects/info_actions.html' %}</div><section class="info-section" aria-label="Información del proyecto">
-  <div class="info-meta">
-    <div class="info-field"><span class="info-label">Fecha de creación</span><span class="info-value">{% if project.created_on %}{{ project.created_on|date:'d/m/Y' }}{% else %}Sin fecha registrada{% endif %}</span></div>
-    <div class="info-field"><span class="info-label">Estado</span><span class="info-value"><span class="badge state-badge {% if project.status == 'finished' %}state-success{% endif %}">{{ project.get_status_display }}</span></span></div>
-  </div>
-  <div class="info-description"><h2 class="info-label">Descripción</h2>{% if project.description %}<p class="info-reading text-break">{{ project.description|linebreaksbr }}</p>{% else %}<p class="info-reading text-body-secondary">Sin descripción</p>{% endif %}</div>
-</section></div></div>
+<div class="card info-card"><div class="card-body info-panel-body">
+  <div class="info-panel-top info-panel-block"><div class="info-panel-facts">
+    <div class="info-panel-row"><span class="info-label">Fecha de creación</span><span class="info-value">{% if project.created_on %}{{ project.created_on|date:'d/m/Y' }}{% else %}Sin fecha registrada{% endif %}</span></div>
+    <div class="info-panel-row"><span class="info-label">Estado</span><span class="info-value"><span class="badge state-badge {% if project.status == 'finished' %}state-success{% endif %}">{{ project.get_status_display }}</span></span></div>
+  </div><div class="info-panel-actions">{% include 'projects/info_actions.html' %}</div></div>
+  <div class="info-panel-description info-panel-block"><h2 class="info-label">Descripción</h2>{% if project.description %}<p class="info-reading text-break">{{ project.description|linebreaksbr }}</p>{% else %}<p class="info-reading text-body-secondary">Sin descripción</p>{% endif %}</div>
+</div></div>
 {% endblock %}

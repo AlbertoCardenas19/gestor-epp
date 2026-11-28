@@ -2,17 +2,27 @@
 
 ## Estado actual
 
-UI-01 a UI-14 publicadas. UI-14 reemplaza el piloto visual anterior de Información del elemento y queda pendiente de validación del usuario antes de extenderlo. Firefox en Ubuntu sigue pendiente de comprobación.
+UI-01 a UI-15 implementadas. UI-15 se entrega en `origin/main` con esta actualización. El patrón compacto de Información se aplica a elemento, proyecto, proveedor y factura por decisión de esta iteración. Firefox en Ubuntu sigue pendiente de comprobación.
 
 ## Pendientes
 
 - Decisiones funcionales abiertas de [docs/04-pendientes.md](04-pendientes.md), en particular la conciliación de facturas históricas discordantes, tratamientos de compra fuera de la base gravada definida, aprobación de compras, devoluciones y reposiciones.
-- Revisar visualmente el piloto UI-14 antes de extenderlo a otras fichas.
+- Revisar integralmente el flujo de compras en una iteración posterior, sin rediseñarlo en UI-15.
 - Confirmar en la PC del usuario el recorrido visual y funcional con sus datos locales tras actualizar desde `origin/main`.
 
 ## Próximo paso
 
-Actualizar la copia Ubuntu desde `origin/main` y revisar el piloto UI-14 en Firefox con los datos locales; si aún falta aplicar la migración de facturas UI-13, hacerla tras una copia de seguridad y revisar las diferencias históricas que aparezcan.
+Tras publicar UI-15, actualizar la copia Ubuntu desde `origin/main` y revisar en Firefox las cuatro fichas, las solicitudes por fila y las pestañas nuevas con datos locales. Si aún falta la migración de facturas UI-13, aplicarla tras una copia de seguridad.
+
+## UI-15 · 28 de noviembre de 2026
+
+**Objetivo y decisiones.** Simplificar las fichas y la gestión de solicitudes sin cambiar la distinción entre pago, recepción y entrega (RF-03, RF-04, RF-05, RF-08 y RF-09). Para asignar stock común recibido a solicitudes, el usuario eligió expresamente seleccionar las solicitudes manualmente. La revisión integral del flujo de compras queda pendiente.
+
+**Interfaz y rutas.** Factura separa Información, Detalles de compra e Historial; proveedor separa Información, Elementos y precios y Facturas. La última tabla filtra por proveedor en el servidor. Información abre primero y ambas tablas de proveedor se ajustan al mostrar su pestaña. Elemento, proyecto, proveedor y factura usan un panel compacto, menú ⋮ CoreUI, padding 24/16px y líneas finas solo entre bloques; los datos y acciones existentes se conservan. La ficha única de elemento es `stock:item`; las URL de consulta anteriores redirigen a Historial con alcance del proyecto cuando corresponde. Los registros históricos conservan destinatario, fechas, motivos, reemplazos y accesos a corrección/anulación. Se retiró el renderizado duplicado del historial común, historial de proyecto y detalle de solicitud.
+
+**Solicitudes.** El menú ⋮ del elemento ofrece Solicitar para un proyecto, con proyecto y cantidad y el mismo servicio transaccional `create_request` que usa el formulario de proyecto. Inventario del proyecto muestra una fila por solicitud, identificada por su ID: Registrar entrega, Editar solicitud y Ver historial abren modales CoreUI. Editar reúne reducción con motivo y reserva manual de una cantidad explícita de stock común para esa solicitud; la necesidad de compra disminuye al reservar, no por el solo pago o la recepción. El historial conserva destinatarios y enlaces a registros corregibles o anulables. Tras guardar, DataTables recarga sin perder la página. Las rutas antiguas de consulta de solicitud redirigen al inventario del proyecto; las rutas de formulario anteriores quedan como compatibilidad sin botones visibles.
+
+**Verificación.** 196 pruebas Django y 19 pruebas Chromium pasaron en PostgreSQL 17; incluyen nuevas comprobaciones de ficha única, URL antiguas, creación desde elemento, reparto manual entre dos solicitudes, idempotencia, reducción y entrega. Chromium mostró Información, pestañas ocultas y tabla filtrada de proveedor a 320, 390 y 1440px sin errores de JavaScript ni desbordamiento horizontal. El modal de edición se abrió a 390 y 1440px, Escape devolvió el foco al disparador y la tabla recuperó 1314px tras pasar de 1440 a 390, 320 y de vuelta a 1440px. La captura final del modal muestra la cantidad explícita a reservar, con un ancho de 374px en viewport de 390px y sin desbordamiento. También pasaron `manage.py check`, `makemigrations --check --dry-run`, `node --check` de los JavaScript modificados y `git diff --check`. Capturas: [elemento](capturas/ui15-elemento-info-1440.png), [proyecto](capturas/ui15-proyecto-info-1440.png), [proveedor](capturas/ui15-proveedor-info-1440.png), [factura](capturas/ui15-factura-info-1440.png), [facturas del proveedor](capturas/ui15-proveedor-facturas-1440.png), [detalles de factura](capturas/ui15-factura-detalles-1440.png), [edición a 390px](capturas/ui15-solicitudes-editar-390.png), [edición a 1440px](capturas/ui15-solicitudes-editar-1440.png), [tabla a 320px](capturas/ui15-solicitudes-320.png) y [tabla tras ampliar](capturas/ui15-solicitudes-1440.png). Firefox no está disponible en este entorno. No se crearon migraciones.
 
 ## UI-14 · 27 de noviembre de 2026 · propuesta visual pendiente de validación
 

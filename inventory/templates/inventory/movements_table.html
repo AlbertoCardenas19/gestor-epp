@@ -1,7 +1,7 @@
 <section data-datatable-panel>
 <p class="small text-danger" role="alert" data-datatable-error hidden></p>
 <div class="card datatable-shell"><div class="card-body">
-<table class="table mb-0 align-middle" style="width:100%" data-datatable data-search-placeholder="Fecha, movimiento, origen, estado, trabajador, observación" data-source="{% url 'stock:history-data' item.pk %}" data-order='[[0,"desc"]]'>
+<table class="table mb-0 align-middle" style="width:100%" data-datatable data-search-placeholder="Fecha, movimiento, origen, estado, trabajador, observación" data-source="{% url 'stock:history-data' item.pk %}{% if scoped_project %}?project={{ scoped_project.pk }}{% endif %}" data-order='[[0,"desc"]]'>
 <caption class="visually-hidden">Movimientos de {{ item.name }}</caption>
 <thead><tr><th data-column="date" data-format="date" scope="col">Fecha</th><th data-column="operation" scope="col">Movimiento</th><th data-column="origin" scope="col">Origen</th><th data-column="quantity" scope="col">Cantidad</th><th data-column="state" data-format="status" scope="col">Estado</th><th data-column="actions" data-actions scope="col">Acciones</th></tr></thead><tbody></tbody>
 </table></div></div>

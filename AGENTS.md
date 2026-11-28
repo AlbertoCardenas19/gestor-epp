@@ -108,3 +108,20 @@ Estas convenciones se establecen en la solicitud actual, no en acuerdos históri
 - Comparar visualmente las pantallas afectadas, teclado y anchos estrechos, incluido
   redimensionamiento de ida y vuelta. Retirar reglas sustituidas, actualizar la guía
   vigente y registrar cada iteración. Justificar y verificar toda excepción.
+
+## Convenciones vigentes de fichas y solicitudes — UI-15
+
+- La ficha única del elemento es `stock:item` (`/inventario/elementos/<id>/ficha/`).
+  Las consultas antiguas del historial común o de proyecto redirigen a su pestaña
+  Historial. Mantener las acciones de corrección y anulación en cada registro.
+- Las solicitudes se gestionan por ID desde la tabla Inventario del proyecto:
+  entrega, edición y consulta del historial usan modales CoreUI. El endpoint de
+  tabla conserva búsqueda, orden y página al actualizar. La URL de detalle antigua
+  redirige al inventario del proyecto.
+- La recepción de factura solo crea stock común. El usuario elige manualmente la
+  solicitud y las unidades que reservará mediante Editar solicitud; el pago y la
+  recepción nunca registran una entrega a un trabajador. La revisión integral del
+  flujo de compra sigue pendiente.
+- Información de elemento, proyecto, proveedor y factura usa el panel y el menú ⋮
+  compartidos. Factura y proveedor usan pestañas CoreUI; DataTables se ajusta al
+  hacerse visible sin reinicializarse.

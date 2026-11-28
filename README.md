@@ -105,9 +105,11 @@ presiona `Ctrl+C`. Las próximas veces solo necesitas iniciar PostgreSQL y ejecu
    Inventario muestra Stock 0 / Entregados 0.
 4. Confirma entrega de 1 a un trabajador. Las columnas pasan a Stock 0 / Entregados 1; el historial
    del proyecto muestra la entrega real. No puedes entregar más de lo reservado.
-5. Registra una entrada en Inventario; después usa «Reservar disponibles» en
-   la solicitud. No hay asignación automática entre proyectos.
-6. Prueba reducción/cancelación pendiente con motivo y corrección/anulación de
+5. Registra una entrada en Inventario; después abre «Editar solicitud» desde la fila
+   de Inventario del proyecto e indica cuántas unidades reservar para esa solicitud.
+   No hay asignación automática entre proyectos.
+6. Prueba la reducción o cancelación pendiente con motivo desde «Editar solicitud»,
+   y la corrección o anulación de
    entregas. El [recorrido detallado](docs/11-inventario-y-solicitudes.md#probar-en-ubuntu)
    explica las cantidades esperadas y las diferencias entre estas operaciones.
 7. Prueba búsqueda con ×, ordenación, páginas y los menús Acciones de los demás listados. Proyectos conserva

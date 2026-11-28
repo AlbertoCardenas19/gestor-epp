@@ -125,7 +125,8 @@ class CommonStockTests(TestCase):
         record = open_stock(self.north, self.item, data(10))
         self.assertEqual(self.client.get(reverse('stock:record', args=[self.other.pk, record.pk])).status_code, 404)
         self.assertEqual(self.client.get(reverse('stock:correct', args=[self.item.pk, record.pk])).status_code, 404)
-        self.assertContains(self.client.get(reverse('stock:record', args=[self.item.pk, record.pk])), record.get_absolute_url())
+        self.assertContains(self.client.get(reverse('stock:record', args=[self.item.pk, record.pk])),
+                            reverse('inventory:correct', args=[self.north.pk, self.item.pk, record.pk]))
 
     def test_common_datatables_search_sort_full_query_and_actions(self):
         Item.objects.bulk_create([Item(name=f'Elemento {i:02d}') for i in range(15)])

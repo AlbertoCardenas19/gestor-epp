@@ -11,6 +11,7 @@ urlpatterns = [
     path('nueva/', RequestCreateView.as_view(), name='create'),
     path('<int:request_pk>/', RequestDetailView.as_view(), name='detail'),
     path('<int:request_pk>/reservar/', RequestActionView.as_view(action='reserve'), name='reserve'),
+    path('<int:request_pk>/editar/', RequestActionView.as_view(action='edit'), name='edit'),
     path('<int:request_pk>/entregar/', RequestActionView.as_view(action='deliver'), name='deliver'),
     path('<int:request_pk>/reducir/', RequestActionView.as_view(action='reduce'), name='reduce'),
 ]

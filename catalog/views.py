@@ -36,12 +36,20 @@ class ItemDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         from inventory.availability import available_quantity
+        from inventory.models import StockPosition
+        from projects.models import Project
         actions = [
             {'label': 'Registrar entrada', 'url': reverse('stock:receive', args=[self.object.pk])},
+            {'label': 'Solicitar para un proyecto', 'url': reverse('stock:request', args=[self.object.pk])},
             {'label': 'Editar elemento', 'url': reverse('catalog:update', args=[self.object.pk])},
         ]
+        project_key = self.request.GET.get('project', '')
+        scoped_project = Project.objects.filter(pk=int(project_key)).first() if project_key.isascii() and project_key.isdigit() and len(project_key) < 19 else None
+        if scoped_project and not StockPosition.objects.filter(project=scoped_project, item=self.object).exists():
+            actions.append({'label': 'Registrar apertura del proyecto',
+                            'url': reverse('inventory:open', args=[scoped_project.pk, self.object.pk])})
         return super().get_context_data(balance=available_quantity(self.object.pk), info_actions=actions,
-            action_key=f'item-{self.object.pk}', action_label=self.object.name, **kwargs)
+            action_key=f'item-{self.object.pk}', action_label=self.object.name, scoped_project=scoped_project, **kwargs)
 
 
 class CategoryListView(TemplateView):

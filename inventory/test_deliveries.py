@@ -51,7 +51,7 @@ class DirectDeliveryTests(TestCase):
         record = StockRecord.objects.get(operation='delivery')
         self.assertEqual(record.worker_full_name, 'Ana Pérez')
         history = Client().get(response.url)
-        self.assertContains(history, 'data-testid="balance">7</p>')
+        self.assertContains(history, 'data-testid="common-balance">7</span>')
         self.assertContains(history, 'Ana Pérez')
         self.assertContains(history, 'Entrega directa')
         listing = self.client.get(reverse('inventory:list', args=[self.project.pk]))
@@ -125,7 +125,7 @@ class DirectDeliveryTests(TestCase):
 
     def test_history_escapes_worker_name(self):
         deliver_stock(self.project, self.item, data(worker_full_name='<script>alert(1)</script>'))
-        response = self.client.get(self.url('history'))
+        response = self.client.get(StockRecord.objects.get(operation='delivery').get_absolute_url())
         self.assertContains(response, '&lt;script&gt;')
         self.assertNotContains(response, '<script>alert(1)</script>')
 

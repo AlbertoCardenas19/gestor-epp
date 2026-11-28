@@ -30,6 +30,42 @@ def data(quantity, **extra):
 
 
 class LibraryBrowserChecks(StaticLiveServerTestCase):
+    def test_supplier_tabs_and_item_request_from_ficha(self):
+        from purchases.models import Invoice
+
+        def seed():
+            supplier = Supplier.objects.create(name='Proveedor de prueba', rut='1-9')
+            invoice = Invoice.objects.create(supplier=supplier, number='F-15', issued_on=date(2026, 11, 27))
+            project = Project.objects.create(name='Obra Norte')
+            item = Item.objects.create(name='Casco de prueba')
+            return supplier, invoice, project, item
+
+        supplier, invoice, project, item = self.db(seed)
+        self.page.goto(self.live_server_url + supplier.get_absolute_url())
+        expect(self.page.get_by_role('tab', name='Información')).to_have_attribute('aria-selected', 'true')
+        self.page.get_by_role('tab', name='Facturas').click()
+        expect(self.page.locator('#supplier-invoices tbody tr')).to_contain_text('F-15')
+        for width in (320, 390, 1440):
+            self.page.set_viewport_size({'width': width, 'height': 900})
+            self.page.wait_for_timeout(300)
+            self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth <= innerWidth'))
+            self.wait_for_table_alignment('#supplier-invoices')
+        self.page.goto(self.live_server_url + invoice.get_absolute_url())
+        expect(self.page.get_by_role('tab', name='Información')).to_have_attribute('aria-selected', 'true')
+        self.page.get_by_role('tab', name='Detalles de compra').click()
+        expect(self.page.locator('#invoice-lines')).to_be_visible()
+        self.page.get_by_role('tab', name='Historial').click()
+        expect(self.page.locator('#invoice-history')).to_be_visible()
+        self.page.goto(self.live_server_url + item.get_absolute_url())
+        self.page.locator('#item-info .info-actions-trigger').click()
+        self.page.get_by_role('link', name='Solicitar para un proyecto').click()
+        self.page.get_by_label('Proyecto').select_option(str(project.pk))
+        self.page.get_by_label('Cantidad solicitada').fill('2')
+        expect(self.page.get_by_role('link', name='Cancelar')).to_have_attribute('href', item.get_absolute_url())
+        self.page.get_by_role('button', name='Guardar solicitud').click()
+        self.visit_table(reverse('requests:list', args=[project.pk]))
+        expect(self.rows().first).to_contain_text('Casco de prueba')
+
     def test_item_information_pilot_layout(self):
         def seed():
             epp, _ = Category.objects.get_or_create(name='EPP')
@@ -50,14 +86,14 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
                 with self.subTest(item=item.name, width=width):
                     self.page.set_viewport_size({'width': width, 'height': 900})
                     self.page.goto(self.live_server_url + item.get_absolute_url())
-                    card = self.page.locator('.item-info-card')
+                    card = self.page.locator('#item-info .info-card')
                     expect(card).to_be_visible()
                     self.assertEqual(card.locator('.info-section, .info-card-toolbar').count(), 0)
                     self.assertEqual(self.page.locator('#item-info h1').count(), 0)
-                    self.assertEqual(self.page.locator('.item-info-body').evaluate(
+                    self.assertEqual(self.page.locator('.info-panel-body').evaluate(
                         'e => parseInt(getComputedStyle(e).paddingLeft)'), 24 if width == 1440 else 16)
                     self.assertLessEqual(self.page.evaluate('document.documentElement.scrollWidth'), width)
-                    facts = card.locator('.item-info-fact')
+                    facts = card.locator('.info-panel-row')
                     self.assertEqual(facts.count(), 2)
                     self.assertLess(facts.nth(0).bounding_box()['y'], facts.nth(1).bounding_box()['y'])
                     if width > 320:
@@ -67,14 +103,14 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
                                                facts.nth(1).locator('.info-value').bounding_box()['x'], delta=1)
                     if not item.description:
                         expect(card).to_contain_text('Sin descripción')
-                        expect(card.locator('.item-info-facts')).to_contain_text('0')
+                        expect(card.locator('.info-panel-facts')).to_contain_text('0')
                     else:
-                        expect(card.locator('.item-info-description')).to_contain_text(item.description)
-                        expect(card.locator('.item-info-facts')).to_contain_text('1234')
-                    self.assertGreaterEqual(card.locator('.item-info-description').bounding_box()['y'] -
-                                            card.locator('.item-info-top').bounding_box()['y'] -
-                                            card.locator('.item-info-top').bounding_box()['height'], 22)
-                    trigger = card.get_by_role('button', name='Acciones del elemento')
+                        expect(card.locator('.info-panel-description')).to_contain_text(item.description)
+                        expect(card.locator('.info-panel-facts')).to_contain_text('1234')
+                    self.assertGreaterEqual(card.locator('.info-panel-description').bounding_box()['y'] -
+                                            card.locator('.info-panel-top').bounding_box()['y'] -
+                                            card.locator('.info-panel-top').bounding_box()['height'], 22)
+                    trigger = card.get_by_role('button', name=f'Acciones de {item.name}')
                     expect(trigger).to_have_text('⋮')
                     self.assertGreaterEqual(trigger.bounding_box()['width'], 44)
                     self.assertGreaterEqual(trigger.bounding_box()['height'], 44)
@@ -144,8 +180,8 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.page.locator('.project-card .project-link').click()
         self.assertEqual(self.page.url, self.live_server_url + projects[8].get_absolute_url())
         expect(self.page.get_by_role('link', name='Información', exact=True)).to_have_attribute('aria-current', 'page')
-        expect(self.page.locator('.info-description')).to_contain_text('Descripción extensa 8')
-        expect(self.page.locator('.info-meta')).to_contain_text('Sin fecha registrada')
+        expect(self.page.locator('.info-panel-description')).to_contain_text('Descripción extensa 8')
+        expect(self.page.locator('.info-panel-facts')).to_contain_text('Sin fecha registrada')
         self.page.get_by_role('link', name='Entregas', exact=True).click()
         self.assertEqual(self.page.url, self.live_server_url + reverse('projects:detail', args=[projects[8].pk]))
         self.page.wait_for_function('window.DataTable && DataTable.tables({api:true}).ajax.json() !== undefined')
@@ -158,7 +194,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.page.goto(self.live_server_url + item.get_absolute_url())
         expect(self.page.locator('#item-info')).to_contain_text('Descripción del casco')
         expect(self.page.locator('#item-info')).to_contain_text('Stock')
-        self.page.get_by_role('button', name='Acciones del elemento').click()
+        self.page.get_by_role('button', name=f'Acciones de {item.name}').click()
         expect(self.page.get_by_role('link', name='Registrar entrada')).to_be_visible()
         expect(self.page.get_by_role('link', name='Editar elemento')).to_be_visible()
         self.page.get_by_role('tab', name='Proyectos', exact=True).focus()
@@ -294,10 +330,10 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         expect(self.page.get_by_role('heading', name=item.name)).to_be_visible()
         self.visit_table(reverse('requests:list', args=[project.pk]))
         expect(self.page.locator('table.dataTable .pending-delivery')).to_have_text('Pendiente')
-        self.assertEqual(self.page.locator('table.dataTable thead th[data-column]').count(), 6)
+        self.assertEqual(self.page.locator('table.dataTable thead th[data-column]').count(), 7)
         self.page.locator('table.dataTable tbody tr td').nth(2).click()
         expect(self.page.get_by_role('heading', name=item.name)).to_be_visible()
-        self.assertEqual(self.page.url.split('?')[0], self.live_server_url + request.get_absolute_url())
+        self.assertEqual(self.page.url.split('?')[0], self.live_server_url + item.get_absolute_url())
 
     @staticmethod
     def _iteration_records():
@@ -358,7 +394,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         return payload
 
     def rows(self):
-        return self.page.locator('table.dataTable tbody tr:not(.child)')
+        return self.page.locator('table.dataTable:visible tbody tr:not(.child)')
 
     @staticmethod
     def pagination_style(locator):
@@ -376,10 +412,10 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.assertTrue(all(abs(header - metrics['cells'][index]) < 2 for index, header in enumerate(metrics['headers'])), metrics)
 
     def search(self, query):
-        return self.table_action(lambda: self.page.locator('.dt-search input').fill(query))
+        return self.table_action(lambda: self.page.locator('.dt-search input:visible').fill(query))
 
     def order(self, column):
-        return self.table_action(lambda: self.page.locator(f'table.dataTable thead th[data-column="{column}"] .dt-column-order').click())
+        return self.table_action(lambda: self.page.locator(f'table.dataTable:visible thead th[data-column="{column}"] .dt-column-order').click())
 
     def test_catalog_empty_one_many_search_sort_and_reload_actions(self):
         self.visit_table(reverse('stock:list'))
@@ -503,14 +539,14 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.page.get_by_label('Cantidad', exact=False).fill('7')
         self.page.get_by_label('Motivo de la corrección', exact=False).fill('Cantidad correcta')
         self.page.get_by_role('button', name='Guardar corrección', exact=True).click()
-        expect(self.page.get_by_test_id('balance')).to_have_text(str(balance - 2))
+        expect(self.page.get_by_test_id('common-balance')).to_have_text(str(balance - 2))
         self.visit_table(reverse('projects:detail', args=[project.pk]))
         self.search('Persona corregida')
         self.rows().filter(has_text='Vigente').get_by_role('button', name=re.compile('^Acciones de')).click()
         self.page.locator('.dropdown-menu.show').get_by_role('link', name='Anular', exact=True).click()
         self.page.get_by_label('Motivo de la anulación', exact=False).fill('La entrega no ocurrió')
         self.page.get_by_role('button', name='Confirmar anulación', exact=True).click()
-        expect(self.page.get_by_test_id('balance')).to_have_text(str(balance + 5))
+        expect(self.page.get_by_test_id('common-balance')).to_have_text(str(balance + 5))
         expect(self.page.get_by_text('Anulado', exact=True).last).to_be_visible()
         self.db(replacement.refresh_from_db)
         self.assertIsNotNone(replacement.voided_at)
@@ -576,15 +612,14 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.visit_table(reverse('stock:history', args=[item.pk]))
         result = self.search('Empresa')
         self.assertEqual(result['recordsFiltered'], 2)
-        expect(self.page.get_by_test_id('common-balance')).to_have_text('17')
+        expect(self.page.locator('#item-info .info-panel-row').nth(1).locator('.info-value')).to_have_text('17')
         # Historical deliveries keep their original URL and contribute once to the common total.
         self.page.goto(self.live_server_url + reverse('stock:record', args=[item.pk, delivery.pk]))
-        self.page.get_by_role('link', name='Ver historial del proyecto', exact=True).click()
-        self.page.locator(f'#registro-{delivery.pk}').get_by_role('link', name=re.compile('^Anular entrega')).click()
+        self.page.get_by_role('link', name=re.compile('^Anular entrega')).click()
         self.page.get_by_label('Motivo de la anulación', exact=False).fill('Entrega histórica duplicada')
         self.page.get_by_role('button', name='Confirmar anulación', exact=True).click()
         self.visit_table(reverse('stock:history', args=[item.pk]))
-        expect(self.page.get_by_test_id('common-balance')).to_have_text('20')
+        expect(self.page.locator('#item-info .info-panel-row').nth(1).locator('.info-value')).to_have_text('20')
         for width in [320, 390, 1440]:
             self.page.set_viewport_size({'width': width, 'height': 900})
             self.visit_table(reverse('stock:list'))
@@ -617,11 +652,22 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.page.get_by_label('Cantidad solicitada', exact=False).fill('5')
         self.page.get_by_role('button', name='Guardar solicitud', exact=True).click()
         request = self.db(lambda: StockRequest.objects.get())
-        expect(self.page.get_by_test_id('request-delivered')).to_have_text('0 Pendiente')
-        expect(self.page.get_by_test_id('request-purchase')).to_have_text('3')
-        self.page.get_by_role('link', name='Confirmar entrega', exact=True).click()
-        self.page.get_by_label('Nombre completo del trabajador', exact=False).fill('Ana Pérez')
-        self.page.get_by_role('button', name='Confirmar entrega', exact=True).click()
+        self.visit_table(reverse('requests:list', args=[north.pk]))
+        expect(self.rows().first).to_contain_text('Pendiente')
+        expect(self.rows().first).to_contain_text('3')
+
+        def open_action(label):
+            self.page.wait_for_function("!document.body.classList.contains('modal-open')")
+            trigger = self.rows().first.get_by_role('button', name=re.compile('^Acciones de solicitud'))
+            trigger.click()
+            self.page.locator('a[data-request-modal]:visible').filter(has_text=label).click()
+            expect(self.page.locator('#request-modal.show')).to_be_visible()
+
+        open_action('Registrar entrega')
+        self.page.locator('#request-modal [name="worker_full_name"]').fill('Ana Pérez')
+        self.page.locator('#request-modal [name="quantity"]').fill('2')
+        self.page.locator('#request-modal [type="submit"]').click()
+        expect(self.page.locator('#request-modal')).to_be_hidden()
         self.page.goto(self.live_server_url + reverse('requests:deliver', args=[north.pk, request.pk]))
         self.page.get_by_label('Nombre completo del trabajador', exact=False).fill('Intento sin reserva')
         self.page.get_by_label('Cantidad', exact=False).fill('1')
@@ -652,15 +698,17 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.page.get_by_label('Fecha del conteo o recepción', exact=False).fill('2026-11-12')
         self.page.get_by_role('button', name='Guardar entrada', exact=True).click()
         self.inventory_counts(3, 2)
-        self.page.goto(self.live_server_url + request.get_absolute_url())
-        self.page.get_by_role('link', name='Reservar disponibles', exact=True).click()
-        self.page.get_by_role('button', name='Reservar disponibles', exact=True).click()
-        expect(self.page.get_by_test_id('request-delivered')).to_have_text('2 Pendiente')
-        expect(self.page.get_by_test_id('request-purchase')).to_have_text('0')
-        self.page.get_by_role('link', name='Confirmar entrega', exact=True).click()
-        self.page.get_by_label('Nombre completo del trabajador', exact=False).fill('Luis Soto')
-        self.page.get_by_label('Cantidad', exact=False).fill('1')
-        self.page.get_by_role('button', name='Confirmar entrega', exact=True).click()
+        self.visit_table(reverse('requests:list', args=[north.pk]))
+        open_action('Editar solicitud')
+        self.page.locator('#request-modal [name="reserve_quantity"]').fill('3')
+        self.page.locator('#request-modal [type="submit"]').click()
+        expect(self.page.locator('#request-modal')).to_be_hidden()
+        self.assertEqual(self.db(lambda: StockRequest.objects.get(pk=request.pk).purchase_quantity), 0)
+        open_action('Registrar entrega')
+        self.page.locator('#request-modal [name="worker_full_name"]').fill('Luis Soto')
+        self.page.locator('#request-modal [name="quantity"]').fill('1')
+        self.page.locator('#request-modal [type="submit"]').click()
+        expect(self.page.locator('#request-modal')).to_be_hidden()
         record = self.db(lambda: StockRecord.objects.select_related('position').get(worker_full_name='Luis Soto'))
         self.page.goto(self.live_server_url + record.get_absolute_url())
         self.page.get_by_role('link', name='Corregir entrega', exact=True).click()
@@ -674,11 +722,18 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.page.get_by_label('Motivo de la anulación', exact=False).fill('Entrega equivocada')
         self.page.get_by_role('button', name='Confirmar anulación', exact=True).click()
         self.inventory_counts(0, 2)
-        self.page.goto(self.live_server_url + request.get_absolute_url())
-        self.page.get_by_role('link', name='Reducir o cancelar pendiente', exact=True).click()
-        self.page.get_by_label('Cantidad pendiente que conservar', exact=False).fill('0')
-        self.page.get_by_label('Motivo de la reducción o cancelación', exact=False).fill('Ya no se necesita el resto')
-        self.page.get_by_role('button', name='Guardar cambio', exact=True).click()
+        self.visit_table(reverse('requests:list', args=[north.pk]))
+        open_action('Ver historial')
+        expect(self.page.locator('#request-modal')).to_contain_text('Ana Pérez')
+        self.page.wait_for_timeout(400)
+        self.page.keyboard.press('Escape')
+        expect(self.page.locator('#request-modal')).to_be_hidden()
+        expect(self.rows().first.get_by_role('button', name=re.compile('^Acciones de solicitud'))).to_be_focused()
+        open_action('Editar solicitud')
+        self.page.locator('#request-modal [name="pending_quantity"]').fill('0')
+        self.page.locator('#request-modal [name="reason"]').fill('Ya no se necesita el resto')
+        self.page.locator('#request-modal [type="submit"]').click()
+        expect(self.page.locator('#request-modal')).to_be_hidden()
         self.inventory_counts(3, 2)
         for width in [320, 390, 1440]:
             self.page.set_viewport_size({'width': width, 'height': 900})
@@ -792,8 +847,8 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.capture('picker-selected-mobile')
         self.page.get_by_label('Cantidad solicitada', exact=False).fill('5')
         self.page.get_by_role('button', name='Guardar solicitud', exact=True).click()
-        expect(self.page.get_by_test_id('request-delivered')).to_have_text('0 Pendiente')
-        expect(self.page.get_by_text('Pendiente', exact=True)).to_be_visible()
+        self.visit_table(reverse('requests:list', args=[north.pk]))
+        expect(self.rows().first).to_contain_text('Pendiente')
         self.inventory_counts(15, 0)
         self.visit_table(reverse('requests:list', args=[north.pk]))
         expect(self.rows().first.locator('td').nth(2)).to_have_text('5')
@@ -801,12 +856,13 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         expect(delivered_cell).to_have_text('Pendiente 0')
         self.rows().first.locator('.row-expand').click()
         expect(self.page.locator('table.dataTable tbody tr.child').get_by_text('Pendiente', exact=True)).to_be_visible()
-        self.rows().first.get_by_role('link', name='Zeta Casco', exact=True).click()
-        self.page.get_by_role('link', name='Confirmar entrega', exact=True).click()
-        self.page.get_by_label('Nombre completo del trabajador', exact=False).fill('Ana Pérez')
-        self.page.get_by_role('button', name='Confirmar entrega', exact=True).click()
-        expect(self.page.get_by_test_id('request-delivered')).to_have_text('5')
-        expect(self.page.get_by_text('Pendiente', exact=True)).to_have_count(0)
+        self.page.locator('table.dataTable tbody tr.child .row-actions-trigger').click()
+        self.page.locator('a[data-request-modal]:visible').filter(has_text='Registrar entrega').click()
+        expect(self.page.locator('#request-modal.show')).to_be_visible()
+        self.page.locator('#request-modal [name="worker_full_name"]').fill('Ana Pérez')
+        self.page.locator('#request-modal [name="quantity"]').fill('5')
+        self.page.locator('#request-modal [type="submit"]').click()
+        expect(self.page.locator('#request-modal')).to_be_hidden()
         self.visit_table(reverse('requests:list', args=[north.pk]))
         expect(self.rows().first.locator('td').nth(3)).to_have_text('5')
         expect(self.rows().first.get_by_text('Pendiente', exact=True)).to_have_count(0)
@@ -982,7 +1038,9 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.page.locator('#id_payment_method').fill('Crédito')
         self.page.get_by_role('button', name='Guardar factura').click()
         expect(self.page.get_by_role('heading', name='Factura Z-100')).to_be_visible()
+        self.page.get_by_role('tab', name='Detalles de compra').click()
         expect(self.page.get_by_text('Por completar').first).to_be_visible()
+        self.page.get_by_role('tab', name='Información').click()
         self.capture('ui13-factura-vacia-1440')
         self.page.locator('.info-actions-trigger').click()
         expect(self.page.get_by_role('link', name='Confirmar recepción completa')).to_have_count(0)
@@ -1026,9 +1084,11 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.capture('ui13-lineas-390')
         self.page.get_by_role('button', name='Guardar líneas').click()
         expect(self.page.get_by_role('heading', name='Factura Z-100')).to_be_visible()
+        self.page.get_by_role('tab', name='Detalles de compra').click()
         expect(self.page.get_by_text('Sin asignar · 3')).to_be_visible()
         expect(self.page.get_by_text('Linterna de inspección')).to_be_visible()
         expect(self.page.get_by_text('Servicio de estampado')).to_be_visible()
+        self.page.get_by_role('tab', name='Historial').click()
         expect(self.page.get_by_text('No hay entradas asociadas.')).to_be_visible()
         self.assertTrue(self.page.locator('.invoice-lines-table').evaluate(
             'e => e.closest(".table-responsive").scrollWidth <= e.closest(".table-responsive").clientWidth + 1'))
@@ -1037,10 +1097,13 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.capture('ui13-factura-1440')
         self.page.set_viewport_size({'width': 390, 'height': 900})
         invoice = self.db(lambda: Invoice.objects.get(number='Z-100'))
+        self.page.get_by_role('tab', name='Información').click()
         self.page.locator('.info-actions-trigger').click()
         self.page.get_by_role('link', name='Confirmar recepción completa').click()
         self.page.get_by_role('button', name='Confirmar recepción completa').click()
+        self.page.get_by_role('tab', name='Historial').click()
         expect(self.page.get_by_role('link', name=re.compile('Zeta Casco · 20'))).to_be_visible()
+        self.page.get_by_role('tab', name='Información').click()
         expect(self.page.get_by_text('Pendiente', exact=True)).to_be_visible()
         self.page.locator('.info-actions-trigger').click()
         self.page.get_by_role('link', name='Marcar como pagada').click()
@@ -1052,6 +1115,7 @@ class LibraryBrowserChecks(StaticLiveServerTestCase):
         self.page.locator('#id_lines-0-unit_price').fill('550')
         self.page.get_by_label('Motivo de la corrección').fill('Ajustar el precio transcrito')
         self.page.get_by_role('button', name='Guardar factura').click()
+        self.page.get_by_role('tab', name='Historial').click()
         correction = self.page.get_by_text(re.compile('^Corrección ·')).first
         correction.click()
         expect(correction.locator('..').get_by_text(re.compile('500 CLP por unidad sin IVA'))).to_be_visible()

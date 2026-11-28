@@ -58,7 +58,7 @@ class IterationRequestAndDetailTests(TestCase):
         self.assertNotIn('occurred_on', RequestForm().fields)
         response = self.client.get(reverse('requests:create', args=[self.north.pk]))
         self.assertNotContains(response, 'name="occurred_on"')
-        self.assertContains(self.client.get(request.get_absolute_url()), 'Registro de solicitud')
+        self.assertRedirects(self.client.get(request.get_absolute_url()), reverse('requests:list', args=[self.north.pk]))
 
     def test_server_ignores_posted_date_and_rechecks_stock_after_picker_load(self):
         url = reverse('requests:create', args=[self.north.pk])

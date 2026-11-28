@@ -1,17 +1,17 @@
 {% extends 'projects/base.html' %}
 {% load static %}
 {% block extra_scripts %}<script src="{% static 'projects/item-picker.js' %}" defer></script>{% endblock %}
-{% block title %}{% if action == 'deliver' %}Confirmar entrega{% elif action == 'reserve' %}Reservar disponibles{% elif action == 'reduce' %}Reducir o cancelar pendiente{% else %}Solicitar elemento{% endif %}{% endblock %}
+{% block title %}{% if action == 'deliver' %}Confirmar entrega{% elif action == 'edit' %}Editar solicitud{% elif action == 'reserve' %}Reservar disponibles{% elif action == 'reduce' %}Reducir o cancelar pendiente{% else %}Solicitar elemento{% endif %}{% endblock %}
 {% block content %}
-<a class="back-link" href="{% if request_record %}{{ request_record.get_absolute_url }}{% else %}{% url 'requests:list' project.pk %}{% endif %}">← Volver al inventario del proyecto</a>
+<a class="back-link" href="{% if from_item %}{{ item.get_absolute_url }}{% else %}{% url 'requests:list' project.pk %}{% endif %}">← Volver{% if not from_item %} al inventario del proyecto{% endif %}</a>
 <div class="form-shell mt-4">
-<h1>{% if action == 'deliver' %}Confirmar entrega{% elif action == 'reserve' %}Reservar disponibles{% elif action == 'reduce' %}Reducir o cancelar pendiente{% else %}Solicitar elemento{% endif %}</h1>
+<h1>{% if action == 'deliver' %}Confirmar entrega{% elif action == 'edit' %}Editar solicitud{% elif action == 'reserve' %}Reservar disponibles{% elif action == 'reduce' %}Reducir o cancelar pendiente{% else %}Solicitar elemento{% endif %}</h1>
 {% if request_record %}<p class="fw-semibold text-break">{{ request_record.item.name }} · {{ project.name }}</p>
-{% if action == 'deliver' %}<p>Unidades reservadas pendientes: {{ request_record.reserved_quantity }}</p>{% elif action == 'reserve' %}<p>Necesidad de compra pendiente: {{ request_record.purchase_quantity }} · Stock disponible: {{ available }}</p>{% elif action == 'reduce' %}<p>Pendiente actual: {{ request_record.pending_quantity }}. Primero se reducirá lo que falta comprar; se conservarán las reservas mientras alcance la cantidad restante.</p>{% endif %}
+{% if action == 'deliver' %}<p>Unidades reservadas pendientes: {{ request_record.reserved_quantity }}</p>{% elif action == 'reserve' %}<p>Necesidad de compra pendiente: {{ request_record.purchase_quantity }} · Stock disponible: {{ available }}</p>{% elif action == 'reduce' or action == 'edit' %}<p>Pendiente actual: {{ request_record.pending_quantity }}. Primero se reducirá lo que falta comprar; se conservarán las reservas mientras alcance la cantidad restante. Stock disponible: {{ available }}.</p>{% endif %}
 {% else %}<p>Se reservará lo disponible y se guardará la cantidad faltante como necesidad de compra.</p>{% endif %}
 <div class="card"><div class="card-body p-4 p-md-5"><form method="post" novalidate>
 {% if is_request_create %}{% include 'inventory/item_picker.html' %}{% endif %}
 {% include 'inventory/fields.html' %}
-<div class="d-flex flex-column flex-sm-row gap-2"><button class="btn btn-primary" type="submit">{% if action == 'deliver' %}Confirmar entrega{% elif action == 'reserve' %}Reservar disponibles{% elif action == 'reduce' %}Guardar cambio{% else %}Guardar solicitud{% endif %}</button><a class="btn btn-outline-secondary" href="{% url 'requests:list' project.pk %}">Cancelar</a></div>
+<div class="d-flex flex-column flex-sm-row gap-2"><button class="btn btn-primary" type="submit">{% if action == 'deliver' %}Confirmar entrega{% elif action == 'reserve' %}Reservar disponibles{% elif action == 'reduce' or action == 'edit' %}Guardar cambio{% else %}Guardar solicitud{% endif %}</button><a class="btn btn-outline-secondary" href="{% if from_item %}{{ item.get_absolute_url }}{% else %}{% url 'requests:list' project.pk %}{% endif %}">Cancelar</a></div>
 </form></div></div></div>
 {% endblock %}

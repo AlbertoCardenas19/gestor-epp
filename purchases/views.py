@@ -131,6 +131,15 @@ class InvoiceData(DataTableView):
                 })}
 
 
+class SupplierInvoiceData(InvoiceData):
+    order_columns = ('number', 'issued_on', 'calculated_total', 'payment_label', 'receipt_label', None)
+    search_fields = ('number', 'purchase_order', 'payment_method', 'payment_label', 'receipt_label')
+
+    def get_queryset(self):
+        get_object_or_404(Supplier, pk=self.kwargs['pk'])
+        return super().get_queryset().filter(supplier_id=self.kwargs['pk'])
+
+
 class InvoiceDetail(DetailView):
     model = Invoice
     context_object_name = 'invoice'

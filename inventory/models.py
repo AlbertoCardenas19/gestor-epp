@@ -36,9 +36,8 @@ class StockPosition(models.Model):
         )['total'] or 0
 
     def get_absolute_url(self):
-        if self.project_id is None:
-            return reverse('stock:history', args=[self.item_id])
-        return reverse('inventory:history', args=[self.project_id, self.item_id])
+        url = reverse('stock:item', args=[self.item_id]) + '?tab=history'
+        return url if self.project_id is None else f'{url}&project={self.project_id}'
 
 
 class StockRecord(models.Model):
@@ -95,9 +94,7 @@ class StockRecord(models.Model):
         return -self.quantity if self.operation == self.Operation.DELIVERY else self.quantity
 
     def get_absolute_url(self):
-        if self.position.project_id is None:
-            return reverse('stock:record', args=[self.position.item_id, self.pk])
-        return self.position.get_absolute_url() + f'#registro-{self.pk}'
+        return reverse('stock:record', args=[self.position.item_id, self.pk])
 
     @property
     def is_replaced(self):

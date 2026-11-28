@@ -25,6 +25,11 @@
     if (window.EppTables) window.EppTables.adjust();
     else if (window.DataTable) DataTable.tables({visible: true, api: true}).columns.adjust();
   });
+  const requestedTab = new URL(location.href).searchParams.get('tab');
+  if (requestedTab) {
+    const tab = document.querySelector(`[data-coreui-toggle="tab"][data-coreui-target="#item-${requestedTab}"]`);
+    if (tab) coreui.Tab.getOrCreateInstance(tab).show();
+  }
 
   const sidebar = document.querySelector('#sidebar');
   if (!sidebar) return;

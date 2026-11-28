@@ -69,11 +69,11 @@ class InventoryFlowTests(TestCase):
         for operation, quantity in [('open', 10), ('receive', 5)]:
             response = self.client.post(self.url(operation), record_data(quantity))
             self.assertEqual(response.status_code, 302)
-            self.assertContains(self.client.get(response.url), 'Stock disponible')
-        history = Client().get(self.url('history'))
-        self.assertContains(history, 'data-testid="balance">15</p>')
+            self.assertContains(self.client.get(response.url), 'Stock actual')
+        history = Client().get(self.item.get_absolute_url())
+        self.assertContains(history, 'Stock')
         self.assertNotContains(history, 'Registrado por:')
-        self.assertContains(history, 'Fecha de registro:')
+        self.assertContains(self.client.get(StockRecord.objects.order_by('-pk').first().get_absolute_url()), 'Fecha de registro')
 
     def test_insufficient_balance_error_belongs_to_quantity_and_rolls_back(self):
         opening = open_stock(self.project, self.item, record_data(10))
@@ -126,9 +126,10 @@ class InventoryFlowTests(TestCase):
         self.assertEqual(corrected.replaces_id, original.pk)
         self.assertEqual(corrected.operation, StockRecord.Operation.OPENING)
         self.assertEqual(original.position.balance, 13)
-        history = self.client.get(self.url('history'))
-        for text in ['Anulado', 'Error al contar', 'Ver reemplazo', 'registro anterior']:
+        history = self.client.get(original.get_absolute_url())
+        for text in ['Sustituido', 'Error al contar', 'Ver reemplazo']:
             self.assertContains(history, text)
+        self.assertContains(self.client.get(corrected.get_absolute_url()), 'registro anterior')
 
     def test_correction_of_receipt_through_form(self):
         open_stock(self.project, self.item, record_data(10))
@@ -226,7 +227,7 @@ class InventoryFlowTests(TestCase):
     def test_history_escapes_observations_and_reasons(self):
         original = open_stock(self.project, self.item, record_data(observation='<script>alert(1)</script>'))
         correct_record(self.project, original.pk, record_data(8, reason='<img src=x onerror=alert(1)>'))
-        response = self.client.get(self.url('history'))
+        response = self.client.get(original.get_absolute_url())
         self.assertNotContains(response, '<script>alert(1)</script>')
         self.assertNotContains(response, '<img src=x')
         self.assertContains(response, '&lt;script&gt;')

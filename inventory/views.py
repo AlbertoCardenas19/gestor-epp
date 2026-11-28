@@ -39,13 +39,8 @@ class ProjectItemMixin(ProjectMixin):
 
 
 class HistoryView(ProjectItemMixin, TemplateView):
-    template_name = 'inventory/history.html'
-
-    def get_context_data(self, **kwargs):
-        position = StockPosition.objects.filter(project=self.project, item=self.item).first()
-        records = list(position.records.select_related('position', 'replaces__position', 'replacement__position')) if position else []
-        balance = available_quantity(self.item.pk)
-        return super().get_context_data(position=position, records=records, balance=balance, **kwargs)
+    def get(self, request, *args, **kwargs):
+        return redirect(self.item.get_absolute_url() + f'?tab=history&project={self.project.pk}')
 
 
 class RecordCreateView(ProjectItemMixin, FormView):
@@ -78,7 +73,7 @@ class RecordCreateView(ProjectItemMixin, FormView):
         except ValidationError as error:
             add_service_error(form, error)
             return self.form_invalid(form)
-        return redirect(record.position.get_absolute_url() + f'#registro-{record.pk}')
+        return redirect(record.get_absolute_url())
 
 
 class CorrectionView(ProjectItemMixin, FormView):

@@ -120,7 +120,7 @@ class DeliveryCancellationTests(TestCase):
             response = self.client.post(self.url(), {'reason': 'Registro duplicado'})
             self.assertRedirects(response, self.delivery.get_absolute_url())
             history = self.client.get(response.url)
-            self.assertContains(history, 'data-testid="balance">10</p>')
+            self.assertContains(history, 'data-testid="common-balance">10</span>')
             self.assertContains(history, 'Anulado')
             self.assertContains(history, 'Registro duplicado')
             self.assertContains(history, 'Anulado el')

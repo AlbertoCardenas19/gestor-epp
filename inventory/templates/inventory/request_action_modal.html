@@ -1,0 +1,9 @@
+<div class="modal-header"><h2 class="modal-title fs-5" id="request-modal-title">{% if action == 'deliver' %}Registrar entrega{% else %}Editar solicitud{% endif %}</h2><button type="button" class="btn-close" data-coreui-dismiss="modal" aria-label="Cerrar"></button></div>
+<form method="post" action="{{ request.path }}?modal=1" data-request-modal-form novalidate>
+  <div class="modal-body">
+    <p class="fw-semibold text-break">{{ request_record.item.name }} · {{ project.name }} · solicitud {{ request_record.pk }}</p>
+    {% if action == 'edit' %}<p class="small">Pendiente actual: {{ request_record.pending_quantity }}. Necesidad de compra: {{ request_record.purchase_quantity }}. Stock disponible: {{ available }}. Puedes reservar unidades para esta solicitud concreta; al reducir, se conserva primero el stock ya reservado y se exige un motivo.</p>{% else %}<p class="small">Reservadas pendientes: {{ request_record.reserved_quantity }}.</p>{% endif %}
+    {% include 'inventory/fields.html' %}
+  </div>
+  <div class="modal-footer"><button class="btn btn-outline-secondary" type="button" data-coreui-dismiss="modal">Cancelar</button><button class="btn btn-primary" type="submit">{% if action == 'deliver' %}Registrar entrega{% else %}Guardar cambio{% endif %}</button></div>
+</form>

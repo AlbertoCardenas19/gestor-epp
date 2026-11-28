@@ -14,6 +14,7 @@ urlpatterns = [
     path('proveedores/<int:pk>/', views.SupplierDetail.as_view(), name='supplier'),
     path('proveedores/<int:pk>/editar/', views.SupplierUpdate.as_view(), name='supplier-edit'),
     path('proveedores/<int:pk>/precios/', views.PriceData.as_view(), name='price-data'),
+    path('proveedores/<int:pk>/facturas/datos/', views.SupplierInvoiceData.as_view(), name='supplier-invoices-data'),
     path('proveedores/<int:pk>/precios/nuevo/', views.reference_price, name='price-create'),
     path('<int:pk>/', views.InvoiceDetail.as_view(), name='invoice'),
     path('<int:pk>/corregir/', views.invoice_edit, name='correct'),

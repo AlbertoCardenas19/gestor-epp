@@ -1,4 +1,5 @@
 """Project requests, partial reservation and actual deliveries; atomic and idempotent."""
+import uuid
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
@@ -43,9 +44,13 @@ def create_request(project, item, data):
 def reserve_more(request, data):
     lock_items(request.item_id)
     request = StockRequest.objects.select_for_update().get(pk=request.pk)
-    if _repeat_event(request, 'reserved', data, {}):
+    payload = data.get('edit_payload', {})
+    if _repeat_event(request, 'reserved', data, payload):
         return request
-    amount = min(request.purchase_quantity, max(0, available_quantity(request.item_id)))
+    maximum = min(request.purchase_quantity, max(0, available_quantity(request.item_id)))
+    amount = data.get('reserve_quantity', maximum)
+    if amount > maximum:
+        raise ValidationError({'reserve_quantity': 'La cantidad supera el stock disponible o la necesidad de compra de esta solicitud.'})
     if amount <= 0:
         raise ValidationError('No hay unidades disponibles para ampliar esta reserva.')
     before = _snapshot(request)
@@ -53,7 +58,7 @@ def reserve_more(request, data):
     request.full_clean()
     request.save(update_fields=['allocated_quantity'])
     StockRequestEvent.objects.create(request=request, action='reserved', before=before, after=_snapshot(request),
-                                    submission_key=data['submission_key'])
+                                    payload=payload, submission_key=data['submission_key'])
     ensure_available(request.item_id)
     return request
 
@@ -64,7 +69,7 @@ def reduce_request(request, data):
     request = StockRequest.objects.select_for_update().get(pk=request.pk)
     target = data['pending_quantity']
     reason = data.get('reason', '').strip()
-    payload = {'pending_quantity': target, 'reason': reason}
+    payload = data.get('edit_payload', {'pending_quantity': target, 'reason': reason})
     if _repeat_event(request, 'reduced', data, payload):
         return request
     if not reason:
@@ -81,6 +86,33 @@ def reduce_request(request, data):
     StockRequestEvent.objects.create(request=request, action='reduced', before=before, after=_snapshot(request),
                                     payload=payload, reason=reason, submission_key=data['submission_key'])
     ensure_available(request.item_id)
+    return request
+
+
+@transaction.atomic
+def edit_request(request, data):
+    """Apply an explicit pending reduction and/or reserve common stock for this request."""
+    target = data['pending_quantity']
+    reserve_quantity = data.get('reserve_quantity', 0)
+    reserve = reserve_quantity > 0
+    payload = {'pending_quantity': target, 'reason': data.get('reason', '').strip(), 'reserve_quantity': reserve_quantity}
+    prior = StockRequestEvent.objects.filter(submission_key=data['submission_key']).first()
+    if prior:
+        if prior.request_id != request.pk or prior.action not in ('reduced', 'reserved') or prior.payload != payload:
+            raise ValidationError('Este formulario ya se utilizó con otros datos. Vuelve a abrirlo.')
+        return request
+    current = request.pending_quantity
+    if target > current:
+        raise ValidationError({'pending_quantity': 'No se puede aumentar una solicitud existente; registra otra solicitud.'})
+    if target == current and not reserve:
+        raise ValidationError('Indica un cambio o selecciona la reserva de stock disponible.')
+    if target < current:
+        reduce_request(request, {**data, 'edit_payload': payload})
+    if reserve:
+        # The second event has a deterministic, distinct key so retries stay idempotent.
+        key = uuid.uuid5(uuid.NAMESPACE_URL, f'{data["submission_key"]}:reserve') if target < current else data['submission_key']
+        reserve_data = {**data, 'submission_key': key, 'edit_payload': payload}
+        reserve_more(request, reserve_data)
     return request
 
 

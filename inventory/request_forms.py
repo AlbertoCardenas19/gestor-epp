@@ -3,6 +3,7 @@ import uuid
 from django import forms
 
 from catalog.models import Item
+from projects.models import Project
 from .forms import InlineErrorsMixin
 
 
@@ -16,6 +17,12 @@ class RequestForm(InlineErrorsMixin, forms.Form):
     submission_key = forms.UUIDField(initial=uuid.uuid4, widget=forms.HiddenInput)
 
 
+class ItemRequestForm(RequestForm):
+    project = forms.ModelChoiceField(label='Proyecto', queryset=Project.objects.order_by('name', 'pk'),
+        empty_label='Selecciona un proyecto', widget=forms.Select(attrs={'class': 'form-select'}))
+    field_order = ['project', 'item', 'quantity', 'observation', 'submission_key']
+
+
 class RequestActionForm(InlineErrorsMixin, forms.Form):
     submission_key = forms.UUIDField(initial=uuid.uuid4, widget=forms.HiddenInput)
 
@@ -25,4 +32,15 @@ class RequestReductionForm(RequestActionForm):
         help_text='Indica cero para cancelar todo lo pendiente. Las entregas realizadas se conservan.',
         widget=forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'step': 1}))
     reason = forms.CharField(label='Motivo de la reducción o cancelación',
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
+
+
+class RequestEditForm(RequestActionForm):
+    pending_quantity = forms.IntegerField(label='Cantidad pendiente que conservar', min_value=0, max_value=9223372036854775807,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'step': 1}))
+    reserve_quantity = forms.IntegerField(label='Unidades de stock disponible que reservarás para esta solicitud',
+        min_value=0, max_value=9223372036854775807, initial=0,
+        help_text='Indica cero si solo quieres reducir el pendiente.',
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'step': 1}))
+    reason = forms.CharField(label='Motivo de la reducción o cancelación', required=False,
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))

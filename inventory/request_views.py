@@ -2,6 +2,9 @@ from django.core.exceptions import ValidationError
 from django.db.models import BigIntegerField, Case, CharField, F, OuterRef, Subquery, Sum, Value, When
 from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, redirect
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import FormView, TemplateView
 
@@ -9,8 +12,8 @@ from projects.datatables import DataTableView
 from .availability import available_quantity
 from .forms import DeliveryForm
 from .models import StockRecord, StockRequest
-from .request_forms import RequestActionForm, RequestForm, RequestReductionForm
-from .request_services import create_request, deliver_request, reduce_request, reserve_more
+from .request_forms import ItemRequestForm, RequestActionForm, RequestEditForm, RequestForm, RequestReductionForm
+from .request_services import create_request, deliver_request, edit_request, reduce_request, reserve_more
 from .views import ProjectMixin, add_service_error
 
 
@@ -32,7 +35,7 @@ class RequestListView(ProjectMixin, TemplateView):
 
 
 class RequestDataView(ProjectMixin, DataTableView):
-    order_columns = ('occurred_on', 'item__name', 'quantity', 'fulfilled_total', 'purchase_total', 'request_label')
+    order_columns = ('occurred_on', 'item__name', 'quantity', 'fulfilled_total', 'purchase_total', 'request_label', None)
     search_fields = ('item__name', 'observation', 'request_label')
     default_order = ('-occurred_on', '-pk')
 
@@ -43,7 +46,8 @@ class RequestDataView(ProjectMixin, DataTableView):
         return {'date': request.occurred_on.isoformat(), 'item': request.item.name, 'quantity': str(request.quantity),
                 'delivered': str(request.delivered_quantity), 'purchase': str(request.purchase_quantity),
                 'state': request.state_label, 'pending': request.pending_quantity > 0,
-                'item_url': request.get_absolute_url()}
+                'item_url': request.item.get_absolute_url(),
+                'actions': render_to_string('inventory/request_row_actions.html', {'request_record': request})}
 
 
 class RequestCreateView(ProjectMixin, FormView):
@@ -67,7 +71,34 @@ class RequestCreateView(ProjectMixin, FormView):
         except ValidationError as error:
             add_service_error(form, error)
             return self.form_invalid(form)
-        return redirect(request.get_absolute_url())
+        return redirect(reverse('requests:list', args=[request.project_id]))
+
+
+class ItemRequestCreateView(FormView):
+    form_class = ItemRequestForm
+    template_name = 'inventory/request_form.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        from catalog.models import Item
+        self.item = get_object_or_404(Item, pk=kwargs['pk'])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_initial(self):
+        return {**super().get_initial(), 'item': self.item.pk}
+
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(item=self.item, from_item=True, **kwargs)
+
+    def form_valid(self, form):
+        if form.cleaned_data['item'].pk != self.item.pk:
+            form.add_error('item', 'El elemento seleccionado no coincide con esta ficha.')
+            return self.form_invalid(form)
+        try:
+            request = create_request(form.cleaned_data['project'], self.item, form.cleaned_data)
+        except ValidationError as error:
+            add_service_error(form, error)
+            return self.form_invalid(form)
+        return redirect(reverse('requests:list', args=[request.project_id]))
 
 
 class RequestMixin(ProjectMixin):
@@ -82,7 +113,7 @@ class RequestMixin(ProjectMixin):
 
 
 class RequestDetailView(RequestMixin, TemplateView):
-    template_name = 'inventory/request_detail.html'
+    template_name = 'inventory/request_history_modal.html'
 
     def get_context_data(self, **kwargs):
         request = self.get_request()
@@ -92,6 +123,12 @@ class RequestDetailView(RequestMixin, TemplateView):
             **kwargs,
         )
 
+    def get(self, request, *args, **kwargs):
+        self.get_request()
+        if request.GET.get('modal') == '1':
+            return super().get(request, *args, **kwargs)
+        return redirect(reverse('requests:list', args=[self.project.pk]))
+
 
 class RequestActionView(RequestMixin, FormView):
     template_name = 'inventory/request_form.html'
@@ -99,7 +136,8 @@ class RequestActionView(RequestMixin, FormView):
     action = 'reserve'
 
     def get_form_class(self):
-        return {'reserve': RequestActionForm, 'reduce': RequestReductionForm, 'deliver': DeliveryForm}[self.action]
+        return {'reserve': RequestActionForm, 'reduce': RequestReductionForm, 'deliver': DeliveryForm,
+                'edit': RequestEditForm}[self.action]
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -107,18 +145,26 @@ class RequestActionView(RequestMixin, FormView):
         if self.action == 'deliver':
             kwargs['operation'] = StockRecord.Operation.DELIVERY
             kwargs['initial'].update(quantity=request.reserved_quantity, occurred_on=timezone.localdate())
-        elif self.action == 'reduce':
+        elif self.action in ('reduce', 'edit'):
             kwargs['initial']['pending_quantity'] = request.pending_quantity
         return kwargs
 
     def get_context_data(self, **kwargs):
-        return super().get_context_data(action=self.action, **kwargs)
+        return super().get_context_data(action=self.action, modal=self.request.GET.get('modal') == '1', **kwargs)
+
+    def get_template_names(self):
+        if self.request.GET.get('modal') == '1':
+            return ['inventory/request_action_modal.html']
+        return [self.template_name]
 
     def form_valid(self, form):
         request = self.get_request()
         try:
-            {'reserve': reserve_more, 'reduce': reduce_request, 'deliver': deliver_request}[self.action](request, form.cleaned_data)
+            {'reserve': reserve_more, 'reduce': reduce_request, 'deliver': deliver_request,
+             'edit': edit_request}[self.action](request, form.cleaned_data)
         except ValidationError as error:
             add_service_error(form, error)
             return self.form_invalid(form)
-        return redirect(request.get_absolute_url())
+        if self.request.GET.get('modal') == '1':
+            return JsonResponse({'ok': True})
+        return redirect(reverse('requests:list', args=[self.project.pk]))

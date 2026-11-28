@@ -63,7 +63,8 @@ class CommonInventoryDataView(DataTableView):
 
 
 class CommonHistoryView(CommonItemMixin, TemplateView):
-    template_name = 'inventory/common_history.html'
+    def get(self, request, *args, **kwargs):
+        return redirect(self.item.get_absolute_url() + '?tab=history')
 
 
 class CommonHistoryDataView(CommonItemMixin, DataTableView):

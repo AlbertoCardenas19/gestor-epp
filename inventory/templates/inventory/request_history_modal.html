@@ -1,0 +1,10 @@
+<div class="modal-header"><h2 class="modal-title fs-5" id="request-modal-title">Historial de {{ request_record.item.name }} · solicitud {{ request_record.pk }}</h2><button type="button" class="btn-close" data-coreui-dismiss="modal" aria-label="Cerrar"></button></div>
+<div class="modal-body">
+  <dl class="row"><dt class="col-sm-5">Estado</dt><dd class="col-sm-7">{{ request_record.state_label }}</dd><dt class="col-sm-5">Solicitado</dt><dd class="col-sm-7">{{ request_record.quantity }}</dd><dt class="col-sm-5">Entregados</dt><dd class="col-sm-7">{{ request_record.delivered_quantity }}</dd><dt class="col-sm-5">Necesidad de compra</dt><dd class="col-sm-7">{{ request_record.purchase_quantity }}</dd><dt class="col-sm-5">Fecha de solicitud</dt><dd class="col-sm-7">{{ request_record.occurred_on|date:'d/m/Y' }}</dd><dt class="col-sm-5">Registro</dt><dd class="col-sm-7">{{ request_record.created_at|date:'d/m/Y H:i:s T' }}</dd></dl>
+  {% if request_record.observation %}<p class="text-break">{{ request_record.observation|linebreaksbr }}</p>{% endif %}
+  <h3 class="h6">Entregas registradas</h3>
+  {% for delivery in deliveries %}<p class="text-break">{{ delivery.occurred_on|date:'d/m/Y' }} · {{ delivery.worker_full_name }} · {{ delivery.quantity }} unidades · {% if delivery.voided_at %}{% if delivery.is_replaced %}Sustituido{% else %}Anulado{% endif %}{% else %}Vigente{% endif %} · <a href="{{ delivery.get_absolute_url }}">Ver registro y correcciones</a></p>{% empty %}<p>No hay entregas registradas.</p>{% endfor %}
+  <h3 class="h6">Cambios de solicitud</h3>
+  {% for event in events %}<p class="text-break">{{ event.get_action_display }} · {{ event.created_at|date:'d/m/Y H:i:s T' }} · Comprometidas: {{ event.before.allocated|default:0 }} → {{ event.after.allocated }} · Canceladas: {{ event.before.cancelled|default:0 }} → {{ event.after.cancelled }}{% if event.reason %} · {{ event.reason }}{% endif %}</p>{% empty %}<p>No hay cambios registrados.</p>{% endfor %}
+</div>
+<div class="modal-footer"><button class="btn btn-outline-secondary" type="button" data-coreui-dismiss="modal">Cerrar</button></div>

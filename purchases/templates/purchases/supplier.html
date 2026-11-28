@@ -5,15 +5,24 @@
 {% block content %}
 <a class="back-link" href="{% url 'purchases:suppliers' %}">← Volver a proveedores</a>
 <h1 class="text-break my-4">{{ supplier }}</h1>
-<div class="card info-card mb-4"><div class="card-body p-4 p-md-5">
-  <div class="info-card-toolbar">{% include 'projects/info_actions.html' %}</div>
-  <div class="info-section"><div class="info-meta">
-    <div class="info-field"><span class="info-label">RUT</span><span class="info-value">{{ supplier.rut }}</span></div>
-    <div class="info-field"><span class="info-label">Persona de contacto</span><span class="info-value">{{ supplier.contact|default:"Sin registrar" }}</span></div>
-    <div class="info-field"><span class="info-label">Teléfono</span><span class="info-value">{{ supplier.phone|default:"Sin registrar" }}</span></div>
-    <div class="info-field"><span class="info-label">Correo electrónico</span><span class="info-value text-break">{{ supplier.email|default:"Sin registrar" }}</span></div>
-  </div></div>
+<nav class="section-tabs mb-4" role="tablist" aria-label="Secciones del proveedor">
+  <button class="section-tab active" id="supplier-info-tab" type="button" role="tab" data-coreui-toggle="tab" data-coreui-target="#supplier-info" aria-controls="supplier-info" aria-selected="true">Información</button>
+  <button class="section-tab" id="supplier-prices-tab" type="button" role="tab" data-coreui-toggle="tab" data-coreui-target="#supplier-prices" aria-controls="supplier-prices" aria-selected="false">Elementos y precios</button>
+  <button class="section-tab" id="supplier-invoices-tab" type="button" role="tab" data-coreui-toggle="tab" data-coreui-target="#supplier-invoices" aria-controls="supplier-invoices" aria-selected="false">Facturas</button>
+</nav>
+<div class="tab-content"><section class="tab-pane fade show active" id="supplier-info" role="tabpanel" aria-labelledby="supplier-info-tab" tabindex="0">
+<div class="card info-card mb-4"><div class="card-body info-panel-body">
+  <div class="info-panel-top"><div class="info-panel-facts info-panel-fact-groups">
+    <div class="info-panel-block">
+    <div class="info-panel-row"><span class="info-label">RUT</span><span class="info-value">{{ supplier.rut }}</span></div>
+    </div><div class="info-panel-block">
+    <div class="info-panel-row"><span class="info-label">Persona de contacto</span><span class="info-value">{{ supplier.contact|default:"Sin registrar" }}</span></div>
+    <div class="info-panel-row"><span class="info-label">Teléfono</span><span class="info-value">{{ supplier.phone|default:"Sin registrar" }}</span></div>
+    <div class="info-panel-row"><span class="info-label">Correo electrónico</span><span class="info-value text-break">{{ supplier.email|default:"Sin registrar" }}</span></div>
+    </div>
+  </div><div class="info-panel-actions">{% include 'projects/info_actions.html' %}</div></div>
 </div></div>
+</section><section class="tab-pane fade" id="supplier-prices" role="tabpanel" aria-labelledby="supplier-prices-tab" tabindex="0">
 <section data-datatable-panel>
   <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
     <h2 class="h4">Precios de referencia</h2>
@@ -32,4 +41,11 @@
     </table>
   </div></div>
 </section>
+</section><section class="tab-pane fade" id="supplier-invoices" role="tabpanel" aria-labelledby="supplier-invoices-tab" tabindex="0">
+<section data-datatable-panel><p data-datatable-error role="alert" class="text-danger" hidden></p>
+  <div class="card datatable-shell"><div class="card-body"><table class="table mb-0 align-middle w-100" data-datatable data-search-placeholder="Número, orden de compra, forma de pago, estado" data-source="{% url 'purchases:supplier-invoices-data' supplier.pk %}" data-order='[[1,"desc"]]'>
+    <caption class="visually-hidden">Facturas de {{ supplier }}</caption>
+    <thead><tr><th scope="col" data-column="number" data-link="url">Factura</th><th scope="col" data-column="issued" data-format="date">Emisión</th><th scope="col" data-column="total">Total (CLP)</th><th scope="col" data-column="payment" data-format="status">Pago</th><th scope="col" data-column="receipt" data-format="status">Recepción</th><th scope="col" data-column="actions" data-actions>Acciones</th></tr></thead><tbody></tbody>
+  </table></div></div>
+</section></section></div>
 {% endblock %}
